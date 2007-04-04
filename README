@@ -1,0 +1,101 @@
+################################################################
+#
+# $Id: README,v 1.1.1.1 2007-04-04 22:39:41 adye Exp $
+#
+################################################################
+
+RooUnfold is a framework for unfolding (AKA "deconvolution" or "unsmearing").
+It currently implements three methods: iterative (Bayes), SVD,
+and bin-by-bin (simple correction factors).
+It can be used from the ROOT prompt, or linked against the ROOT libraries.
+
+RooUnfold requires ROOT 4 (see below for running the test programs in ROOT 4)
+or ROOT 5 or later.
+
+
+Building
+========
+
+Use GNU make. Just type
+
+  make
+
+to build the RooUnfold shared library.
+
+Running
+=======
+
+RooUnfoldExample.cxx makes a simple test of RooUnfold.
+
+  % root
+  root [0] gSystem->Load("lib/linux/libRooUnfold.so")
+  root [1] .L examples/RooUnfoldExample.cxx
+  root [2] RooUnfoldExample()
+
+More involved tests, allowing different toy MC PDFs to be used for training
+and testing, can be done using examples/RooUnfoldTest.cxx.
+To run RooUnfoldTest from within ROOT, RooFit is normally used.
+RooFit can be loaded with
+
+  root [3] gSystem->Load("libRooFit.so")
+
+RooFit is not required to use the RooUnfold classes from another program
+(eg. examples/RooUnfoldExample.cxx).
+
+You can change the options for RooUnfoldTest:
+
+  root [4] RooUnfoldTest(2,0,2,5,40,10000,100000,-12.5,10.0,0)
+
+The example programs can also be run from the shell command line.
+
+  % make bin
+  % export LD_LIBRARY_PATH="lib/linux:$LD_LIBRARY_PATH"
+  % RooUnfoldTest
+
+and the output appears in RooUnfoldTest.ps
+
+For a 2-D example look at RooUnfoldTest2D that works in a similar way.
+
+
+Testing in ROOT 4
+=================
+
+The test programs, examples/RooUnfoldTest.cxx and examples/RooUnfoldTest2D.cxx,
+use RooFit to generate the toy distributions. Hand-coded alternatives are
+provided if RooFit is not available (eg. running in ROOT 4). In this
+case some parameters this may not normalise the plotted generator PDF curve
+properly - just a cosmetic problem.
+
+To disable the use of RooFit, comment out the "#define USE_ROOFIT" line in
+examples/RooUnfoldTest*.cxx. Alternatively, for the stand-alone case, use
+
+  make bin NOROOFIT=1
+
+to build.
+
+
+Documentation
+=============
+
+See http://www.slac.stanford.edu/~adye/RooUnfold/RooUnfold.html or make
+your own:
+
+  root [5] THtml html
+  root [6] html->MakeClass("RooUnfold")
+
+This creates an htmldoc subdirectory.
+
+
+Notes on the RooUnfHisto Class
+==============================
+
+The RooUnfHisto class can be used independently of the RooUnfold interface
+for unfolding (equidistant 1D) histograms. The method uses a singular
+value decomposition of the detector response matrix, which has to be provided
+as a 2D quadratic histogram. The covariance matrix on the unfolded spectrum
+can be determined using toy studies.
+ROOT version 4 is needed for the singular value decomposition.
+The code was originally implemented by
+Kerstin Tackmann (kerstin@slac.stanford.edu) for the unfolding of the
+hadronic mass spectrum in B->Xu l nu on the recoil of fully reconstructed
+hadronic B decays and the tests have been done using this spectrum.
