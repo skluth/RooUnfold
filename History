@@ -1,0 +1,48 @@
+History for RooUnfold
+=====================
+
+$Id: History,v 1.1.1.1 2007-04-04 14:53:56 adye Exp $
+
+Put notes on the changes to this package here (latest at the top).
+If you make a tag, please document it here as well.
+
+-------------------------------------------------------------------------
+
+Tim Adye  4-Apr-2007
+  o Combine RooUnfHistoSvd and RooUnfold into a single stand-alone package.
+  o Combined History entries below.
+
+Tim Adye 14-Nov-2006 tja061114a
+  o Use TVectorDfwd.h in ROOT5
+
+Tim Adye  9-Aug-2006 tja060809a
+  o Allow zero regularisation parameter in RooUnfoldTest.cc.
+  o Simpler pad selection in 2-up display RooUnfoldTest.cc.
+
+Tim Adye 15-Dec-2005 tja051215a
+  o Fix some typos in comments
+  o Add reference to pre-built ROOT docs to README
+
+Tim Adye 12-Dec-2005 V00-00-03
+  o Add RooUnfoldExample.cc.
+  o Use Int_t consistently in test routines.
+  o Tidy up README.
+
+Tim Adye 12-Dec-2005 V00-00-01
+  o First RooUnfold version with Bayes, SVD, and bin-by-bin methods.
+
+Tim Adye 12-Dec-2005 tja051212a
+  o Initialise all RooUnfHistoSvd member variables on object creation.
+  o Allow TUnfHisto::init caller to disable creation of results file.
+  o Add GNUmakefile to allow also building outside BaBar environment.
+
+Tim Adye 18-Nov-2005 tja051118a
+  RooUnfHistoSvd tweaks:
+  o Declare method parameters "const" where appropriate.
+  o Declare methods const or static where appropriate.
+  o Pass vectors and matrices by const reference, rather than by value.
+  o Don't forget to delete a few new'ed objects.
+
+Kerstin Tackmann 30-Sep-2005 kt093005
+Kerstin Tackmann 15-Dec-2004 KT121504
+  RooUnfHistoSvd development
