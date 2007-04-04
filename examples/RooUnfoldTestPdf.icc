@@ -1,0 +1,143 @@
+//=====================================================================-*-C++-*-
+// File and Version Information:
+//      $Id: RooUnfoldTestPdf.icc,v 1.1.1.1 2007-04-04 22:22:00 adye Exp $
+//
+// Description:
+//      MC Generation routines implemented without RooFit.
+//      NB. This version does not take into account the portion of the PDF
+//      outside [xlo:xhi] when normalising the PDF histogram, h, so
+//      it won't be displayed properly if the |mean +/- width| is too large.
+//
+//      The PDFs are defined by fpdf as follows:-
+//
+//        1: top-hat distribution over mean +/- 3*width.
+//        2: Gaussian
+//        3: Double-sided exponential decay
+//        4: Breit-Wigner
+//        5: Double Breit-Wigner, peaking at mean-width and mean+width.
+//
+// Environment:
+//      Software developed for the BaBar Detector at the SLAC B-Factory.
+//
+// Author List:
+//      Tim Adye <T.J.Adye@rl.ac.uk>
+//
+// Copyright Information:
+//      Copyleft (C) 2005-6     Rutherford Appleton Laboratory
+//
+//==============================================================================
+
+#ifndef ROOUNFOLDTESTPDF_ICC
+#define ROOUNFOLDTESTPDF_ICC
+
+#if !defined(__CINT__) || defined(__MAKECINT__)
+#include <iostream>
+#include <math.h>
+using std::cout;
+using std::cerr;
+using std::endl;
+
+#include "TH1D.h"
+#include "TVectorD.h"
+#include "TRandom.h"
+#endif
+
+Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVectorD& x,
+                        TH1* h= 0, Double_t mean= 0.0, Double_t width= 2.5)
+{
+  static Double_t pi= atan2 (0.0, -1.0);
+
+  Int_t nb= h->GetNbinsX();
+  Double_t norm= h ? nx * ((h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin()) / nb) : 0;
+
+  switch (fpdf) {
+
+    case 1: {
+      for (Int_t i= 0; i < nx; i++) {
+        x[i]= mean + 3.0*width * (2.0*gRandom->Rndm() - 1.0);
+      }
+      if (h) {
+        norm /= 6.0*width;
+        for (Int_t i= 1; i<=nb; i++) {
+          Double_t z= h->GetBinCenter(i);
+          if (fabs (z-mean) < 3.0*width) {
+            h->SetBinContent(i, norm);
+          } else {
+            h->SetBinContent(i, 0.0);
+          }
+        }
+      }
+      return nx;
+    }
+
+    case 2: {
+      for (Int_t i= 0; i < nx; i++) {
+        x[i]= gRandom->Gaus (mean, width);
+      }
+      if (h) {
+        norm /= sqrt(2*pi) * width;
+        for (Int_t i= 1; i<=nb; i++) {
+          Double_t z= h->GetBinCenter(i);
+          if (fabs ((z-mean)/width) < 10.0) {
+            h->SetBinContent(i, norm * exp (-0.5*(pow((z-mean)/width,2))));
+          } else {
+            h->SetBinContent(i, 0.0);
+          }
+        }
+      }
+      return nx;
+    }
+
+    case 3: {
+      for (Int_t i= 0; i < nx; i++) {
+        Double_t z= gRandom->Exp (width);
+        x[i]= gRandom->Rndm() < 0.5 ? mean - z : mean + z;
+      }
+      if (h) {
+        norm /= (2*width);
+        for (Int_t i= 1; i<=nb; i++) {
+          Double_t z= h->GetBinCenter(i);
+          h->SetBinContent (i, norm * exp (-fabs(z-mean)/width));
+        }
+      }
+      return nx;
+    }
+
+    case 4: {
+      for (Int_t i= 0; i < nx; i++) {
+        x[i]= gRandom->BreitWigner (mean, width);
+      }
+      if (h) {
+        norm *= width / (2*pi);
+        for (Int_t i= 1; i<=nb; i++) {
+          Double_t z= h->GetBinCenter(i);
+          h->SetBinContent (i, norm / (pow(z-mean,2) + 0.25*pow(width,2)));
+        }
+      }
+      return nx;
+    }
+
+    case 5: {
+      for (Int_t i= 0; i < nx; i++) {
+        Double_t m= gRandom->Rndm() < 0.5 ? mean - width : mean + width;
+        x[i]= gRandom->BreitWigner (m, width);
+      }
+      if (h) {
+        norm *= width / (4*pi);
+        for (Int_t i= 1; i<=nb; i++) {
+          Double_t z= h->GetBinCenter(i);
+          h->SetBinContent (i, norm * (1 / (pow(z-mean+width,2) + 0.25*pow(width,2)) +
+                                       1 / (pow(z-mean-width,2) + 0.25*pow(width,2))));
+        }
+      }
+      return nx;
+    }
+
+    default: {
+      cerr << "PDF " << fpdf << " not defined" << endl;
+      return 0;
+    }
+
+  }
+}
+#endif

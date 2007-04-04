@@ -1,0 +1,145 @@
+//=====================================================================-*-C++-*-
+// File and Version Information:
+//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.1.1.1 2007-04-04 22:22:29 adye Exp $
+//
+// Description:
+//      MC Generation routines implemented with RooFit.
+//
+//      The PDFs are defined by fpdf as follows:-
+//
+//        1: top-hat distribution over mean +/- 3*width.
+//        2: Gaussian
+//        3: Double-sided exponential decay
+//        4: Breit-Wigner
+//        5: Double Breit-Wigner, peaking at mean-width and mean+width.
+//
+// Environment:
+//      Software developed for the BaBar Detector at the SLAC B-Factory.
+//
+// Author List:
+//      Tim Adye <T.J.Adye@rl.ac.uk>
+//
+// Copyright Information:
+//      Copyleft (C) 2005-6     Rutherford Appleton Laboratory
+//
+//==============================================================================
+
+#ifndef ROOUNFOLDTESTPDFROOFIT_ICC
+#define ROOUNFOLDTESTPDFROOFIT_ICC
+
+#if !defined(__CINT__) || defined(__MAKECINT__)
+#include <iostream>
+using std::cout;
+using std::cerr;
+using std::endl;
+
+#include "TH1D.h"
+#include "TVectorD.h"
+
+#include "RooGlobalFunc.h"
+#include "RooArgList.h"
+#include "RooAbsPdf.h"
+#include "RooRealVar.h"
+#include "RooArgSet.h"
+#include "RooDataSet.h"
+#include "RooAddPdf.h"
+#include "RooTruthModel.h"
+
+#include "RooGaussian.h"
+#include "RooDecay.h"
+#include "RooBreitWigner.h"
+#include "RooParametricStepFunction.h"
+#endif
+
+Int_t mcgenpdf (const RooAbsPdf& pdf, RooRealVar& xvar, Int_t nx,
+                 TVectorD& x, TH1* h= 0, Double_t offset= 0.0)
+{
+  using namespace RooFit;
+
+  pdf.Print();
+  RooDataSet* ds= pdf.generate (xvar, nx);
+
+  Int_t ngen= ds->numEntries();
+
+  for (Int_t i= 0; i<ngen; i++) {
+    const RooArgSet* row= ds->get(i);
+    RooRealVar* xrow= (RooRealVar*) row->find("xvar");
+    x[i]= xrow->getVal()+offset;
+  }
+  if (h) {
+    Int_t nb= h->GetNbinsX();
+    RooArgSet a(xvar);
+    Double_t norm= nx * ((h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin()) / nb) / pdf.getNorm (a);
+    for (Int_t i= 1; i<=nb; i++) {
+      xvar.setVal (h->GetBinCenter(i)-offset);
+      Double_t v= pdf.getVal();
+      h->SetBinContent(i, norm*v);
+    }
+  }
+  delete ds;
+  return ngen;
+}
+
+// Generate truth distribution.
+// RooFit only used inside here and helper routine, mcgenpdf.
+Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVectorD& x,
+                        TH1* h= 0, Double_t mean= 0.0, Double_t width= 2.5)
+{
+  using namespace RooFit;
+
+  RooRealVar xvar("xvar","xvar",xlo,xhi);
+  switch (fpdf) {
+
+    case 1: {
+      const Int_t stepbins= 3;
+      const Double_t stepa[]= { xlo, mean-3*width, mean+3*width, xhi };
+      TArrayD steps(stepbins+1,stepa);
+      RooRealVar step0("binHeight0","bin 0 Value",0.0);
+      RooRealVar step1("binHeight1","bin 1 Value",1.0/(steps[2]-steps[1]));
+      RooRealVar step2("binHeight2","bin 2 Value",0.0);
+      RooArgList steplist(step0, step1, step2, "steplist");
+      return mcgenpdf (RooParametricStepFunction("pdf","top hat",xvar,steplist,steps,stepbins),
+                       xvar, nx, x, h);
+    }
+
+    case 2: {
+      RooRealVar p51("p51","mean",mean);
+      RooRealVar p52("p52","width",width);
+      return mcgenpdf (RooGaussian("pdf","Gaussian",xvar,p51,p52),
+                       xvar, nx, x, h);
+    }
+
+    case 3: {
+      RooRealVar p21("p21","tau",width);
+      RooTruthModel dectm("dectm","decay truth model",xvar);
+      return mcgenpdf (RooDecay("pdf","decay",xvar,p21,dectm,RooDecay::DoubleSided),
+                       xvar, nx, x, h, mean);
+    }
+
+    case 4: {
+      RooRealVar p11("p11","mean",mean);
+      RooRealVar p12("p12","width",width);
+      return mcgenpdf (RooBreitWigner("pdf","Breit Wigner",xvar,p11,p12),
+                       xvar, nx, x, h);
+    }
+
+    case 5: {
+      RooRealVar p31("p31","mean 1",mean-width);
+      RooRealVar p32("p32","width 1",width);
+      RooRealVar p33("p33","mean 2",mean+width);
+      RooRealVar p34("p34","width 2",width);
+      RooRealVar fbw1("fbw1","Breit Wigner 1 fraction",0.5);
+      RooBreitWigner bw1("pdf1","Breit Wigner 1",xvar,p31,p32);
+      RooBreitWigner bw2("pdf2","Breit Wigner 2",xvar,p33,p34);
+      return mcgenpdf (RooAddPdf("pdf","Two Breit Wigners",RooArgList(bw1,bw2),RooArgList(fbw1)),
+                       xvar, nx, x, h);
+    }
+
+    default: {
+      cerr << "PDF " << fpdf << " not defined" << endl;
+      return 0;
+    }
+  }
+}
+
+#endif
