@@ -1,6 +1,6 @@
 ################################################################
 #
-# $Id: README,v 1.1.1.1 2007-04-04 22:39:41 adye Exp $
+# $Id: README,v 1.2 2007-04-05 20:47:27 adye Exp $
 #
 ################################################################
 
@@ -9,8 +9,7 @@ It currently implements three methods: iterative (Bayes), SVD,
 and bin-by-bin (simple correction factors).
 It can be used from the ROOT prompt, or linked against the ROOT libraries.
 
-RooUnfold requires ROOT 4 (see below for running the test programs in ROOT 4)
-or ROOT 5 or later.
+RooUnfold requires ROOT 4 or later.
 
 
 Building
@@ -49,7 +48,6 @@ You can change the options for RooUnfoldTest:
 The example programs can also be run from the shell command line.
 
   % make bin
-  % export LD_LIBRARY_PATH="lib/linux:$LD_LIBRARY_PATH"
   % RooUnfoldTest
 
 and the output appears in RooUnfoldTest.ps
@@ -71,7 +69,7 @@ examples/RooUnfoldTest*.cxx. Alternatively, for the stand-alone case, use
 
   make bin NOROOFIT=1
 
-to build.
+to build (this is the default if RooFit is not available).
 
 
 Documentation
