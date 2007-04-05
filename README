@@ -1,6 +1,6 @@
 ################################################################
 #
-# $Id: README,v 1.3 2007-04-05 21:14:18 adye Exp $
+# $Id: README,v 1.4 2007-04-05 21:49:17 adye Exp $
 #
 ################################################################
 
@@ -45,12 +45,12 @@ RooFit is not required to use the RooUnfold classes from another program
 
 You can change the options for RooUnfoldTest:
 
-  root [4] RooUnfoldTest(2,0,2,5,40,10000,100000,-12.5,10.0,0)
+  root [4] RooUnfoldTest(2,0,5,3)
 
 The example programs can also be run from the shell command line.
 
   % make bin
-  % RooUnfoldTest
+  % ./RooUnfoldTest
 
 and the output appears in RooUnfoldTest.ps
 
@@ -86,7 +86,7 @@ See http://www.slac.stanford.edu/~adye/RooUnfold/RooUnfold.html or make
 your own:
 
   root [5] THtml html
-  root [6] html->MakeClass("RooUnfold")
+  root [6] html->MakeAll()
 
 This creates an htmldoc subdirectory.
 
