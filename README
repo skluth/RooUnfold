@@ -1,6 +1,6 @@
 ################################################################
 #
-# $Id: README,v 1.2 2007-04-05 20:47:27 adye Exp $
+# $Id: README,v 1.3 2007-04-05 21:14:18 adye Exp $
 #
 ################################################################
 
@@ -27,16 +27,18 @@ Running
 RooUnfoldExample.cxx makes a simple test of RooUnfold.
 
   % root
-  root [0] gSystem->Load("lib/linux/libRooUnfold.so")
+  root [0] gSystem->Load("libRooUnfold")
   root [1] .L examples/RooUnfoldExample.cxx
   root [2] RooUnfoldExample()
 
 More involved tests, allowing different toy MC PDFs to be used for training
-and testing, can be done using examples/RooUnfoldTest.cxx.
+and testing, can be found in examples/RooUnfoldTest.cxx.
 To run RooUnfoldTest from within ROOT, RooFit is normally used.
 RooFit can be loaded with
 
-  root [3] gSystem->Load("libRooFit.so")
+  root [1] gSystem->Load("libRooFit")
+  root [2] .L examples/RooUnfoldTest.cxx
+  root [3] RooUnfoldTest()
 
 RooFit is not required to use the RooUnfold classes from another program
 (eg. examples/RooUnfoldExample.cxx).
@@ -60,12 +62,17 @@ Testing in ROOT 4
 
 The test programs, examples/RooUnfoldTest.cxx and examples/RooUnfoldTest2D.cxx,
 use RooFit to generate the toy distributions. Hand-coded alternatives are
-provided if RooFit is not available (eg. running in ROOT 4). In this
-case some parameters this may not normalise the plotted generator PDF curve
-properly - just a cosmetic problem.
+provided if RooFit is not available (eg. running in ROOT 4). In some cases,
+this may not normalise the plotted generator PDF curve properly, but that's just
+a cosmetic problem.
 
-To disable the use of RooFit, comment out the "#define USE_ROOFIT" line in
-examples/RooUnfoldTest*.cxx. Alternatively, for the stand-alone case, use
+To disable the use of RooFit, #define NOROOFIT before loading RooUnfoldTest*.cxx
+
+  root [1] #define NOROOFIT 1
+  root [2] .L examples/RooUnfoldTest.cxx
+  root [3] RooUnfoldTest()
+
+For the stand-alone case, use
 
   make bin NOROOFIT=1
 
