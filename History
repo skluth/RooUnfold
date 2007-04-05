@@ -1,15 +1,16 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.1.1.1 2007-04-04 14:53:56 adye Exp $
+$Id: History,v 1.2 2007-04-05 13:38:24 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
 
-Tim Adye  4-Apr-2007
+Tim Adye  4-Apr-2007 V00-01-01
   o Combine RooUnfHistoSvd and RooUnfold into a single stand-alone package.
+  o Rewritten standalone GNUMakefile.
   o Combined History entries below.
 
 Tim Adye 14-Nov-2006 tja061114a
