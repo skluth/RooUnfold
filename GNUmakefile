@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.3 2007-04-05 21:14:18 adye Exp $
+#      $Id: GNUmakefile,v 1.4 2007-04-06 00:43:27 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -38,8 +38,12 @@
 # --- External configuration ---------------------------------
 include $(ROOTSYS)/test/Makefile.arch
 CC       = $(CXX)
+ifeq ($(CC),g++)
 CCFLAGS  = $(filter-out -Woverloaded-virtual,$(CXXFLAGS)) -Wno-deprecated -Wno-parentheses -Wno-sign-compare
 MFLAGS   = -MM -Wno-deprecated
+else
+CCFLAGS  = $(CXXFLAGS)
+endif
 SRCDIR   = $(CURDIR)/src/
 WORKDIR  = $(CURDIR)/tmp/$(ARCH)/
 LIBDIR   = $(CURDIR)/
@@ -92,12 +96,20 @@ default : shlib
 # List of all object files to build
 OLIST=$(addprefix $(OBJDIR),$(patsubst %.cxx,%.o,$(notdir $(wildcard $(SRCDIR)*.cxx))))
 
+ifeq ($(MFLAGS),)
+
+# Can't make dependency files, so make every compilation dependent on all headers.
+HDEP=$(HLIST)
+
+else
+
 # List of all dependency file to make
 DLIST=$(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(notdir $(wildcard $(SRCDIR)*.cxx $(EXESRC)*.cxx))))
 
 ifeq ($(NOROOFIT),)
 # List of programs that use RooFit. Should only be those in $(EXESRC)
 ROOFITCLIENTS=$(patsubst $(DEPDIR)%.d,$(OBJDIR)%.o,$(shell fgrep -l '/RooGlobalFunc.h ' $(DLIST) 2>/dev/null))
+endif
 endif
 
 # Implicit rule making all dependency Makefiles included at the end of this makefile
@@ -120,13 +132,13 @@ $(DEPDIR)%.d : $(EXESRC)%.cxx
 	 [ -s $@ ] || rm -f $@
 
 # Implicit rule to compile all classes
-$(OBJDIR)%.o : $(SRCDIR)%.cxx
+$(OBJDIR)%.o : $(SRCDIR)%.cxx $(HDEP)
 	@echo "Compiling $<"
 	@mkdir -p $(OBJDIR)
 	@$(CC) $(CCFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
 
 # Implicit rule to compile main program
-$(OBJDIR)%.o : $(EXESRC)%.cxx
+$(OBJDIR)%.o : $(EXESRC)%.cxx $(HDEP)
 	@echo "Compiling main program $<"
 	@mkdir -p $(OBJDIR)
 	@$(CC) $(CCFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
@@ -178,4 +190,6 @@ clean :
 
 .PHONY : include shlib lib bin default clean
 
+ifneq ($(DLIST),)
 -include $(DLIST)
+endif

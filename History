@@ -1,12 +1,15 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.5 2007-04-05 22:40:13 adye Exp $
+$Id: History,v 1.6 2007-04-06 00:43:30 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye  5-Apr-2007 V00-01-03
+  o Fixes to build on Solaris.
 
 Tim Adye  5-Apr-2007 V00-01-02
   o By default, build test programs with static RooUnfold library,
