@@ -1,7 +1,7 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.7 2007-08-02 18:22:12 adye Exp $
+$Id: History,v 1.8 2007-08-02 19:20:35 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
@@ -13,6 +13,8 @@ Kerstin Tackmann 28-Jul-2007 kt072807
   RooUnfHistoSvd improvements:
   o Replace use of copy constructors by use of Clone. This should get rid of the
     segfaults that Jochen has been seeing.
+  o Fixed bug in TUnfHisto::GetCov that could lead to small numerical changes in
+    the estimated uncertainties.
   o Tested on my spectrum that the changes, which were supposed to be only
     clean-up between the previous two tags (Tim's and mine), do indeed give
     identical results on the curvature of the weight distributions and the
