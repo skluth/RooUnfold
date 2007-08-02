@@ -2,7 +2,7 @@
 //Kerstin Tackmann, Heiko Lacker (TU Dresden)
 //based on 
 //Andreas Hoecker, Vakhtang Kartvelishvili, hep-ph/9509307
-//$Id: RooUnfHistoSvd.cxx,v 1.1.1.1 2007-04-04 21:27:25 adye Exp $
+//$Id: RooUnfHistoSvd.cxx,v 1.2 2007-08-02 18:22:12 adye Exp $
 ///////////////////////////////////////////////////////////////////////
 
 #include "RooUnfHistoSvd.h"
@@ -307,8 +307,8 @@ TMatrixD TUnfHisto::GetCov(const TMatrixD& cov, const TH1D *bref,  Int_t ntoys, 
     random.Gaus(0.,1.);
   }
 
-  _toyhisto = new TH1D(*bref);
-  TH1D *toymean = new TH1D(*bref);
+  _toyhisto = (TH1D*)bref->Clone("toyhisto");
+  TH1D *toymean = (TH1D*)bref->Clone("toymean");
   for(Int_t j=0; j<_gDim; j++){
     toymean->SetBinContent(j+1,0.);
   }
@@ -335,9 +335,9 @@ TMatrixD TUnfHisto::GetCov(const TMatrixD& cov, const TH1D *bref,  Int_t ntoys, 
       if(toydist != NULL){
         for(int j=0; j<_gDim; j++)
           toydist[j]->Fill(unfres(j));
-	i--;
-	continue;
       }
+      i--;
+      continue;
     }
     for(Int_t j=0; j<_gDim; j++){
       toymean->SetBinContent(j+1, toymean->GetBinContent(j+1) + unfres(j)/ntoys);
@@ -438,9 +438,9 @@ void TUnfHisto::GetS2(const TMatrixD& cov, const TMatrixD& mcov, const TH1D *xre
     random.Gaus(0.,1.);
   }
 
-  _toyhisto = new TH1D(*xref);
-  TH1D *biashisto = new TH1D(*xref);
-  TH1D *truthhisto = new TH1D(*xref);
+  _toyhisto = (TH1D*)xref->Clone("toyhisto");
+  TH1D *biashisto = (TH1D*)xref->Clone("biashisto");
+  TH1D *truthhisto = (TH1D*)xref->Clone("truthhisto");
 
   //Get the mean of the toys first
   for(int i=1; i<=ntoys; i++){
@@ -510,8 +510,8 @@ TMatrixD TUnfHisto::GetMatStatCov(Int_t ntoys, Int_t tau, Int_t fg)
     random.Gaus(0.,1.);
   }
 
-  _toymat = new TH2D(*_A);
-  TH1D *toymean = new TH1D(*_xini);
+  _toymat = (TH2D*)_A->Clone("toymat");
+  TH1D *toymean = (TH1D*)_xini->Clone("toymean");
   for(Int_t j=0; j<_gDim; j++){
     toymean->SetBinContent(j+1,0.);
   }
