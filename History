@@ -1,12 +1,16 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.8 2007-08-02 19:20:35 adye Exp $
+$Id: History,v 1.9 2008-01-23 23:05:52 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye         23-Jan-2008 V00-01-05
+  o Include missing headers for ROOT 5.16/00.
+  o Fix RooUnfoldTest2D.ps file name.
 
 Tim Adye          2-Aug-2007 V00-01-04
 Kerstin Tackmann 28-Jul-2007 kt072807

@@ -2,7 +2,7 @@
 //Kerstin Tackmann, Heiko Lacker (TU Dresden)
 //based on 
 //Andreas Hoecker, Vakhtang Kartvelishvili, hep-ph/9509307
-//$Id: RooUnfHistoSvd.cxx,v 1.2 2007-08-02 18:22:12 adye Exp $
+//$Id: RooUnfHistoSvd.cxx,v 1.3 2008-01-23 23:06:14 adye Exp $
 ///////////////////////////////////////////////////////////////////////
 
 #include "RooUnfHistoSvd.h"
@@ -13,6 +13,7 @@
 #include "TDecompSVD.h"
 #include "TRandom.h"
 #include <iostream>
+#include <cmath>
 
 ClassImp(TUnfHisto);
 

@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldTest2D.cxx,v 1.1.1.1 2007-04-04 21:27:25 adye Exp $
+//      $Id: RooUnfoldTest2D.cxx,v 1.2 2008-01-23 23:06:05 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -29,6 +29,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+#include "TROOT.h"
 #include "TStyle.h"
 #include "TCanvas.h"
 #include "TRandom.h"
@@ -357,7 +358,7 @@ void RooUnfoldTest2D (
        << ")" << endl;
   gROOT->SetStyle("Plain");
   gStyle->SetOptStat(0);
-  TPostScript ps("RooUnfoldTest.ps", 111);
+  TPostScript ps("RooUnfoldTest2D.ps", 111);
   canvas= new TCanvas("RooUnfoldTest2D","RooUnfoldTest2D",1);
   canvas->SetGrid();
   canvas->Divide(2,4);

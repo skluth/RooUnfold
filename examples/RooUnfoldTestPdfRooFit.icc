@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.1.1.1 2007-04-04 22:22:29 adye Exp $
+//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.2 2008-01-23 23:06:05 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented with RooFit.
@@ -35,6 +35,7 @@ using std::endl;
 
 #include "TH1D.h"
 #include "TVectorD.h"
+#endif
 
 #include "RooGlobalFunc.h"
 #include "RooArgList.h"
@@ -49,7 +50,6 @@ using std::endl;
 #include "RooDecay.h"
 #include "RooBreitWigner.h"
 #include "RooParametricStepFunction.h"
-#endif
 
 Int_t mcgenpdf (const RooAbsPdf& pdf, RooRealVar& xvar, Int_t nx,
                  TVectorD& x, TH1* h= 0, Double_t offset= 0.0)
