@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldTest2D.cxx,v 1.2 2008-01-23 23:06:05 adye Exp $
+//      $Id: RooUnfoldTest2D.cxx,v 1.3 2008-01-23 23:27:21 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -320,7 +320,7 @@ void RooUnfoldTest2D (
                       Double_t xhi=      10.0,
                       Double_t ylo=     -12.5,
                       Double_t yhi=      10.0,
-                      Int_t    regparm_in= -999,  // Bayes niter=4, SVD tau=20
+                      Int_t    regparm_in= -999,  // Bayes niter=4, SVD kterm=20
                       Int_t    ntoys_in= 1000   // SVD only
                      )
 {

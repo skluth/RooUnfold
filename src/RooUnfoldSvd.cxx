@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.1.1.1 2007-04-04 21:27:25 adye Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.2 2008-01-23 23:27:26 adye Exp $
 //
 // Description:
 //      Unfold
@@ -38,12 +38,12 @@ RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldSvd& rhs)
   Setup (rhs);
 }
 
-RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t tau, Int_t ntoys,
+RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm, Int_t ntoys,
                             const char* name, const char* title)
   : RooUnfold (name, title)
 {
   Setup ();
-  Setup (res, meas, tau, ntoys);
+  Setup (res, meas, kterm, ntoys);
 }
 
 RooUnfoldSvd&
@@ -61,7 +61,7 @@ RooUnfoldSvd&
 RooUnfoldSvd::Setup()
 {
   _svd= 0;
-  _tau= _ntoys= 0;
+  _kterm= _ntoys= 0;
   _meas1d= _train1d= _truth1d= 0;
   RooUnfold::Setup();
   return *this;
@@ -70,14 +70,14 @@ RooUnfoldSvd::Setup()
 RooUnfoldSvd&
 RooUnfoldSvd::Setup (const RooUnfoldSvd& rhs)
 {
-  return Setup (rhs.response(), rhs.Hmeasured(), rhs._tau, rhs._ntoys);
+  return Setup (rhs.response(), rhs.Hmeasured(), rhs._kterm, rhs._ntoys);
 }
 
 RooUnfoldSvd&
-RooUnfoldSvd::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t tau, Int_t ntoys)
+RooUnfoldSvd::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm, Int_t ntoys)
 {
   RooUnfold::Setup (res, meas);
-  _tau= tau;
+  _kterm= kterm;
   _ntoys= ntoys;
 
   _svd= new TUnfHisto (_nt, _nm);
@@ -101,12 +101,12 @@ RooUnfoldSvd::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t tau, I
   _svd->init (_meas1d, _train1d, _truth1d, _res->Hresponse(), false);
 
   _rec.ResizeTo (_nm);
-  _rec= _svd->Unfold (_tau);
+  _rec= _svd->Unfold (_kterm);
   //Get the covariance matrix for statistical uncertainties on measured spectrum
   _cov.ResizeTo (_nm, _nm);
-  _cov= _svd->GetCov (covMeas, _meas1d, _ntoys, _tau);
+  _cov= _svd->GetCov (covMeas, _meas1d, _ntoys, _kterm);
   //Get the covariance matrix for statistical uncertainties on signal MC
-  TMatrixD ucovTrain= _svd->GetMatStatCov (_ntoys, _tau);
+  TMatrixD ucovTrain= _svd->GetMatStatCov (_ntoys, _kterm);
 
   Double_t sf= (_truth1d->Integral() / _train1d->Integral()) * _meas1d->Integral();
   Double_t sf2= sf*sf;

@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.1.1.1 2007-04-04 22:52:37 adye Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.2 2008-01-23 23:27:21 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -257,7 +257,7 @@ void RooUnfoldTest (
                     Int_t    ntrain= 100000,
                     Double_t xlo=     -12.5,
                     Double_t xhi=      10.0,
-                    Int_t    regparm_in= -999,  // Bayes niter=4, SVD tau=20
+                    Int_t    regparm_in= -999,  // Bayes niter=4, SVD kterm=20
                     Int_t    ntoys_in= 1000   // SVD only
                    )
 {

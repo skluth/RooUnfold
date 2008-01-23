@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldSvd.h,v 1.1.1.1 2007-04-04 21:27:02 adye Exp $
+//      $Id: RooUnfoldSvd.h,v 1.2 2008-01-23 23:27:32 adye Exp $
 //
 // Description:
 //      Unfold
@@ -35,13 +35,13 @@ public:
   RooUnfoldSvd (const RooUnfoldSvd& rhs); // copy constructor
 
   // Special constructors
-  RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t tau= 1, Int_t ntoys= 1000,
+  RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm= 1, Int_t ntoys= 1000,
                 const char* name= 0, const char* title= 0);
 
   // Set up an existing object
   virtual RooUnfoldSvd& Clear ();
   virtual RooUnfoldSvd& Setup (const RooUnfoldSvd& rhs);
-  virtual RooUnfoldSvd& Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t tau= 1, Int_t ntoys= 1000);
+  virtual RooUnfoldSvd& Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm= 1, Int_t ntoys= 1000);
 
 protected:
 
@@ -49,7 +49,7 @@ protected:
 
   // instance variables
   TUnfHisto* _svd;
-  Int_t _tau;
+  Int_t _kterm;
   Int_t _ntoys;
 
   TH1D *_meas1d, *_train1d, *_truth1d;
