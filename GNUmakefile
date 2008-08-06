@@ -1,14 +1,11 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.4 2007-04-06 00:43:27 adye Exp $
+#      $Id: GNUmakefile,v 1.5 2008-08-06 22:16:41 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
 #
 # Instructions:
-#      o Review 'external configuration' section below
-#        to match systems compilers setup
-#
 #      o Make sure the ROOTSYS environment variable is set and points
 #        to your ROOT release, and that $ROOTSYS/bin is in your PATH.
 #
@@ -22,10 +19,11 @@
 #          (libRooUnfold.a).
 #
 # Build targets:
-#      shlib - make libRooUnfold.so (default target)
-#      lib   - make libRooUnfold.a
-#      bin   - make lib and example programs
-#      clean - delete all intermediate and final build objects
+#      shlib   - make libRooUnfold.so (default target)
+#      include - make dependency files (*.d)
+#      lib     - make libRooUnfold.a
+#      bin     - make lib and example programs
+#      clean   - delete all intermediate and final build objects
 #
 # Author List:
 #      Tim Adye <T.J.Adye@rl.ac.uk>
@@ -35,82 +33,115 @@
 #
 #===============================================================================
 
-# --- External configuration ---------------------------------
-include $(ROOTSYS)/test/Makefile.arch
-CC       = $(CXX)
-ifeq ($(CC),g++)
-CCFLAGS  = $(filter-out -Woverloaded-virtual,$(CXXFLAGS)) -Wno-deprecated -Wno-parentheses -Wno-sign-compare
-MFLAGS   = -MM -Wno-deprecated
-else
-CCFLAGS  = $(CXXFLAGS)
+# === ROOT setup ===============================================================
+-include $(ROOTSYS)/test/Makefile.arch
+ifeq ($(ROOTCONFIG),)
+ROOTCONFIG    = $(ROOTSYS)/bin/root-config
 endif
-SRCDIR   = $(CURDIR)/src/
-WORKDIR  = $(CURDIR)/tmp/$(ARCH)/
-LIBDIR   = $(CURDIR)/
-SHLIBDIR = $(CURDIR)/
-EXEDIR   = $(CURDIR)/
-EXESRC   = $(CURDIR)/examples/
-INCLUDES = -I$(SRCDIR)
-# -------------------------------------------------------------
+ifeq ($(ARCH),)
+# === This section is just in case ROOT's test/Makefile.arch didn't work =======
+out := $(shell echo "$(ROOTSYS)/test/Makefile.arch not found - trying a basic Linux config" >&2)
+ARCH          =   $(shell $(ROOTCONFIG) --arch)
+ifeq ($(ARCH),)
+out := $(shell echo "$(ROOTCONFIG) did not work - assume standard locations below $(ROOTSYS)" >&2)
+ARCH          =   $(shell uname | tr '[A-Z]' '[a-z]')
+ROOTLIBS      = -L$(ROOTSYS)/lib -lCore -lCint -lHist -lGraf -lGpad -lPostscript -lMatrix -ldl
+ROOTINCLUDES  = -I$(ROOTSYS)/include
+CXXFLAGS      =   $(ROOTINCLUDES)
+NOROOFIT      = 1
+else
+ROOTLIBS      =   $(shell $(ROOTCONFIG) --libs)
+ROOTINCLUDES  = -I$(shell $(ROOTCONFIG) --incdir)
+CXXFLAGS      =   $(shell $(ROOTCONFIG) --cflags)
+endif
+CXX           = g++
+CXXFLAGS     += -Wall -fPIC
+LD            = g++
+LDFLAGS       =
+SOFLAGS       = -shared
+ObjSuf        = o
+ExeSuf        =
+DllSuf        = so
+OutPutOpt     = -o # keep whitespace after "-o"
+else
+ROOTINCLUDES  = -I$(shell $(ROOTCONFIG) --incdir)
+endif
 
-# Internal configuration
-PACKAGE=RooUnfold
-OBJDIR=$(WORKDIR)obj/
-DEPDIR=$(WORKDIR)dep/
+# === RooUnfold directories and options ========================================
+
+CC            = $(CXX)
+ifeq ($(CC),g++)
+CCFLAGS       = $(filter-out -Woverloaded-virtual,$(CXXFLAGS)) -Wno-deprecated -Wno-parentheses -Wno-sign-compare
+MFLAGS        = -MM -Wno-deprecated
+else
+CCFLAGS       = $(CXXFLAGS)
+endif
+SRCDIR        = $(CURDIR)/src/
+WORKDIR       = $(CURDIR)/tmp/$(ARCH)/
+LIBDIR        = $(CURDIR)/
+SHLIBDIR      = $(CURDIR)/
+EXEDIR        = $(CURDIR)/
+EXESRC        = $(CURDIR)/examples/
+INCLUDES      = -I$(SRCDIR)
+
+# === Internal configuration ===================================================
+
+PACKAGE       = RooUnfold
+OBJDIR        = $(WORKDIR)obj/
+DEPDIR        = $(WORKDIR)dep/
 
 ifeq ($(NOROOFIT),)
-ifneq ($(shell root-config --has-roofit),yes)
+ifneq ($(shell $(ROOTCONFIG) --has-roofit),yes)
 out := $(shell echo "This version of ROOT does not support RooFit. We will build the test programs without it." >&2)
-NOROOFIT = 1
+NOROOFIT      = 1
 endif
 endif
 
 ifneq ($(NOROOFIT),)
-CPPFLAGS += -DNOROOFIT
+CPPFLAGS     += -DNOROOFIT
 else
-ROOFITLIBS += -lRooFit -lMinuit -lHtml
+ROOFITLIBS   += -lRooFit -lMinuit -lHtml
 endif
 
-MAIN      = $(notdir $(wildcard $(EXESRC)*.cxx))
-MAINEXE   = $(addprefix $(EXEDIR),$(patsubst %.cxx,%$(ExeSuf),$(MAIN)))
-INCLUDES += -I$(ROOTSYS)/include
-ROOTSYS  ?= ERROR_RootSysIsNotDefined
-HLIST     = $(filter-out $(SRCDIR)$(PACKAGE)_LinkDef.h,$(wildcard $(SRCDIR)*.h)) $(SRCDIR)$(PACKAGE)_LinkDef.h
-CINTFILE  = $(WORKDIR)$(PACKAGE)Cint.cxx
-CINTOBJ   = $(OBJDIR)$(PACKAGE)Cint.o
-LIBFILE   = $(LIBDIR)lib$(PACKAGE).a
-SHLIBFILE = $(SHLIBDIR)lib$(PACKAGE).$(DllSuf)
+MAIN          = $(notdir $(wildcard $(EXESRC)*.cxx))
+MAINEXE       = $(addprefix $(EXEDIR),$(patsubst %.cxx,%$(ExeSuf),$(MAIN)))
+ROOTSYS      ?= ERROR_RootSysIsNotDefined
+HLIST         = $(filter-out $(SRCDIR)$(PACKAGE)_LinkDef.h,$(wildcard $(SRCDIR)*.h)) $(SRCDIR)$(PACKAGE)_LinkDef.h
+CINTFILE      = $(WORKDIR)$(PACKAGE)Cint.cxx
+CINTOBJ       = $(OBJDIR)$(PACKAGE)Cint.o
+LIBFILE       = $(LIBDIR)lib$(PACKAGE).a
+SHLIBFILE     = $(SHLIBDIR)lib$(PACKAGE).$(DllSuf)
 
 ifneq ($(SHARED),)
-LIBS=-L$(SHLIBDIR)
-LINKLIB=$(SHLIBFILE)
-LINKLIBOPT=-l$(PACKAGE) 
+LIBS          = -L$(SHLIBDIR)
+LINKLIB       = $(SHLIBFILE)
+LINKLIBOPT    = -l$(PACKAGE)
 else
-LIBS=-L$(LIBDIR)
-LINKLIB=$(LIBFILE)
-LINKLIBOPT=-Wl,-static -l$(PACKAGE) -Wl,-Bdynamic
+LIBS          = -L$(LIBDIR)
+LINKLIB       = $(LIBFILE)
+LINKLIBOPT    = -Wl,-static -l$(PACKAGE) -Wl,-Bdynamic
 endif
 
-default : shlib
-
 # List of all object files to build
-OLIST=$(addprefix $(OBJDIR),$(patsubst %.cxx,%.o,$(notdir $(wildcard $(SRCDIR)*.cxx))))
+OLIST         = $(addprefix $(OBJDIR),$(patsubst %.cxx,%.o,$(notdir $(wildcard $(SRCDIR)*.cxx))))
 
 ifeq ($(MFLAGS),)
 
 # Can't make dependency files, so make every compilation dependent on all headers.
-HDEP=$(HLIST)
+HDEP          = $(HLIST)
 
 else
 
 # List of all dependency file to make
-DLIST=$(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(notdir $(wildcard $(SRCDIR)*.cxx $(EXESRC)*.cxx))))
+DLIST         = $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(notdir $(wildcard $(SRCDIR)*.cxx $(EXESRC)*.cxx))))
 
 ifeq ($(NOROOFIT),)
 # List of programs that use RooFit. Should only be those in $(EXESRC)
-ROOFITCLIENTS=$(patsubst $(DEPDIR)%.d,$(OBJDIR)%.o,$(shell fgrep -l '/RooGlobalFunc.h ' $(DLIST) 2>/dev/null))
+ROOFITCLIENTS = $(patsubst $(DEPDIR)%.d,$(OBJDIR)%.o,$(shell fgrep -l '/RooGlobalFunc.h ' $(DLIST) 2>/dev/null))
 endif
 endif
+
+# === Implicit rules ===========================================================
 
 # Implicit rule making all dependency Makefiles included at the end of this makefile
 $(DEPDIR)%.d : $(SRCDIR)%.cxx
@@ -118,7 +149,7 @@ $(DEPDIR)%.d : $(SRCDIR)%.cxx
 	@mkdir -p $(DEPDIR)
 	@rm -f $@
 	@set -e; \
-	 $(CC) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $< \
+	 $(CC) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $< \
 	 | sed 's,\($(notdir $*)\.o\) *:,$(OBJDIR)\1 $@ :,g' > $@; \
 	 [ -s $@ ] || rm -f $@
 
@@ -127,7 +158,7 @@ $(DEPDIR)%.d : $(EXESRC)%.cxx
 	@mkdir -p $(DEPDIR)
 	@rm -f $@
 	@set -e; \
-	 $(CC) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $< \
+	 $(CC) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $< \
 	 | sed 's,\($(notdir $*)\.o\) *:,$(OBJDIR)\1 $@ :,g' > $@; \
 	 [ -s $@ ] || rm -f $@
 
@@ -143,6 +174,10 @@ $(OBJDIR)%.o : $(EXESRC)%.cxx $(HDEP)
 	@mkdir -p $(OBJDIR)
 	@$(CC) $(CCFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
 
+
+# === Explicit rules ===========================================================
+
+default : shlib
 
 # Rule to make ROOTCINT output file
 $(CINTOBJ) : $(HLIST)
