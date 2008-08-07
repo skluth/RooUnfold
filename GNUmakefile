@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.5 2008-08-06 22:16:41 adye Exp $
+#      $Id: GNUmakefile,v 1.6 2008-08-07 01:05:51 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -17,12 +17,14 @@
 #        - Add SHARED=1 to link test executables with shared library
 #          (libRooUnfold.so). Otherwise links with static library
 #          (libRooUnfold.a).
+#        - Add ROOTBUILD=debug for debug version.
 #
 # Build targets:
 #      shlib   - make libRooUnfold.so (default target)
 #      include - make dependency files (*.d)
 #      lib     - make libRooUnfold.a
 #      bin     - make lib and example programs
+#      commands- show commands to make each type of target
 #      clean   - delete all intermediate and final build objects
 #
 # Author List:
@@ -63,6 +65,10 @@ ObjSuf        = o
 ExeSuf        =
 DllSuf        = so
 OutPutOpt     = -o # keep whitespace after "-o"
+ifneq ($(findstring debug,$(ROOTBUILD)),)
+CXXFLAGS     += -g
+LDFLAGS      += -g
+endif
 else
 ROOTINCLUDES  = -I$(shell $(ROOTCONFIG) --incdir)
 endif
@@ -100,7 +106,11 @@ endif
 ifneq ($(NOROOFIT),)
 CPPFLAGS     += -DNOROOFIT
 else
+ifneq ($(wildcard $(ROOTSYS)/lib/libRooFitCore.$(DllSuf)),)
+ROOFITLIBS   += -lRooFit -lRooFitCore -lThread -lMinuit -lHtml
+else
 ROOFITLIBS   += -lRooFit -lMinuit -lHtml
+endif
 endif
 
 MAIN          = $(notdir $(wildcard $(EXESRC)*.cxx))
@@ -213,6 +223,15 @@ include: $(DLIST)
 lib: $(LIBFILE)
 shlib: $(SHLIBFILE)
 bin: $(MAINEXE)
+
+commands :
+	@echo "Make $(DEPDIR)%.d:	$(CC) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $(SRCDIR)%.cxx | sed 's,\(%\.o\) *:,$(OBJDIR)\1 $(DEPDIR)%.d :,g' > $(DEPDIR)%.d"
+	@echo
+	@echo "Compile $(SRCDIR)%.cxx:	$(CC) $(CCFLAGS) $(CPPFLAGS) -c $(SRCDIR)%.cxx -o $(OBJDIR)%.o $(INCLUDES)"
+	@echo
+	@echo "Make $(SHLIBFILE):	$(LD) $(SOFLAGS) $(LDFLAGS) *.o $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS)"
+	@echo
+	@echo "Make executable $(EXEDIR)RooUnfoldTest$(ExeSuf):	$(LD) $(LDFLAGS) $(OBJDIR)RooUnfoldTest.o $(OutPutOpt)$(EXEDIR)RooUnfoldTest$(ExeSuf) $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(if $(findstring $<,$(ROOFITCLIENTS)),$(ROOFITLIBS))"
 
 clean :
 	rm -f $(DLIST)

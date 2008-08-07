@@ -1,7 +1,7 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.11 2008-08-06 22:16:54 adye Exp $
+$Id: History,v 1.12 2008-08-07 01:05:51 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
@@ -9,12 +9,15 @@ If you make a tag, please document it here as well.
 -------------------------------------------------------------------------
 
 Tim Adye          6-Aug-2008
+  o Get include directory from root-config --incdir as suggested by
+    Peter Waller <peter.waller@gmail.com>.
   o More robust GNUmakefile. If $ROOTSYS/test/Makefile.arch doesn't exist, it
     gets settings from root-config. If that doesn't exist, it assumes everything
     is below $ROOTSYS in the standard places. These fallbacks probably won't
     work on anything except Linux.
-  o Get include directory from root-config --incdir as suggested by
-    Peter Waller <peter.waller@gmail.com>.
+  o Use -lRooFitCore if available (seems to be needed with ROOT 5.18 Cygwin).
+  o Use gmake  ROOTBUILD=debug for debug build.
+  o Use gmake commands to see compiler options to be used.
 
 Tim Adye         23-Jan-2008 V00-01-05
   o Include missing headers for ROOT 5.16/00.
