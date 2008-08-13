@@ -1,12 +1,17 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.18 2008-08-13 18:42:27 adye Exp $
+$Id: History,v 1.19 2008-08-13 19:11:38 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye          6-Aug-2008 tja080813b
+  o Add missing include file to RooUnfoldTest.
+  o Fix for onepage==3.
+
 Tim Adye          6-Aug-2008 tja080813a
   o Removed $ROOTSYS fallback in Makefile. That wouldn't work because
     $ROOTSYS/test/Makefile.arch would have already exited.

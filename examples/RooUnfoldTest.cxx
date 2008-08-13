@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.3 2008-08-13 10:35:24 fwilson Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.4 2008-08-13 19:11:50 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -31,6 +31,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+#include "TROOT.h"
 #include "TObject.h"
 #include "TStyle.h"
 #include "TCanvas.h"
@@ -378,8 +379,8 @@ void RooUnfoldTest (
     pad2->SetPad (pad2->GetXlowNDC(), pad2->GetYlowNDC(), pad2->GetXlowNDC()+pad2->GetWNDC(), .3);
     pad1->SetGrid(1);
     pad2->SetGrid(1);
-  } else if (onepage==4)
-    canvas->Divide(1,4);
+  } else if (onepage>=3)
+    canvas->Divide(1,onepage);
   else
     canvas->SetGrid(1);
   ipad= 0;
