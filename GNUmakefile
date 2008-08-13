@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.7 2008-08-07 01:13:21 adye Exp $
+#      $Id: GNUmakefile,v 1.8 2008-08-13 18:42:27 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -44,18 +44,9 @@ ifeq ($(ARCH),)
 # === This section is just in case ROOT's test/Makefile.arch didn't work =======
 out := $(shell echo "$(ROOTSYS)/test/Makefile.arch not found - trying a basic Linux config" >&2)
 ARCH          =   $(shell $(ROOTCONFIG) --arch)
-ifeq ($(ARCH),)
-out := $(shell echo "$(ROOTCONFIG) did not work - assume standard locations below $(ROOTSYS)" >&2)
-ARCH          =   $(shell uname | tr '[A-Z]' '[a-z]')
-ROOTLIBS      = -L$(ROOTSYS)/lib -lCore -lCint -lHist -lGraf -lGpad -lPostscript -lMatrix -ldl
-ROOTINCLUDES  = -I$(ROOTSYS)/include
-CXXFLAGS      =   $(ROOTINCLUDES)
-NOROOFIT      = 1
-else
 ROOTLIBS      =   $(shell $(ROOTCONFIG) --libs)
 ROOTINCLUDES  = -I$(shell $(ROOTCONFIG) --incdir)
 CXXFLAGS      =   $(shell $(ROOTCONFIG) --cflags)
-endif
 CXX           = g++
 CXXFLAGS     += -Wall -fPIC
 LD            = g++

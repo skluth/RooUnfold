@@ -1,35 +1,39 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.17 2008-08-13 15:36:31 fwilson Exp $
+$Id: History,v 1.18 2008-08-13 18:42:27 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
-Fergus Wilson 13-Aug-08 ffw130808c
-  o Improved version of the Bayesiamn systematc error calculation.
-  o systematc error calculation no longer done during training/testing.
+Tim Adye          6-Aug-2008 tja080813a
+  o Removed $ROOTSYS fallback in Makefile. That wouldn't work because
+    $ROOTSYS/test/Makefile.arch would have already exited.
 
-Fergus Wilson 13-Aug-08 ffw130808b
-  o remember to remove debug code.
+Fergus Wilson    13-Aug-08 ffw130808c
+  o Improved version of the Bayesian systematc error calculation.
+  o Systematc error calculation no longer done during training/testing.
 
-Fergus Wilson 13-Aug-08 ffw130808a
+Fergus Wilson    13-Aug-08 ffw130808b
+  o Remember to remove debug code.
+
+Fergus Wilson    13-Aug-08 ffw130808a
   o speeded up Bayesian covariance matrix at least factor two.
 
-Fergus Wilson 13-Aug-08 ffw130808
-  o changed smear method so it now works for different x-axis ranges. 
-    Efficiency correctly goes from 1.0 at low x to 0.3 at high x; shift is 
-    10% of the range ; smearing is now 1 bin width
+Fergus Wilson    13-Aug-08 ffw130808
+  o Changed smear method so it now works for different x-axis ranges.
+    Efficiency correctly goes from 1.0 at low x to 0.3 at high x; shift is
+    10% of the range; smearing is now 1 bin width.
   o RooUnfoldTest: change colors and markers to use names rather than numbers.
     Added a pulls histogram; Draw a line at y=0 on residual plot; added simple
     checking of some command line parameters.
-  o RooUnfoldTestPdf: added a new distribution of exponential decaying 
+  o RooUnfoldTestPdf: added a new distribution of exponential decaying
     background and a resonance (i.e. Higgs-like).
-  o RooUnfoldBayesImpl : added a chi^2 method. Added 1-D smoothing. Speeded
-    up covarinace matrix
+  o RooUnfoldBayesImpl: added a chi^2 method. Added 1-D smoothing. Speeded
+    up covarinace matrix.
 
-Tim Adye          6-Aug-2008
+Tim Adye          6-Aug-2008 tja080806a
   o Get include directory from root-config --incdir as suggested by
     Peter Waller <peter.waller@gmail.com>.
   o More robust GNUmakefile. If $ROOTSYS/test/Makefile.arch doesn't exist, it
