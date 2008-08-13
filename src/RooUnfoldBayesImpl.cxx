@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------
 //
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.2 2008-08-13 10:35:37 fwilson Exp $
+//   $Id: RooUnfoldBayesImpl.cxx,v 1.3 2008-08-13 11:16:21 fwilson Exp $
 //
 // Description:
 //   Bayesian Unfolding class 
@@ -790,7 +790,7 @@ RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
   clock.Start();
   //Int_t np(0);
   for (Int_t k = 0 ; k < _nc ; k++) {
-    for (Int_t l = 0 ; l < _nc ; l++) {
+    for (Int_t l = k ; l < _nc ; l++) {
       _Vij->Set(k,l,0.0);
       Double_t temp(0), temp2(0);
       for (Int_t j = 0 ; j < _ne ; j++) {
@@ -798,21 +798,20 @@ RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
 	if (Mlj == 0) {continue;}  // skip zero elements
         Double_t Mkj = _Mij->Get(k,j);
 
-        temp += (Mkj*Mlj*effects[j]*(1-effects[j]/nbartrue));
+	Double_t ratio = effects[j]/nbartrue;
+        temp += (Mkj*Mlj*effects[j]*(1-ratio));
 
         for (Int_t i = 0 ; i < _ne ; i++) {
           if (i==j) {continue;}
           Double_t Mki = _Mij->Get(k,i);
-          temp2 += (Mki*Mlj*effects[i]*effects[j]/nbartrue);
+          temp2 += (Mki*Mlj*effects[i]*ratio);
         }
       }
 
       _Vij->Set(k,l,(temp-temp2));
-
-      //cout << "Vij " << k << " " << l << " "
-      //   << _Vij[k][l] << " " << _a2d->Get(k,l) << endl;
-
+      _Vij->Set(l,k,(temp-temp2)); // symmetric matrix
     }
+
     clock.Stop();
     if (k==1 && (_nc*_ne >= 50000)) {
       Double_t nsecs  = clock.RealTime() * _nc / 2.0;
@@ -828,6 +827,12 @@ RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
   }
   cout << endl;
 
+  for (Int_t k = 0 ; k < _nc ; k++) {
+    for (Int_t l = 0 ; l < _nc ; l++) {
+      cout << "Vij " << k << " " << l << " " << _Vij->Get(k,l) << endl;
+    }
+  }
+      
   return(1);
   // return the systematic error. This still needs to be debugged.
   cout << "getCovariance" << endl;

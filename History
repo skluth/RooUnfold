@@ -1,12 +1,15 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.14 2008-08-13 10:35:17 fwilson Exp $
+$Id: History,v 1.15 2008-08-13 11:16:14 fwilson Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+Fergus Wilson 13-Aug-08 ffw130808a
+  o speeded up Bayesian covariance matrix at least factor two.
+
 Fergus Wilson 13-Aug-08 ffw130808
   o changed smear method so it now works for different x-axis ranges. 
     Efficiency correctly goes from 1.0 at low x to 0.3 at high x; shift is 
