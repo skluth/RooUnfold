@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------
 //
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.4 2008-08-13 11:18:52 fwilson Exp $
+//   $Id: RooUnfoldBayesImpl.cxx,v 1.5 2008-08-13 15:36:35 fwilson Exp $
 //
 // Description:
 //   Bayesian Unfolding class 
@@ -20,7 +20,9 @@
 //------------------------------------------------------------------
 #include "RooUnfoldBayesImpl.h"
 
-#include <iostream>
+#include "Riostream.h"
+
+//#include <iostream>
 #include <vector>
 #include <math.h>
 
@@ -549,7 +551,8 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
 
     // chi^2 (but need to calculate error)
     // takes a verrrrrrrry long time
-    if (_nc*_ne < 50000) {getCovariance(_nEj);}
+    // only do when unfolded?
+    //if (_nc*_ne < 50000) {getCovariance(_nEj);}
 
     // so not smooth the last iteraction
     if (kiter < (iterations-1)) {
@@ -784,98 +787,126 @@ RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
   vector<Double_t> dummy;
   Double_t nbartrue = getnbarCi(effects,dummy);
 
-  // error due n(Ej)
-  // error from data
+  // error  error from data
   TStopwatch clock;
   clock.Start();
-  //Int_t np(0);
+
+  cout << "Calculating covariance due to number of measured events..." << endl;
+  Array2D *Vc0 = new Array2D(_nc,_nc); // automatically zeroed
   for (Int_t k = 0 ; k < _nc ; k++) {
     for (Int_t l = k ; l < _nc ; l++) {
-      _Vij->Set(k,l,0.0);
-      Double_t temp(0), temp2(0);
-      for (Int_t j = 0 ; j < _ne ; j++) {
-        Double_t Mlj = _Mij->Get(l,j);
-	if (Mlj == 0) {continue;}  // skip zero elements
-        Double_t Mkj = _Mij->Get(k,j);
-
-	Double_t ratio = effects[j]/nbartrue;
-        temp += (Mkj*Mlj*effects[j]*(1-ratio));
-
-        for (Int_t i = 0 ; i < _ne ; i++) {
-          if (i==j) {continue;}
-          Double_t Mki = _Mij->Get(k,i);
-          temp2 += (Mki*Mlj*effects[i]*ratio);
-        }
-      }
-
-      _Vij->Set(k,l,(temp-temp2));
-      _Vij->Set(l,k,(temp-temp2)); // symmetric matrix
-    }
-
-    clock.Stop();
-    if (k==1 && (_nc*_ne >= 50000)) {
-      Double_t nsecs  = clock.RealTime() * _nc / 2.0;
-      if (nsecs>600) {
-        Double_t nhours = nsecs / 3600.0;
-        cout << "Predicted time per iteration : " << nhours << " hours" << endl;
-      } else {
-        cout << "Predicted time per iteration : " << nsecs << " secs" << endl;
-      }
-    } else {
-      //cout << "."; np++; if(np==72) {cout << endl; np=0;}
-    }
-  }
-  cout << endl;
-
-  /*
-  for (Int_t k = 0 ; k < _nc ; k++) {
-    for (Int_t l = 0 ; l < _nc ; l++) {
-      cout << "Vij " << k << " " << l << " " << _Vij->Get(k,l) << endl;
-    }
-  }
-  */
-  
-  return(1);
-  // return the systematic error. This still needs to be debugged.
-  cout << "getCovariance" << endl;
-  // error due P(Ej|Ci)
-  // error from Monte Carlo
-  for (Int_t k = 0 ; k < _nc ; k++) {
-    for (Int_t l = 0 ; l < _nc ; l++) {
       Double_t temp(0);
-      for (Int_t j = 0 ; j < _ne ; j++) {
-        if (_nEj[j] <= 0) {continue;}
-        for (Int_t i = 0 ; i < _ne ; i++) {
-          if (_nEj[i] <= 0) {continue;}
+      for (Int_t i = 0 ; i < _ne ; i++) {
+	for (Int_t j = 0 ; j < _ne ; j++) {
+	  Double_t temp2 = _Mij->Get(i,k) * _Mij->Get(j,l) * effects[j] ;
+	  Double_t ratio = effects[j] / nbartrue;
+	  if (i==j) {
+	    temp += (temp2 * (1.0 - ratio));
+	  } else {
+	    temp -= (temp2 * ratio);
+	  }
+	} // j...
+      } // i...
+      Vc0->Set(k, l, temp);
+      Vc0->Set(l, k, temp); // symmetric matrix
+    } // l...
+  } // k...
 
-          Double_t covM(0);
-          for (Int_t r = 0 ; r < _nc ; r++) {
-            for (Int_t s = 0 ; s < _nc ; s++) {
+  clock.Stop();
+  //Double_t nsecs  = clock.RealTime();
+  
+  // error due to uncertainty on unfolding matrix M
+  Array2D *Vc1 = new Array2D(_nc,_nc);  // automatically zeroed
+  Bool_t doUnfoldSystematic = true;
+  if (doUnfoldSystematic) {
+    cout << "Calculating covariance due to unfolding matrix..." << endl;
+    
+    // Pre-compute some numbers
+    vector<Double_t> inv_nCi(_nCi);
+    Array2D *inv_npec = new Array2D(_nc,_ne);  // automatically zeroed
+    for (Int_t k = 0 ; k < _nc ; k++) {
+      if (inv_nCi[k] != 0) {inv_nCi[k] = 1.0 / inv_nCi[k];}
+      for (Int_t i = 0 ; i < _ne ; i++) {
+	if (inv_nCi[k] == 0) {continue;}
+	Double_t pec  = _Nij->Get(k,i) / _nCi[k];
+	Double_t temp = inv_nCi[k] / pec;
+	if (pec !=0) {inv_npec->Set(k,i,temp); }
+      }
+    }
+    //
+    Array2D *M_tmp = new Array2D(_nc,_ne);  // automatically zeroed
+    for (Int_t i = 0 ; i < _ne ; i++) {
+      Double_t temp(0);
+      // diagonal element
+      for (Int_t u = 0 ; u < _nc ; u++) {
+	temp = _Mij->Get(i,u) * _Mij->Get(i,u) * _efficiencyCi[u] * _efficiencyCi[u]
+	  * (inv_npec->Get(u,i) - inv_nCi[u]);
+	M_tmp->Add(i, i, temp);
+      }
+      
+      // off-diagonal element
+      for (Int_t j = i+1 ; j < _ne ; j++) {
+	for (Int_t u = 0 ; u < _nc ; u++) {
+	  temp = -1.0 * _Mij->Get(i,u) * _Mij->Get(j,u) * _efficiencyCi[u] * _efficiencyCi[u]
+	    * inv_nCi[u];
+	  M_tmp->Add(j, i, temp);
+	}
+	M_tmp->Set(i, j, M_tmp->Get(j, i)); // symmetric matrix
+      }
+    }
 
-              for (Int_t u = 0 ; u < _nc ; u++) {
-                // cov[P(E_r|C_u),P(E_s|C_u)]
-                Double_t covP(0);
-                Double_t PErCu =  _Nij->Get(u,r) / _nCi[u];
-                if (r==s) {
-                  covP = PErCu * (1.0 - PErCu) / _nCi[u];
-                } else {
-                  Double_t PEsCu = _Nij->Get(u,s) / _nCi[u];
-                  covP = -1.0 * PErCu * PEsCu / _nCi[u];
-                }
+    // now calculate covariance
+    Double_t neff_inv(0);
+    for (Int_t k = 0 ; k < _nc ; k++) {
+      (_efficiencyCi[k] != 0) ? neff_inv = inv_nCi[k]  / _efficiencyCi[k] : neff_inv = 0;
+      for (Int_t l = k ; l < _nc ; l++) {
+	for (Int_t i = 0 ; i < _ne ; i++) {
+	  for (Int_t j = 0 ; j < _ne ; j++) {
+	    Double_t covM = _Mij->Get(i,l) * inv_nCi[l] + 
+	                    _Mij->Get(j,k) * inv_nCi[k] + M_tmp->Get(j,i);
+	    if (k==l) {
+	      covM -= neff_inv;
+	      if (i==j) {covM += inv_npec->Get(k,i);}
+	    }
+	    if (i==j) { 
+	      covM -=  (_Mij->Get(i,l) * _efficiencyCi[l] * inv_npec->Get(l,i) +
+			_Mij->Get(i,k) * _efficiencyCi[k] * inv_npec->Get(k,i) );
+	    }
+	    covM +=  _Mij->Get(i,k) * _Mij->Get(j,l);
 
-                // cov[M_ki,M_lj]
-                covM = covM + (deltaM(k,i,r,u) * deltaM(l,j,s,u) * covP);
-                //cout << k << l << j << i << r << s << u << endl;
-              }  // u
-            }  // s
-          }  // r
+	    Double_t temp = effects[i] * effects[j] * covM;
+	    Vc1->Add(l, k, temp);
+	  } // j...
+	} // i...
+	Vc1->Set(k, l, Vc1->Get(l,k));
+      } // l...
+    } // k...
+  } // if (doUnfodsystematic
 
-          //_Vij[k][l] += temp;
-          _Vij->Add(k,l,temp);
-        }  // i
-      } // j
-    } // l
-  } // k
+  // to get complete covariance add together
+  // divide by nbartrue*nbartrue to get probability covariance matrix
+  Double_t nbar2 = 1.0;
+  //Double_t nbar2 = nbartrue*nbartrue;
+  for (Int_t k = 0 ; k < _nc ; k++) {
+    for (Int_t l = k ; l < _nc ; l++) {
+      Double_t temp = (Vc0->Get(k,l) + Vc1->Get(k,l)) / nbar2;
+      _Vij->Set(k,l,temp);
+      _Vij->Set(l,k,temp);
+    }
+  }  
+
+  Bool_t printCovar = false;
+  if (printCovar) {
+    cout << " k   l  Vc0(k,l)   Vc1(k,l)  _Vij(k,l)" << endl;
+    for (Int_t k = 0 ; k < _nc ; k++) {
+      for (Int_t l = 0 ; l < _nc ; l++) {
+	if (_Vij->Get(k,l) == 0) {continue;}
+	cout << setiosflags(ios::left) << setw(4) << k << setw(4) << l 
+	     << setw(11) << Vc0->Get(k,l) << setw(10) << Vc1->Get(k,l) 
+	     << setw(10)<< _Vij->Get(k,l) << endl;
+      }
+    }
+  }
 
   return(1);
 }
@@ -884,8 +915,9 @@ RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
 Double_t
 RooUnfoldBayesImpl::deltaM(Int_t k, Int_t i, Int_t r, Int_t u) const
 {
-  // Helper function for getCovariance.
-
+  // Helper function for getCovariance. Calculates derivative
+  // d M_{ki} / d P(E_r | C_u) 
+  //
   Double_t temp(0);
 
   if (_Mij->Get(k,i) == 0.0) {return(temp);}
