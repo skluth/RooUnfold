@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------
 //
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.3 2008-08-13 11:16:21 fwilson Exp $
+//   $Id: RooUnfoldBayesImpl.cxx,v 1.4 2008-08-13 11:18:52 fwilson Exp $
 //
 // Description:
 //   Bayesian Unfolding class 
@@ -827,12 +827,14 @@ RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
   }
   cout << endl;
 
+  /*
   for (Int_t k = 0 ; k < _nc ; k++) {
     for (Int_t l = 0 ; l < _nc ; l++) {
       cout << "Vij " << k << " " << l << " " << _Vij->Get(k,l) << endl;
     }
   }
-      
+  */
+  
   return(1);
   // return the systematic error. This still needs to be debugged.
   cout << "getCovariance" << endl;

@@ -1,12 +1,15 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.15 2008-08-13 11:16:14 fwilson Exp $
+$Id: History,v 1.16 2008-08-13 11:18:46 fwilson Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+Fergus Wilson 13-Aug-08 ffw130808b
+  o remember to remove debug code.
+
 Fergus Wilson 13-Aug-08 ffw130808a
   o speeded up Bayesian covariance matrix at least factor two.
 
