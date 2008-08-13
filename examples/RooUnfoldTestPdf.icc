@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdf.icc,v 1.1.1.1 2007-04-04 22:22:00 adye Exp $
+//      $Id: RooUnfoldTestPdf.icc,v 1.2 2008-08-13 10:35:24 fwilson Exp $
 //
 // Description:
 //      MC Generation routines implemented without RooFit.
@@ -15,6 +15,7 @@
 //        3: Double-sided exponential decay
 //        4: Breit-Wigner
 //        5: Double Breit-Wigner, peaking at mean-width and mean+width.
+//        6: Gaussian Resonance on exponential decay background
 //
 // Environment:
 //      Software developed for the BaBar Detector at the SLAC B-Factory.
@@ -131,6 +132,34 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
         }
       }
       return nx;
+    }
+
+    case 6: {
+      Double_t tau     = (xhi-xlo)/3.0;
+      Double_t mymean  = xlo + (xhi-xlo)*0.4;
+      Double_t mywidth = (xhi-xlo)/10.0;
+
+      Double_t resonance(0),background(0);
+      for (Int_t i= 0; i < nx; i++) {
+	resonance  = gRandom->Gaus (mymean, mywidth);
+	background = gRandom->Exp(tau);
+	x[i]= 10*resonance + background;
+      }
+      if (h) {
+        norm /= sqrt(2*pi) * mywidth;
+        for (Int_t i= 1; i<=nb; i++) {
+          Double_t z= h->GetBinCenter(i);
+	  resonance = background = 0;
+          if (fabs ((z-mymean)/mywidth) < 10.0) {
+	    resonance  = norm * exp (-0.5*(pow((z-mymean)/mywidth,2)));
+	    background = exp(z/tau);
+            h->SetBinContent(i, norm*(10*resonance + background));
+          } else {
+            h->SetBinContent(i, 0.0);
+          }
+        }
+      }
+       return nx;
     }
 
     default: {

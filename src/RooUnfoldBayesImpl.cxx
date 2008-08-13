@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------
 //
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.1.1.1 2007-04-04 21:27:25 adye Exp $
+//   $Id: RooUnfoldBayesImpl.cxx,v 1.2 2008-08-13 10:35:37 fwilson Exp $
 //
 // Description:
 //   Bayesian Unfolding class 
@@ -536,31 +536,32 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
       //      _nbartrue += nbarCi[i];
     }
 
-    _nbartrue = sum(nbarCi);
-
-    //cout << "nbartrue " << _nbartrue << endl;
-
     // new estimate of true distribution
+    _nbartrue = sum(nbarCi);
     vector<Double_t> PbarCi(nbarCi);
-    Double_t diff(0.);
+    //cout << "nbartrue " << _nbartrue << endl;
     for (UInt_t i = 0 ; i < nbarCi.size(); i++) {
       PbarCi[i] /= _nbartrue;
-      //Double_t delta = (PbarCi[i] - P0C[i])*_nbartrue;
-      //cout << "i PbarCi P0C " << i << "\t" << PbarCi[i]*_nbartrue
-      //     << "\t" << P0C[i]*_nbartrue << "\t" << _nCi[i] << "\t" << delta << endl;
-      diff += fabs(PbarCi[i] - P0C[i]);
+      cout << "i PbarCi P0C " << i 
+	   << "\t" << PbarCi[i]*_nbartrue 
+	   << "\t" << P0C[i]*_nbartrue << endl;
     }
-
-    //cout << "Difference " << diff << endl;
 
     // chi^2 (but need to calculate error)
     // takes a verrrrrrrry long time
     if (_nc*_ne < 50000) {getCovariance(_nEj);}
 
+    // so not smooth the last iteraction
+    if (kiter < (iterations-1)) {
+      if (smoothit) {smooth(PbarCi);}
+      //smooth(PbarCi);
+    }
+
+    Double_t chi2 = getChi2(PbarCi, P0C, _nbartrue);
+    cout << "Chi^2 " << chi2 << endl;
+
     // replace P0C
     P0C = PbarCi;
-
-    if (smoothit) {smooth(PbarCi);}
 
     // and repeat
   }
@@ -572,18 +573,57 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
 
 //-------------------------------------------------------------------------
 Int_t
-RooUnfoldBayesImpl::smooth(const vector<Double_t>& PbarCi) const
+RooUnfoldBayesImpl::smooth(vector<Double_t>& PbarCi, Double_t nevts) const
 {
-  // Smooth unfolding distributions
+  // Smooth unfolding distribution. PbarCi is the array of proababilities 
+  // to be smoothed PbarCi; nevts is the numbers of events 
+  // (needed to calculate suitable errors for the smearing).
+  // PbarCi is returned with the smoothed distribution.
+
   if (_ndims != 1) {
     cout << "Smoothing only implemented for 1-D distributions" << endl;
     return (0);
   } else {
-    cout << "Smoothing not yet implemented ! continuing." << endl;
+    //cout << "Smoothing." << endl;
+    TH1D* h = new TH1D("hsmooth", "Smoothed Causes", _nt[0], _tmin[0], _tmax[0]);
+    // pack histogram
+    for (Int_t i = 0 ; i < _nc ; i++) {
+      h->SetBinContent(i+1, PbarCi[i]);
+      // calculate error on probability
+      Double_t error = sqrt (fabs (PbarCi[i]/nevts));
+      h->SetBinError(i+1, error);
+    }
+    h->Smooth(); // smooth the histogram
+    // unpack histogram into array
+    for (Int_t i = 0 ; i < _nc ; i++) {
+      PbarCi[i] = h->GetBinContent(i+1);
+    }
+    delete h;
   }
 
-  //TH1D *h = new TH1D(PbarCi);
   return(1);
+}
+
+//-------------------------------------------------------------------------
+Double_t
+RooUnfoldBayesImpl::getChi2(const vector<Double_t> prob1, 
+			    const vector<Double_t> prob2, 
+			    Double_t nevents) const
+{
+  // calculate the chi^2. prob1 and prob2 are the probabilities
+  // and nevents is the number of events used to calculate the probabilities
+  Double_t chi2(0);
+  //cout << "chi2 " << prob1.size() << " " << prob2.size() << " " << nevents << endl;
+  for (UInt_t i = 0 ; i < prob1.size() ; i++) {
+    Double_t psum  = (prob1[i] + prob2[i])*nevents;
+    Double_t pdiff = (prob1[i] - prob2[i])*nevents;
+    if (psum > 1) {
+      chi2 = chi2 + (pdiff*pdiff)/psum;
+    } else {
+      chi2 = chi2 + (pdiff*pdiff);
+    }
+  }
+  return(chi2);
 }
 
 //-------------------------------------------------------------------------
@@ -748,13 +788,14 @@ RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
   // error from data
   TStopwatch clock;
   clock.Start();
-  Int_t np(0);
+  //Int_t np(0);
   for (Int_t k = 0 ; k < _nc ; k++) {
     for (Int_t l = 0 ; l < _nc ; l++) {
       _Vij->Set(k,l,0.0);
       Double_t temp(0), temp2(0);
       for (Int_t j = 0 ; j < _ne ; j++) {
         Double_t Mlj = _Mij->Get(l,j);
+	if (Mlj == 0) {continue;}  // skip zero elements
         Double_t Mkj = _Mij->Get(k,j);
 
         temp += (Mkj*Mlj*effects[j]*(1-effects[j]/nbartrue));
@@ -782,7 +823,7 @@ RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
         cout << "Predicted time per iteration : " << nsecs << " secs" << endl;
       }
     } else {
-      cout << "."; np++; if(np==72) {cout << endl; np=0;}
+      //cout << "."; np++; if(np==72) {cout << endl; np=0;}
     }
   }
   cout << endl;

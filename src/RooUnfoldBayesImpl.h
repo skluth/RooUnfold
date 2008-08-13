@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------
 //
-// $Id: RooUnfoldBayesImpl.h,v 1.1.1.1 2007-04-04 21:27:02 adye Exp $
+// $Id: RooUnfoldBayesImpl.h,v 1.2 2008-08-13 10:35:37 fwilson Exp $
 //
 //--------------------------------------------------------------------
 #ifndef ROOUNFOLDBAYESIMPL_HH
@@ -33,11 +33,14 @@ private:
   Int_t getCovariance(const vector<Double_t>& effects);
   Int_t getCovarianceBinByBin(vector<Double_t> effects);
   Double_t sum(const vector<Double_t>& x) const;
-  Int_t smooth(const vector<Double_t>& PbarCi) const;
+  Int_t smooth(vector<Double_t>& PbarCi, Double_t nevts = 1) const;
   Bool_t proceed() const;
   Double_t getnbarCi(const vector<Double_t>& effects,
                      vector<Double_t> &causes) const;
   Int_t getBin(Int_t index, Bool_t truth, vector<Int_t>& coords) const;
+  Double_t getChi2(const vector<Double_t> prob1, 
+		   const vector<Double_t> prob2, 
+		   Double_t nevents) const;
 
   // Truth variables
   vector<Int_t> _nt;      // number of bins per dimension
