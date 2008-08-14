@@ -1,13 +1,18 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.20 2008-08-14 09:19:54 fwilson Exp $
+$Id: History,v 1.21 2008-08-14 14:05:17 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
-Fergus Wilson    14-Aug-08 ffw140808a
+
+Tim Adye         14-Aug-2008 tja080814a
+  o Fix inefficiency simulation in RooUnfoldTest. Now goes from 0.3 at low x
+    to 1 at high x as before.
+
+Fergus Wilson    14-Aug-2008 ffw140808a
   o Bayesian Systematc error calculation due to unfolding matrix 
     disabled while investigate normalisation.
 
@@ -19,17 +24,18 @@ Tim Adye          6-Aug-2008 tja080813a
   o Removed $ROOTSYS fallback in Makefile. That wouldn't work because
     $ROOTSYS/test/Makefile.arch would have already exited.
 
-Fergus Wilson    13-Aug-08 ffw130808c
+Fergus Wilson    13-Aug-2008 ffw130808c
   o Improved version of the Bayesian systematc error calculation.
-  o Bayesian Systematc error calculation no longer done during training/testing.
+  o Bayesian Systematic error calculation no longer done during
+    training/testing.
 
-Fergus Wilson    13-Aug-08 ffw130808b
+Fergus Wilson    13-Aug-2008 ffw130808b
   o Remember to remove debug code.
 
-Fergus Wilson    13-Aug-08 ffw130808a
+Fergus Wilson    13-Aug-2008 ffw130808a
   o speeded up Bayesian covariance matrix at least factor two.
 
-Fergus Wilson    13-Aug-08 ffw130808
+Fergus Wilson    13-Aug-2008 ffw130808
   o Changed smear method so it now works for different x-axis ranges.
     Efficiency correctly goes from 1.0 at low x to 0.3 at high x; shift is
     10% of the range; smearing is now 1 bin width.

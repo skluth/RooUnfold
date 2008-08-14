@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.4 2008-08-13 19:11:50 adye Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.5 2008-08-14 14:05:23 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -114,27 +114,24 @@ Double_t smear (Double_t xt, Int_t nb, Double_t xlo, Double_t xhi)
 {
   // Apply a gaussian smearing, systematic translation, and an efficiency
   // function to the truth.
-  // Efficiency: 100% at x=xlo, 30% at x=xhi.
+  // Efficiency: 30% at x=xlo, 100% at x=xhi.
   // Shift = -10% of the range.
   // Smear = half a bin width.
 
+  const Double_t ylo= 0.3, yhi= 1.0, relshift= -0.1, binsmear= 0.5;
   Double_t xwidth =  (xhi-xlo);
 
-  const Double_t yint = 1.0;
-  Double_t slope = (0.3-1.0) / (xhi-xlo);
-  Double_t yeff= yint + slope * xt;  // efficiency
-  if (yeff>1) {yeff=1.0;}
-  if (yeff<0) {yeff=0.0;}
+  Double_t slope = (yhi-ylo) / xwidth;
+  Double_t yeff= ylo + slope * (xt-xlo);  // efficiency
 
   // MC test: if random number > eff then reject
   if (gRandom->Rndm() > yeff)  return cutdummy;
   if (nosmear) return xt;   // bin-by-bin correction can't handle bias and smearing
 
-  Double_t xshift = -xwidth * 0.1;           // shift
-  Double_t xsigma = xwidth*0.5 /(float)nb ;  // smear sigma
+  Double_t xshift = xwidth*relshift;                 // shift
+  Double_t xsigma = xwidth*binsmear / Double_t(nb);  // smear sigma
 
   Double_t xsmear= gRandom->Gaus(xshift, xsigma);     // bias and smear
-  //Double_t xsmear= gRandom->Gaus(-2.5,0.2);     // bias and smear
   //cout << "SMEAR " << xt << " " << xsmear << " " << xwidth << " " << xsigma << endl;
   return xt+xsmear;
 }
