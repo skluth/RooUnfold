@@ -1,12 +1,15 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.19 2008-08-13 19:11:38 adye Exp $
+$Id: History,v 1.20 2008-08-14 09:19:54 fwilson Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+Fergus Wilson    14-Aug-08 ffw140808a
+  o Bayesian Systematc error calculation due to unfolding matrix 
+    disabled while investigate normalisation.
 
 Tim Adye          6-Aug-2008 tja080813b
   o Add missing include file to RooUnfoldTest.
@@ -18,7 +21,7 @@ Tim Adye          6-Aug-2008 tja080813a
 
 Fergus Wilson    13-Aug-08 ffw130808c
   o Improved version of the Bayesian systematc error calculation.
-  o Systematc error calculation no longer done during training/testing.
+  o Bayesian Systematc error calculation no longer done during training/testing.
 
 Fergus Wilson    13-Aug-08 ffw130808b
   o Remember to remove debug code.

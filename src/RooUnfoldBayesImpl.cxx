@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------
 //
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.5 2008-08-13 15:36:35 fwilson Exp $
+//   $Id: RooUnfoldBayesImpl.cxx,v 1.6 2008-08-14 09:20:02 fwilson Exp $
 //
 // Description:
 //   Bayesian Unfolding class 
@@ -790,34 +790,37 @@ RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
   // error  error from data
   TStopwatch clock;
   clock.Start();
-
   cout << "Calculating covariance due to number of measured events..." << endl;
-  Array2D *Vc0 = new Array2D(_nc,_nc); // automatically zeroed
+  Array2D *Vc0 = new Array2D(_nc,_nc);
   for (Int_t k = 0 ; k < _nc ; k++) {
     for (Int_t l = k ; l < _nc ; l++) {
-      Double_t temp(0);
-      for (Int_t i = 0 ; i < _ne ; i++) {
-	for (Int_t j = 0 ; j < _ne ; j++) {
-	  Double_t temp2 = _Mij->Get(i,k) * _Mij->Get(j,l) * effects[j] ;
-	  Double_t ratio = effects[j] / nbartrue;
-	  if (i==j) {
-	    temp += (temp2 * (1.0 - ratio));
-	  } else {
-	    temp -= (temp2 * ratio);
-	  }
-	} // j...
-      } // i...
-      Vc0->Set(k, l, temp);
-      Vc0->Set(l, k, temp); // symmetric matrix
-    } // l...
-  } // k...
+      Vc0->Set(k,l,0.0);
+      Double_t temp(0), temp2(0);
+      for (Int_t j = 0 ; j < _ne ; j++) {
+        Double_t Mlj = _Mij->Get(l,j);
+	if (Mlj == 0) {continue;}  // skip zero elements
+        Double_t Mkj = _Mij->Get(k,j);
 
+	Double_t ratio = effects[j]/nbartrue;
+        temp += (Mkj*Mlj*effects[j]*(1-ratio));
+
+        for (Int_t i = 0 ; i < _ne ; i++) {
+          if (i==j) {continue;}
+          Double_t Mki = _Mij->Get(k,i);
+          temp2 += (Mki*Mlj*effects[i]*ratio);
+        }
+      }
+
+      Vc0->Set(k,l,(temp-temp2));
+      Vc0->Set(l,k,(temp-temp2)); // symmetric matrix
+    }
+  }
   clock.Stop();
   //Double_t nsecs  = clock.RealTime();
   
   // error due to uncertainty on unfolding matrix M
   Array2D *Vc1 = new Array2D(_nc,_nc);  // automatically zeroed
-  Bool_t doUnfoldSystematic = true;
+  Bool_t doUnfoldSystematic = false;
   if (doUnfoldSystematic) {
     cout << "Calculating covariance due to unfolding matrix..." << endl;
     
@@ -885,11 +888,11 @@ RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
 
   // to get complete covariance add together
   // divide by nbartrue*nbartrue to get probability covariance matrix
-  Double_t nbar2 = 1.0;
-  //Double_t nbar2 = nbartrue*nbartrue;
+  //Double_t nbar2 = 1.0;
+  Double_t nbar2 = nbartrue*nbartrue;
   for (Int_t k = 0 ; k < _nc ; k++) {
     for (Int_t l = k ; l < _nc ; l++) {
-      Double_t temp = (Vc0->Get(k,l) + Vc1->Get(k,l)) / nbar2;
+      Double_t temp = (Vc0->Get(k,l) + Vc1->Get(k,l) / nbar2) ;
       _Vij->Set(k,l,temp);
       _Vij->Set(l,k,temp);
     }
