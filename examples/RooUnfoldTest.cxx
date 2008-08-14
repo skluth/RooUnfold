@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.5 2008-08-14 14:05:23 adye Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.6 2008-08-14 14:14:12 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -95,8 +95,8 @@ void setmax (TH1* h,
              const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
              const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0)
 {
-  // return the maximum y value of upto 7 histograms
-  // Add  10% to correct for display of error bars
+  // Get the maximum y value of up to 7 histograms
+  // Add 10% to match behaviour of ROOT's automatic scaling
   Double_t maxval= h1 ? h1->GetMaximum() : -DBL_MAX;
   if (h2 && h2->GetMaximum() > maxval) maxval= h2->GetMaximum();
   if (h3 && h3->GetMaximum() > maxval) maxval= h3->GetMaximum();
