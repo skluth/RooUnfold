@@ -1,12 +1,15 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.21 2008-08-14 14:05:17 adye Exp $
+$Id: History,v 1.22 2008-08-19 16:52:49 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye         19-Aug-2008 V00-01-06
+  o Copy updated setmax (just name and comments) and smear to RooUnfoldTest2D.
 
 Tim Adye         14-Aug-2008 tja080814a
   o Fix inefficiency simulation in RooUnfoldTest. Now goes from 0.3 at low x

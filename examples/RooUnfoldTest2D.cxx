@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldTest2D.cxx,v 1.3 2008-01-23 23:27:21 adye Exp $
+//      $Id: RooUnfoldTest2D.cxx,v 1.4 2008-08-19 16:53:24 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -80,10 +80,12 @@ Int_t regparm= 0, ntoys= 0;
 // Set histogram Y-axis display range
 //==============================================================================
 
-void setmax2 (TH1* h,
-              const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
-              const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0)
+void setmax (TH1* h,
+             const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
+             const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0)
 {
+  // Get the maximum y value of up to 7 histograms
+  // Add 10% to match behaviour of ROOT's automatic scaling
   Double_t maxval= h1 ? h1->GetMaximum() : -DBL_MAX;
   if (h2 && h2->GetMaximum() > maxval) maxval= h2->GetMaximum();
   if (h3 && h3->GetMaximum() > maxval) maxval= h3->GetMaximum();
@@ -97,21 +99,37 @@ void setmax2 (TH1* h,
 // Gaussian smearing, systematic translation, and variable inefficiency
 //==============================================================================
 
-Double_t smear (Double_t xt)
+Double_t smear (Double_t xt, Int_t nb, Double_t xlo, Double_t xhi)
 {
-  Double_t xeff= 0.7 + (1.0-0.7)/20*(xt+10.0);  // efficiency
-  Double_t x= gRandom->Rndm();
-  if (x>xeff)  return cutdummy;
+  // Apply a gaussian smearing, systematic translation, and an efficiency
+  // function to the truth.
+  // Efficiency: 70% at x=xlo, 100% at x=xhi.
+  // Shift = -10% of the range.
+  // Smear = half a bin width.
+
+  const Double_t ylo= 0.7, yhi= 1.0, relshift= -0.1, binsmear= 0.5;
+  Double_t xwidth =  (xhi-xlo);
+
+  Double_t slope = (yhi-ylo) / xwidth;
+  Double_t yeff= ylo + slope * (xt-xlo);  // efficiency
+
+  // MC test: if random number > eff then reject
+  if (gRandom->Rndm() > yeff)  return cutdummy;
   if (nosmear) return xt;   // bin-by-bin correction can't handle bias and smearing
-  Double_t xsmear= gRandom->Gaus(-2.5,0.2);     // bias and smear
+
+  Double_t xshift = xwidth*relshift;                 // shift
+  Double_t xsigma = xwidth*binsmear / Double_t(nb);  // smear sigma
+
+  Double_t xsmear= gRandom->Gaus(xshift, xsigma);     // bias and smear
+  //cout << "SMEAR " << xt << " " << xsmear << " " << xwidth << " " << xsigma << endl;
   return xt+xsmear;
 }
 
-Bool_t smear (Double_t& x, Double_t& y)
+Bool_t smear (Double_t& x, Double_t& y, Int_t nx, Double_t xlo, Double_t xhi, Int_t ny, Double_t ylo, Double_t yhi)
 {
-  Double_t xs= smear (x);
+  Double_t xs= smear (x, nx, xlo, xhi);
   if (xs==cutdummy) return false;
-  Double_t ys= smear (y);
+  Double_t ys= smear (y, ny, ylo, yhi);
   if (ys==cutdummy) return false;
   if (nosmear) {
     x= xs;
@@ -161,7 +179,7 @@ Int_t Train2 (Int_t fxtrain, Int_t fytrain, Int_t nb, Int_t ntrain,
     hTrainTrue2->Fill (xt, yt);
 
     Double_t x= xt, y= yt;
-    if (smear (x, y)) {
+    if (smear (x, y, nb, xlo, xhi, nb, ylo, yhi)) {
       hTrain2 ->Fill (x, y);
       response->Fill (x, y, xt, yt);
     } else {
@@ -174,8 +192,8 @@ Int_t Train2 (Int_t fxtrain, Int_t fytrain, Int_t nb, Int_t ntrain,
   hTrainX=     hTrain2    ->ProjectionX("Training Measured X");
   hTrainY=     hTrain2    ->ProjectionY("Training Measured Y");
 
-  setmax2 (hTrainTrueX, hPDFx, hTrainX);
-  setmax2 (hTrainTrueY, hPDFy, hTrainY);
+  setmax (hTrainTrueX, hPDFx, hTrainX);
+  setmax (hTrainTrueY, hPDFy, hTrainY);
 
   canvas->cd(1);
   hTrainTrueX->Draw();
@@ -223,7 +241,7 @@ Int_t Test2 (Int_t fxtest, Int_t fytest, Int_t nb, Int_t ntest,
     Double_t xt= xtest[i], yt= ytest[i];
     hTrue2->Fill (xt, yt);
     Double_t x= xt, y= yt;
-    if (smear (x, y))
+    if (smear (x, y, nb, xlo, xhi, nb, ylo, yhi))
       hMeas2->Fill (x, y);
   }
 
@@ -258,8 +276,8 @@ void Unfold2 (Int_t method, Int_t nb, Double_t xlo, Double_t xhi, Double_t ylo, 
   hRecoX->SetMarkerStyle(8);
   hRecoY->SetMarkerStyle(8);
 
-  setmax2 (hTrueX, hTestPDFx, hMeasX, hRecoX);
-  setmax2 (hTrueY, hTestPDFy, hMeasY, hRecoY);
+  setmax (hTrueX, hTestPDFx, hMeasX, hRecoX);
+  setmax (hTrueY, hTestPDFy, hMeasY, hRecoY);
 
   canvas->cd(3);
   hTrueX   ->Draw();
