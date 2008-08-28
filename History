@@ -1,12 +1,18 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.22 2008-08-19 16:52:49 adye Exp $
+$Id: History,v 1.23 2008-08-28 21:04:43 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye         28-Aug-2008 tja080828a
+  *** At the moment, fix makes things worse! 2D case doesn't work.
+  o New routine RooUnfold::GetBin returns global bin for multi-dimensional
+    histogram corresponding to vector index. This fixes RooUnfold::Hreco and
+    RooUnfoldBayes::H2VD. Bug reported by Peter Waller.
 
 Tim Adye         19-Aug-2008 V00-01-06
   o Copy updated setmax (just name and comments) and smear to RooUnfoldTest2D.
@@ -52,7 +58,7 @@ Fergus Wilson    13-Aug-2008 ffw130808
 
 Tim Adye          6-Aug-2008 tja080806a
   o Get include directory from root-config --incdir as suggested by
-    Peter Waller <peter.waller@gmail.com>.
+    Peter Waller.
   o More robust GNUmakefile. If $ROOTSYS/test/Makefile.arch doesn't exist, it
     gets settings from root-config. If that doesn't exist, it assumes everything
     is below $ROOTSYS in the standard places. These fallbacks probably won't

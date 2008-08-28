@@ -1,4 +1,4 @@
-RooUnfold             $Id: README,v 1.5 2007-04-05 22:40:13 adye Exp $
+RooUnfold             $Id: README,v 1.6 2008-08-28 21:04:58 adye Exp $
 =========
 
 RooUnfold is a framework for unfolding (AKA "deconvolution" or "unsmearing").
@@ -10,6 +10,8 @@ RooUnfold requires ROOT 4 or later.
 For the latest version and documentation, see here
 
   http://hepunx.rl.ac.uk/~adye/software/unfold/RooUnfold.html
+
+RooUnfold was written by Tim Adye, Kerstin Tackmann, and Fergus Wilson.
 
 Building
 ========

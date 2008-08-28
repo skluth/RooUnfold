@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.1.1.1 2007-04-04 21:27:02 adye Exp $
+//      $Id: RooUnfold.h,v 1.2 2008-08-28 21:05:44 adye Exp $
 //
 // Description:
 //      Unfold
@@ -16,12 +16,12 @@
 #ifndef ROOUNFOLD_HH
 #define ROOUNFOLD_HH
 
+#include "TH1.h"
 #include "TNamed.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
 
 class RooUnfoldResponse;
-class TH1;
 
 class RooUnfold : public TNamed {
 
@@ -59,10 +59,13 @@ public:
 
   virtual Int_t                    verbose() const;
 
+  static Int_t                     GetBin (const TH1* h, size_t i);
+
 protected:
 
   virtual RooUnfold& Setup();
   virtual void SetNameTitleDefault();
+  static Int_t                     GetBinDim (const TH1* h, size_t i);
 
   // instance variables
 
@@ -93,5 +96,7 @@ inline const TVectorD&          RooUnfold::Vreco()     const { return _rec;     
 inline TVectorD&                RooUnfold::Vreco()           { return _rec;     }
 inline const TMatrixD&          RooUnfold::Ereco()     const { return _cov;     }
 inline TMatrixD&                RooUnfold::Ereco()           { return _cov;     }
+
+inline Int_t                    RooUnfold::GetBin (const TH1* h, size_t i) { return (h->GetDimension()<2) ? i+1 : GetBinDim(h,i); }
 
 #endif

@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.1.1.1 2007-04-04 21:27:25 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.2 2008-08-28 21:05:45 adye Exp $
 //
 // Description:
 //      Unfold
@@ -135,7 +135,7 @@ RooUnfoldBayes::H2VD (const TH1* h, vector<Double_t>& v)
   if (!h) return v;
   Int_t nb= v.size();
   for (size_t i= 0; i < nb; i++)
-    v[i]= h->GetBinContent (i+1);
+    v[i]= h->GetBinContent (GetBin(h,i));
   return v;
 }
 
