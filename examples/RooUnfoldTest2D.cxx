@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldTest2D.cxx,v 1.4 2008-08-19 16:53:24 adye Exp $
+//      $Id: RooUnfoldTest2D.cxx,v 1.5 2009-05-22 17:10:15 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -269,7 +269,12 @@ void Unfold2 (Int_t method, Int_t nb, Double_t xlo, Double_t xhi, Double_t ylo, 
     default: cerr << "Unknown RooUnfold method " << method << endl;
              return;
   }
-  hReco2= (TH2D*) unfold->Hreco();
+  bool withError= !(dynamic_cast<RooUnfoldBayes*>(unfold) && nb > 20);   // nb^4<160000 (causes*effects, where each is nb*nb)
+  if (!withError) {
+    cerr << "Don't calculate errors - this would take too long ("
+         << nb*nb << " bins - should be no more than 400 for Bayes algorithm)" << endl;
+  }
+  hReco2= (TH2D*) unfold->Hreco(withError);
 
   hRecoX= hReco2->ProjectionX("Reconstructed X", -1, -1, "E");
   hRecoY= hReco2->ProjectionY("Reconstructed Y", -1, -1, "E");

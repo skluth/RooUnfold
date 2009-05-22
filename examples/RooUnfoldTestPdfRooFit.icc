@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.3 2008-08-13 10:35:24 fwilson Exp $
+//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.4 2009-05-22 17:10:15 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented with RooFit.
@@ -71,11 +71,13 @@ Int_t mcgenpdf (const RooAbsPdf& pdf, RooRealVar& xvar, Int_t nx,
     Int_t nb= h->GetNbinsX();
     RooArgSet a(xvar);
     Double_t norm= nx * ((h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin()) / nb) / pdf.getNorm (a);
+    cout << "fill histogram " << h->GetName() << ": norm=" << norm << ", offset=" << offset << endl;
     for (Int_t i= 1; i<=nb; i++) {
       xvar.setVal (h->GetBinCenter(i)-offset);
       Double_t v= pdf.getVal();
       h->SetBinContent(i, norm*v);
     }
+    cout << "histogram " << h->GetName() << " filled" << endl;
   }
   delete ds;
   return ngen;
@@ -88,7 +90,8 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
 {
   using namespace RooFit;
 
-  RooRealVar xvar("xvar","xvar",xlo,xhi);
+  Double_t offset= (fpdf==3 ? mean : 0.0);
+  RooRealVar xvar("xvar","xvar",xlo-offset,xhi-offset);
   switch (fpdf) {
 
     case 1: {
@@ -110,7 +113,7 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
                        xvar, nx, x, h);
     }
 
-    case 3: {
+    case 3: {   // NB. xvar limits offset by mean above
       RooRealVar p21("p21","tau",width);
       RooTruthModel dectm("dectm","decay truth model",xvar);
       return mcgenpdf (RooDecay("pdf","decay",xvar,p21,dectm,RooDecay::DoubleSided),

@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.2 2008-08-28 21:05:43 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.3 2009-05-22 17:10:20 adye Exp $
 //
 // Description:
 //      Unfold
@@ -75,6 +75,7 @@ RooUnfold::Setup()
   _meas= 0;
   _nm= _nt= 0;
   _verbose= 1;
+  _haveCov= false;
   return *this;
 }
 
@@ -100,33 +101,22 @@ RooUnfold::SetNameTitleDefault()
   if (s[0] == '\0') SetTitle (_res->GetTitle());
 }
 
-Int_t
-RooUnfold::GetBinDim (const TH1* h, size_t i)
-{
-  Int_t nx= h->GetNbinsX();
-  if (h->GetDimension() == 2) {
-//  cout << i << " -> " << "(" << i%nx+1 << "," << i/nx+1 << ")" << endl;
-    return h->GetBin (i%nx+1, i/nx+1);
-  }
-  if (h->GetDimension() == 3) {
-    Int_t ny= h->GetNbinsY();
-//  cout << i << " -> " << "(" << i%nx+1 << "," << (i/nx)%ny+1 << "," << i/(nx*ny)+1 << ")" << endl;
-    return h->GetBin (i%nx+1, (i/nx)%ny+1, i/(nx*ny)+1);
-  }
-  return i+1;   // not used: 1D handled by inline GetBin(), don't support >3D.
-}
-
 TH1*
 RooUnfold::Hreco (Bool_t withError) const
 {
   TH1* reco= (TH1*) _res->Htruth()->Clone();
   reco->Reset();
   reco->SetNameTitle (GetName(), GetTitle());
+  if (withError && !_haveCov) GetCov();
   for (size_t i= 0; i < _nt; i++) {
-    Int_t j= GetBin(reco, i);
+    Int_t j= RooUnfoldResponse::GetBin(reco, i);
     reco->SetBinContent (j,             _rec(i));
     if (withError)
       reco->SetBinError (j, sqrt (fabs (_cov(i,i))));
   }
   return reco;
+}
+
+void RooUnfold::GetCov() const {
+  _haveCov= true;
 }

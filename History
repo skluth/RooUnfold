@@ -1,12 +1,26 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.23 2008-08-28 21:04:43 adye Exp $
+$Id: History,v 1.24 2009-05-22 17:09:59 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye         22-May-2009 V00-01-07
+Tim Adye         10-Oct-2008
+  o Don't calculate covariance matrix unless required. This can be a slow
+    operation for the Bayes algorithm. RooUnfoldBayesImpl does not call
+    getCovariance after unfolding - now done automatically in RooUnfoldBayes.
+  o Fix conversion of multi-dimensional distributions to 1D (for use in response
+    matrix and in Bayes algorithm). Under/overflow bins are ignored.
+    RooUnfoldResponse::GetBin and FindBin convert from and to a vector index.
+  o Fix RooUnfoldTestPdfRooFit's double-sided exponential distribution.
+    No longer gives warnings about out-of-range values.
+  o RooUnfoldTest2D only calculates errors with the Bayes algorithm
+    for <=25 bins. It takes a long time for more bins (goes as the 4th power
+    of the number of bins).
 
 Tim Adye         28-Aug-2008 tja080828a
   *** At the moment, fix makes things worse! 2D case doesn't work.

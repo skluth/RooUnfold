@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.3 2008-01-23 23:06:14 adye Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.4 2009-05-22 17:10:20 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -200,7 +200,7 @@ RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t xt, Double_t yt)
   if (_cached) ClearCache();
   ((TH2D*)_mes)->Fill (xr, yr);
   ((TH2D*)_tru)->Fill (xt, yt);
-  return _res->Fill (Double_t(_mes->FindBin (xr, yr))-.5, Double_t(_tru->FindBin (xt, yt))-.5);
+  return _res->Fill (Double_t(FindBin (_mes, xr, yr))+.5, Double_t(FindBin (_tru, xt, yt))+.5);
 }
 
 Int_t
@@ -211,7 +211,55 @@ RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t zr, Double_t xt, Dou
   if (_cached) ClearCache();
   ((TH3D*)_mes)->Fill (xr, yr, zr);
   ((TH3D*)_tru)->Fill (xt, yt, zt);
-  return _res->Fill (Double_t(_mes->FindBin (xr, yr, zt))-.5, Double_t(_tru->FindBin (xt, yt, zt))-.5);
+  return _res->Fill (Double_t(FindBin (_mes, xr, yr, zt))+.5, Double_t(FindBin (_tru, xt, yt, zt))+.5);
+}
+
+Int_t
+RooUnfoldResponse::FindBin(const TH1* h, Double_t x, Double_t y)
+{
+  Int_t nx=   h->GetNbinsX();
+  Int_t ny=   h->GetNbinsY();
+  Int_t binx= h->GetXaxis()->FindBin(x) - 1;
+  if (binx <  0)  return -1;
+  if (binx >= nx) return nx*ny;
+  Int_t biny= h->GetYaxis()->FindBin(y) - 1;
+  if (biny <  0)  return -1;
+  if (biny >= ny) return nx*ny;
+  return binx + nx*biny;
+}
+
+Int_t
+RooUnfoldResponse::FindBin(const TH1* h, Double_t x, Double_t y, Double_t z)
+{
+  Int_t nx=   h->GetNbinsX();
+  Int_t ny=   h->GetNbinsY();
+  Int_t nz=   h->GetNbinsZ();
+  Int_t binx= h->GetXaxis()->FindBin(x) - 1;
+  if (binx <  0)  return -1;
+  if (binx >= nx) return nx*ny*nz;
+  Int_t biny= h->GetYaxis()->FindBin(y) - 1;
+  if (biny <  0)  return -1;
+  if (biny >= ny) return nx*ny*nz;
+  Int_t binz= h->GetZaxis()->FindBin(z) - 1;
+  if (binz <  0)  return -1;
+  if (binz >= nz) return nx*ny*nz;
+  return binx + nx*(biny + ny*binz);
+}
+
+Int_t
+RooUnfoldResponse::GetBinDim (const TH1* h, size_t i)
+{
+  Int_t nx= h->GetNbinsX();
+  if (h->GetDimension() == 2) {
+//  cout << i << " -> " << "(" << i%nx+1 << "," << i/nx+1 << ")" << endl;
+    return h->GetBin (i%nx+1, i/nx+1);
+  }
+  if (h->GetDimension() == 3) {
+    Int_t ny= h->GetNbinsY();
+//  cout << i << " -> " << "(" << i%nx+1 << "," << (i/nx)%ny+1 << "," << i/(nx*ny)+1 << ")" << endl;
+    return h->GetBin (i%nx+1, (i/nx)%ny+1, i/(nx*ny)+1);
+  }
+  return i+1;   // not used: 1D handled by inline GetBin(), don't support >3D.
 }
 
 Int_t
@@ -246,9 +294,10 @@ RooUnfoldResponse::H2H1D(const TH1* h, Int_t nb)
 {
   if (h->GetDimension() == 1) return (TH1D*) h->Clone();
   TH1D* h1d= new TH1D(h->GetName(), h->GetTitle(), nb, 0.0, 1.0);
-  for (size_t i= 1; i <= nb; i++) {
-    h1d->SetBinContent (i, h->GetBinContent (i));
-    h1d->SetBinError   (i, h->GetBinError   (i));
+  for (size_t i= 0; i < nb; i++) {
+    Int_t j= GetBin (h, i);  // don't bother with under/overflow bins
+    h1d->SetBinContent (i+1, h->GetBinContent (j));
+    h1d->SetBinError   (i+1, h->GetBinError   (j));
   }
   return h1d;
 }

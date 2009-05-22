@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------
 //
-// $Id: RooUnfoldBayesImpl.h,v 1.2 2008-08-13 10:35:37 fwilson Exp $
+// $Id: RooUnfoldBayesImpl.h,v 1.3 2009-05-22 17:10:20 adye Exp $
 //
 //--------------------------------------------------------------------
 #ifndef ROOUNFOLDBAYESIMPL_HH
@@ -30,8 +30,6 @@ private:
   Int_t getRecoBin (Double_t x, Double_t y=0.0, Double_t z=0.0) const;
   Int_t getBin     (Double_t x, Double_t xmin, Double_t xmax, Int_t nx) const;
   Double_t deltaM  (Int_t k, Int_t i, Int_t r, Int_t u) const;
-  Int_t getCovariance(const vector<Double_t>& effects);
-  Int_t getCovarianceBinByBin(vector<Double_t> effects);
   Double_t sum(const vector<Double_t>& x) const;
   Int_t smooth(vector<Double_t>& PbarCi, Double_t nevts = 1) const;
   Bool_t proceed() const;
@@ -122,6 +120,8 @@ private:
   Int_t unfold(vector<Double_t>& causes); // unfold vector of causes after training
   Int_t unfoldBinByBin(vector<Double_t>& causes); // unfold vector of causes after training
 
+  Int_t getCovariance();
+  Int_t getCovarianceBinByBin();
   Double_t getError(); // Estimated error on number of unfolded events
 
   // returns histogram of unfolded causes

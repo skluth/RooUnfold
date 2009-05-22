@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------
 //
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.6 2008-08-14 09:20:02 fwilson Exp $
+//   $Id: RooUnfoldBayesImpl.cxx,v 1.7 2009-05-22 17:10:20 adye Exp $
 //
 // Description:
 //   Bayesian Unfolding class 
@@ -552,7 +552,7 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
     // chi^2 (but need to calculate error)
     // takes a verrrrrrrry long time
     // only do when unfolded?
-    //if (_nc*_ne < 50000) {getCovariance(_nEj);}
+    //if (_nc*_ne < 50000) {getCovariance();}
 
     // so not smooth the last iteraction
     if (kiter < (iterations-1)) {
@@ -757,8 +757,11 @@ RooUnfoldBayesImpl::trainBinByBin(Bool_t smoothit)
 
 //-------------------------------------------------------------------------
 Int_t
-RooUnfoldBayesImpl::getCovarianceBinByBin(const vector<Double_t> effects)
+RooUnfoldBayesImpl::getCovarianceBinByBin()
 {
+  const vector<Double_t>& effects= _nEstj;
+  // Calculate error
+
   // Create the covariance matrix for Bin by Bin
 
   // Unfolded = effects * Truth / Generated
@@ -774,13 +777,15 @@ RooUnfoldBayesImpl::getCovarianceBinByBin(const vector<Double_t> effects)
       _Vij->Set(k, l, variance);
     }
   }  
+  _nCausesError = getError();
   return(1);
 }
 
 //-------------------------------------------------------------------------
 Int_t
-RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
+RooUnfoldBayesImpl::getCovariance()
 {
+  const vector<Double_t>& effects= _nEstj;
   // Create the covariance matrix
   if (_nc*_ne >= 50000) 
     cout << "getCovariance (this takes some time with many bins)." << endl;
@@ -911,6 +916,7 @@ RooUnfoldBayesImpl::getCovariance(const vector<Double_t>& effects)
     }
   }
 
+  _nCausesError = getError();
   return(1);
 }
 
@@ -1054,10 +1060,6 @@ RooUnfoldBayesImpl::unfold(vector<Double_t>& causes)
   _causes.clear();
   _causes = causes;
 
-  // Calculate error
-  if  (_nc*_ne < 50000) {getCovariance(_nEstj);}
-  _nCausesError = getError();
-
   return(1);
 }
 
@@ -1073,10 +1075,6 @@ RooUnfoldBayesImpl::unfoldBinByBin(vector<Double_t>& causes)
   _ncauses = getnbarCi(_nEstj, causes);
   _causes.clear();
   _causes = causes;
-
-  // Calculate error
-  getCovarianceBinByBin(_nEstj);
-  _nCausesError = getError();
 
   return(1);
 }

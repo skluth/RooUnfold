@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.h,v 1.1.1.1 2007-04-04 21:27:02 adye Exp $
+//      $Id: RooUnfoldBinByBin.h,v 1.2 2009-05-22 17:10:20 adye Exp $
 //
 // Description:
 //      Unfold
@@ -33,6 +33,10 @@ public:
   virtual RooUnfoldBinByBin& Setup (const RooUnfoldResponse* res, const TH1* meas, Bool_t smoothit= false);
 
 protected:
+
+  virtual Int_t unfold (vector<Double_t>& causes);
+  virtual Int_t train();
+  virtual Int_t getCovariance() const;
 
   // instance variables
 

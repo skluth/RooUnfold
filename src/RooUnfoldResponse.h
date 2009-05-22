@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.1.1.1 2007-04-04 21:27:02 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.2 2009-05-22 17:10:20 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -18,9 +18,8 @@
 
 #include "TNamed.h"
 #include "TMatrixD.h"
+#include "TH1.h"
 
-class TH1;
-class TH1D;
 class TH2D;
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,0,0)
 #include "TVectorDfwd.h"
@@ -98,12 +97,17 @@ public:
   static TVectorD* H2VE (const TH1*  h, Int_t nb);
   static TMatrixD* H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm= 0);
   static TMatrixD* H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm= 0);
+  static Int_t   GetBin (const TH1*  h, size_t i);  // vector index (0..nx*ny-1) -> multi-dimensional histogram global bin number (0..(nx+2)*(ny+2)-1) skipping under/overflow bins
 
 private:
 
   virtual RooUnfoldResponse& Setup();
   virtual void ClearCache();
   virtual void SetNameTitleDefault();
+
+  static Int_t FindBin   (const TH1* h, Double_t x, Double_t y);
+  static Int_t FindBin   (const TH1* h, Double_t x, Double_t y, Double_t z);
+  static Int_t GetBinDim (const TH1* h, size_t i);
 
   // instance variables
 
@@ -157,5 +161,6 @@ inline const TMatrixD& RooUnfoldResponse::Mresponse()         const { if (!_mRes
 inline const TMatrixD& RooUnfoldResponse::Eresponse()         const { if (!_eRes) _cached= _eRes= H2ME (_res, _nm, _nt, _tru); return *_eRes; }
 
 inline Double_t RooUnfoldResponse::operator() (Int_t r, Int_t t) const { return Mresponse()(r,t); }
+inline Int_t    RooUnfoldResponse::GetBin (const TH1* h, size_t i) { return (h->GetDimension()<2) ? i+1 : GetBinDim(h,i); }
 
 #endif

@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBayes.h,v 1.1.1.1 2007-04-04 21:27:02 adye Exp $
+//      $Id: RooUnfoldBayes.h,v 1.2 2009-05-22 17:10:20 adye Exp $
 //
 // Description:
 //      Unfold
@@ -39,7 +39,7 @@ public:
 
   // Special constructors
   RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, Int_t niter= 4, Bool_t smoothit= false,
-                     const char* name= 0, const char* title= 0);
+                  const char* name= 0, const char* title= 0);
 
   // Set up an existing object
   virtual RooUnfoldBayes& Clear ();
@@ -56,6 +56,10 @@ public:
 protected:
 
   virtual RooUnfoldBayes& Setup();
+  virtual Int_t unfold (vector<Double_t>& causes);
+  virtual Int_t train();
+  virtual Int_t getCovariance() const;
+  virtual void GetCov() const;  // actually updates mutable _cov
 
   // instance variables
   RooUnfoldBayesImpl* _bayes;

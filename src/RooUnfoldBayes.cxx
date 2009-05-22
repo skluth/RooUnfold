@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.2 2008-08-28 21:05:45 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.3 2009-05-22 17:10:20 adye Exp $
 //
 // Description:
 //      Unfold
@@ -110,7 +110,16 @@ RooUnfoldBayes::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t nite
 
   _rec.ResizeTo (_nm);
   VD2V (causes, _rec);
+  _haveCov= false;
+
+  return *this;
+}
+
+void
+RooUnfoldBayes::GetCov() const
+{
   _cov.ResizeTo (_nm, _nm);
+  getCovariance();
   if (_bayes->error() != 0.0) {
     AD2M (_bayes->covariance(), _cov);
   } else {
@@ -118,9 +127,13 @@ RooUnfoldBayes::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t nite
     for (Int_t i= 0; i < _nm; i++)
       _cov(i,i)= sqrt (fabs (_rec(i)));
   }
-
-  return *this;
+  _haveCov= true;
 }
+
+// routines that can be overridden by RooUnfoldBinByBin.
+Int_t RooUnfoldBayes::unfold (vector<Double_t>& causes) { return _bayes->unfold (causes);           }
+Int_t RooUnfoldBayes::train()                           { return _bayes->train (_niter, _smoothit); }
+Int_t RooUnfoldBayes::getCovariance() const             { return _bayes->getCovariance();           }
 
 void
 RooUnfoldBayes::Print(Option_t* o) const
@@ -135,7 +148,7 @@ RooUnfoldBayes::H2VD (const TH1* h, vector<Double_t>& v)
   if (!h) return v;
   Int_t nb= v.size();
   for (size_t i= 0; i < nb; i++)
-    v[i]= h->GetBinContent (GetBin(h,i));
+    v[i]= h->GetBinContent (RooUnfoldResponse::GetBin(h,i));
   return v;
 }
 

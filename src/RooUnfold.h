@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.2 2008-08-28 21:05:44 adye Exp $
+//      $Id: RooUnfold.h,v 1.3 2009-05-22 17:10:20 adye Exp $
 //
 // Description:
 //      Unfold
@@ -16,11 +16,11 @@
 #ifndef ROOUNFOLD_HH
 #define ROOUNFOLD_HH
 
-#include "TH1.h"
 #include "TNamed.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
 
+class TH1;
 class RooUnfoldResponse;
 
 class RooUnfold : public TNamed {
@@ -59,23 +59,22 @@ public:
 
   virtual Int_t                    verbose() const;
 
-  static Int_t                     GetBin (const TH1* h, size_t i);
-
 protected:
 
   virtual RooUnfold& Setup();
   virtual void SetNameTitleDefault();
-  static Int_t                     GetBinDim (const TH1* h, size_t i);
+  virtual void GetCov() const;  // actually updates mutable _cov
 
   // instance variables
 
   Int_t _verbose;  // Debug print level
   Int_t _nm;   // Total number of measured bins
   Int_t _nt;   // Total number of truth    bins
+  mutable Bool_t _haveCov;
   const RooUnfoldResponse* _res;   // Response matrix (not owned)
   const TH1* _meas;                // Measured distribution (not owned)
   TVectorD _rec;  // Reconstructed distribution
-  TMatrixD _cov;  // Reconstructed distribution covariance
+  mutable TMatrixD _cov;  // Reconstructed distribution covariance
 
 public:
 
@@ -94,9 +93,7 @@ inline const RooUnfoldResponse* RooUnfold::response()  const { return _res;     
 inline const TH1*               RooUnfold::Hmeasured() const { return _meas;    }
 inline const TVectorD&          RooUnfold::Vreco()     const { return _rec;     }
 inline TVectorD&                RooUnfold::Vreco()           { return _rec;     }
-inline const TMatrixD&          RooUnfold::Ereco()     const { return _cov;     }
-inline TMatrixD&                RooUnfold::Ereco()           { return _cov;     }
-
-inline Int_t                    RooUnfold::GetBin (const TH1* h, size_t i) { return (h->GetDimension()<2) ? i+1 : GetBinDim(h,i); }
+inline const TMatrixD&          RooUnfold::Ereco()     const { if (!_haveCov) GetCov(); return _cov; }
+inline TMatrixD&                RooUnfold::Ereco()           { if (!_haveCov) GetCov(); return _cov; }
 
 #endif
