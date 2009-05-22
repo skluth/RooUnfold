@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.2 2009-05-22 17:10:20 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.3 2009-05-22 19:02:37 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -97,7 +97,10 @@ public:
   static TVectorD* H2VE (const TH1*  h, Int_t nb);
   static TMatrixD* H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm= 0);
   static TMatrixD* H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm= 0);
+  static void      V2H  (const TVectorD& v, TH1* h, Int_t nb);
   static Int_t   GetBin (const TH1*  h, size_t i);  // vector index (0..nx*ny-1) -> multi-dimensional histogram global bin number (0..(nx+2)*(ny+2)-1) skipping under/overflow bins
+
+  TH1* ApplyToTruth (const TH1* truth= 0, const char* name= "AppliedResponse") const; // If argument is 0, applies itself to its own truth
 
 private:
 

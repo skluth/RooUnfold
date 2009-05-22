@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.4 2009-05-22 17:10:20 adye Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.5 2009-05-22 19:02:37 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -313,6 +313,14 @@ RooUnfoldResponse::H2V  (const TH1* h, Int_t nb)
   return v;
 }
 
+void
+RooUnfoldResponse::V2H (const TVectorD& v, TH1* h, Int_t nb)
+{
+  for (size_t i= 0; i < nb; i++) {
+    h->SetBinContent (i+1, v(i));
+  }
+}
+
 TVectorD*
 RooUnfoldResponse::H2VE (const TH1* h, Int_t nb)
 {
@@ -364,6 +372,42 @@ RooUnfoldResponse::H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm)
   }
   return m;
 }
+
+// Apply the response matrix to the truth
+// Errors not set, since we assume original truth has no errors
+TH1*
+RooUnfoldResponse::ApplyToTruth (const TH1* truth, const char* name) const
+{
+  if (!Htruth()) return 0;  // Needed for checking binning if nothing else
+
+  // If no truth histogram input, use training truth
+  // If truth histogram input, make sure its binning is correct
+  TVectorD* resultvect;
+  if (truth) {
+    if (truth->GetNbinsX() != _tru->GetNbinsX() ||
+        truth->GetNbinsY() != _tru->GetNbinsY() ||
+        truth->GetNbinsZ() != _tru->GetNbinsZ())
+      cerr << "Warning: RooUnfoldResponse::ApplyToTruth truth histogram is a different size ("
+           << (truth->GetNbinsX() * truth->GetNbinsY() * truth->GetNbinsZ()) << " bins) or shape from response matrix truth ("
+           << ( _tru->GetNbinsX() *  _tru->GetNbinsY() *  _tru->GetNbinsZ()) << " bins)" << endl;
+    resultvect= H2V (truth, GetNbinsTruth());
+    if (!resultvect) return 0;
+  } else {
+    resultvect= new TVectorD (Vtruth());
+  }
+
+  (*resultvect) *= Mresponse();   // v= A*v
+
+  // Turn results vector into properly binned histogram
+  TH1* result= (TH1*) Hmeasured()->Clone (name);
+  result->SetTitle (name);
+  result->Reset();
+  V2H (*resultvect, result, GetNbinsMeasured());
+  delete resultvect;
+  return result;
+}
+
+
 
 void
 RooUnfoldResponse::SetNameTitleDefault()

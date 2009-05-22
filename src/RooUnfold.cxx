@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.3 2009-05-22 17:10:20 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.4 2009-05-22 19:02:37 adye Exp $
 //
 // Description:
 //      Unfold
@@ -104,9 +104,9 @@ RooUnfold::SetNameTitleDefault()
 TH1*
 RooUnfold::Hreco (Bool_t withError) const
 {
-  TH1* reco= (TH1*) _res->Htruth()->Clone();
+  TH1* reco= (TH1*) _res->Htruth()->Clone(GetName());
   reco->Reset();
-  reco->SetNameTitle (GetName(), GetTitle());
+  reco->SetTitle (GetTitle());
   if (withError && !_haveCov) GetCov();
   for (size_t i= 0; i < _nt; i++) {
     Int_t j= RooUnfoldResponse::GetBin(reco, i);
