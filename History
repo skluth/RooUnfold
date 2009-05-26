@@ -1,12 +1,16 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.25 2009-05-22 19:02:33 adye Exp $
+$Id: History,v 1.26 2009-05-26 18:24:25 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye         26-May-2009 tja090526a
+  o RooUnfoldResponse::Fill() and Miss() fix for variable binning in 1D case.
+    Use case highlighted by Seth Zenz.
 
 Tim Adye         22-May-2009 V00-01-08
   o Add RooUnfoldResponse::ApplyToTruth based on idea and code from
@@ -27,7 +31,6 @@ Tim Adye         10-Oct-2008
     of the number of bins).
 
 Tim Adye         28-Aug-2008 tja080828a
-  *** At the moment, fix makes things worse! 2D case doesn't work.
   o New routine RooUnfold::GetBin returns global bin for multi-dimensional
     histogram corresponding to vector index. This fixes RooUnfold::Hreco and
     RooUnfoldBayes::H2VD. Bug reported by Peter Waller.

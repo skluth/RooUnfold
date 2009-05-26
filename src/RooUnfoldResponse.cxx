@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.5 2009-05-22 19:02:37 adye Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.6 2009-05-26 18:24:29 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -125,6 +125,13 @@ RooUnfoldResponse::Setup (Int_t nm, Double_t mlo, Double_t mhi, Int_t nt, Double
   return *this;
 }
 
+void
+RooUnfoldResponse::ReplaceAxis (TObject* hist, TAxis* dest, const TAxis* source)
+{
+  source->Copy (*dest);
+  dest->SetParent (hist);
+}
+
 RooUnfoldResponse&
 RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
 {
@@ -139,9 +146,9 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
   _tdim= _tru->GetDimension();
   _nm= _mes->GetNbinsX() * _mes->GetNbinsY() * _mes->GetNbinsZ();
   _nt= _tru->GetNbinsX() * _tru->GetNbinsY() * _tru->GetNbinsZ();
-  _res= new TH2D (GetName(), GetTitle(),
-                  _nm, _mdim==1 ? _mes->GetXaxis()->GetXmin() : 0.0, _mdim==1 ? _mes->GetXaxis()->GetXmax() : Double_t(_nm),
-                  _nt, _tdim==1 ? _tru->GetXaxis()->GetXmin() : 0.0, _tdim==1 ? _tru->GetXaxis()->GetXmax() : Double_t(_nt));
+  _res= new TH2D (GetName(), GetTitle(), _nm, 0.0, Double_t(_nm), _nt, 0.0, Double_t(_nt));
+  if (_mdim==1) ReplaceAxis (_res, _res->GetXaxis(), _mes->GetXaxis());
+  if (_tdim==1) ReplaceAxis (_res, _res->GetYaxis(), _tru->GetXaxis());
   TH1::AddDirectory (oldstat);
   SetNameTitleDefault();
   return *this;

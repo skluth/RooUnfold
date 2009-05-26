@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.3 2009-05-22 19:02:37 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.4 2009-05-26 18:24:29 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -111,6 +111,7 @@ private:
   static Int_t FindBin   (const TH1* h, Double_t x, Double_t y);
   static Int_t FindBin   (const TH1* h, Double_t x, Double_t y, Double_t z);
   static Int_t GetBinDim (const TH1* h, size_t i);
+  static void ReplaceAxis(TObject* hist, TAxis* axis, const TAxis* source);
 
   // instance variables
 
