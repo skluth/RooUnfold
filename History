@@ -1,12 +1,16 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.26 2009-05-26 18:24:25 adye Exp $
+$Id: History,v 1.27 2009-05-27 15:36:30 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye         26-May-2009 tja090527a
+  o Allow weight to be specified with RooUnfoldResponse::Fill() and Miss().
+    Defaults to 1.0, so no change if not specified.
 
 Tim Adye         26-May-2009 tja090526a
   o RooUnfoldResponse::Fill() and Miss() fix for variable binning in 1D case.

@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.4 2009-05-26 18:24:29 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.5 2009-05-27 15:36:34 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -58,13 +58,14 @@ public:
 
   // Fill with training data
 
-  virtual Int_t Fill (Double_t xr, Double_t xt);  // Fill 1D Response Matrix
-  virtual Int_t Fill (Double_t xr, Double_t yr, Double_t xt, Double_t yt);  // Fill 2D Response Matrix
-  virtual Int_t Fill (Double_t xr, Double_t yr, Double_t zr, Double_t xt, Double_t yt, Double_t zt);  // Fill 3D Response Matrix
+  virtual Int_t Fill (Double_t xr, Double_t xt, Double_t w= 1.0);  // Fill 1D Response Matrix
+  virtual Int_t Fill (Double_t xr, Double_t yr, Double_t xt, Double_t yt, Double_t w= 1.0);  // Fill 2D Response Matrix
+  virtual Int_t Fill (Double_t xr, Double_t yr, Double_t zr, Double_t xt, Double_t yt, Double_t zt, Double_t w= 1.0);  // Fill 3D Response Matrix
 
-  virtual Int_t Miss (Double_t xt);  // Fill missed event into 1D Response Matrix
-  virtual Int_t Miss (Double_t xt, Double_t yt);  // Fill missed event into 2D Response Matrix
-  virtual Int_t Miss (Double_t xt, Double_t yt, Double_t zt);  // Fill missed event into 3D Response Matrix
+          Int_t Miss (Double_t xt);  // Fill missed event into 1D Response Matrix
+          Int_t Miss (Double_t xt, Double_t w);  // Fill missed event into 1D (with weight) or 2D Response Matrix
+          Int_t Miss (Double_t xt, Double_t yt, Double_t w);  // Fill missed event into 2D (with weight) or 3D Response Matrix
+  virtual Int_t Miss (Double_t xt, Double_t yt, Double_t zt, Double_t w);  // Fill missed event into 3D Response Matrix
 
   // Accessors
 
@@ -107,6 +108,8 @@ private:
   virtual RooUnfoldResponse& Setup();
   virtual void ClearCache();
   virtual void SetNameTitleDefault();
+  virtual Int_t Miss1D (Double_t xt, Double_t w= 1.0);  // Fill missed event into 1D Response Matrix (with weight)
+  virtual Int_t Miss2D (Double_t xt, Double_t yt, Double_t w= 1.0);  // Fill missed event into 2D Response Matrix (with weight)
 
   static Int_t FindBin   (const TH1* h, Double_t x, Double_t y);
   static Int_t FindBin   (const TH1* h, Double_t x, Double_t y, Double_t z);
@@ -166,5 +169,9 @@ inline const TMatrixD& RooUnfoldResponse::Eresponse()         const { if (!_eRes
 
 inline Double_t RooUnfoldResponse::operator() (Int_t r, Int_t t) const { return Mresponse()(r,t); }
 inline Int_t    RooUnfoldResponse::GetBin (const TH1* h, size_t i) { return (h->GetDimension()<2) ? i+1 : GetBinDim(h,i); }
+
+inline Int_t RooUnfoldResponse::Miss (Double_t xt)                          { return                                Miss1D(xt);      }
+inline Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t w)              { return _mdim==2 ? Miss2D(xt,w) :      Miss1D(xt,w);    }
+inline Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t yt, Double_t w) { return _mdim==3 ? Miss(xt,yt,w,1.0) : Miss2D(xt,yt,w); }
 
 #endif

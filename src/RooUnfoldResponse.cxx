@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.6 2009-05-26 18:24:29 adye Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.7 2009-05-27 15:36:34 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -189,36 +189,36 @@ RooUnfoldResponse::ClearCache()
 }
 
 Int_t
-RooUnfoldResponse::Fill (Double_t xr, Double_t xt)
+RooUnfoldResponse::Fill (Double_t xr, Double_t xt, Double_t w)
 {
   assert (_mes != 0 && _tru != 0);
   assert (_mdim==1 && _tdim==1);
   if (_cached) ClearCache();
-  ((TH1D*)_mes)->Fill (xr);
-  ((TH1D*)_tru)->Fill (xt);
-  return _res->Fill (xr, xt);
+  ((TH1D*)_mes)->Fill (xr, w);
+  ((TH1D*)_tru)->Fill (xt, w);
+  return _res->Fill (xr, xt, w);
 }
 
 Int_t
-RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t xt, Double_t yt)
+RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t xt, Double_t yt, Double_t w)
 {
   assert (_mes != 0 && _tru != 0);
   assert (_mdim==2 && _tdim==2);
   if (_cached) ClearCache();
-  ((TH2D*)_mes)->Fill (xr, yr);
-  ((TH2D*)_tru)->Fill (xt, yt);
-  return _res->Fill (Double_t(FindBin (_mes, xr, yr))+.5, Double_t(FindBin (_tru, xt, yt))+.5);
+  ((TH2D*)_mes)->Fill (xr, yr, w);
+  ((TH2D*)_tru)->Fill (xt, yt, w);
+  return _res->Fill (Double_t(FindBin (_mes, xr, yr))+.5, Double_t(FindBin (_tru, xt, yt))+.5, w);
 }
 
 Int_t
-RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t zr, Double_t xt, Double_t yt, Double_t zt)
+RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t zr, Double_t xt, Double_t yt, Double_t zt, Double_t w)
 {
   assert (_mes != 0 && _tru != 0);
   assert (_mdim==3 && _tdim==3);
   if (_cached) ClearCache();
-  ((TH3D*)_mes)->Fill (xr, yr, zr);
-  ((TH3D*)_tru)->Fill (xt, yt, zt);
-  return _res->Fill (Double_t(FindBin (_mes, xr, yr, zt))+.5, Double_t(FindBin (_tru, xt, yt, zt))+.5);
+  ((TH3D*)_mes)->Fill (xr, yr, zr, w);
+  ((TH3D*)_tru)->Fill (xt, yt, zt, w);
+  return _res->Fill (Double_t(FindBin (_mes, xr, yr, zt))+.5, Double_t(FindBin (_tru, xt, yt, zt))+.5, w);
 }
 
 Int_t
@@ -270,30 +270,30 @@ RooUnfoldResponse::GetBinDim (const TH1* h, size_t i)
 }
 
 Int_t
-RooUnfoldResponse::Miss (Double_t xt)
+RooUnfoldResponse::Miss1D (Double_t xt, Double_t w)
 {
   assert (_tru != 0);
   assert (_mdim==1 && _tdim==1);
   if (_cached) ClearCache();
-  return ((TH1D*)_tru)->Fill (xt);
+  return ((TH1D*)_tru)->Fill (xt, w);
 }
 
 Int_t
-RooUnfoldResponse::Miss (Double_t xt, Double_t yt)
+RooUnfoldResponse::Miss2D (Double_t xt, Double_t yt, Double_t w)
 {
   assert (_tru != 0);
   assert (_mdim==2 && _tdim==2);
   if (_cached) ClearCache();
-  return ((TH2D*)_tru)->Fill (xt, yt);
+  return ((TH2D*)_tru)->Fill (xt, yt, w);
 }
 
 Int_t
-RooUnfoldResponse::Miss (Double_t xt, Double_t yt, Double_t zt)
+RooUnfoldResponse::Miss (Double_t xt, Double_t yt, Double_t zt, Double_t w)
 {
   assert (_tru != 0);
   assert (_mdim==3 && _tdim==3);
   if (_cached) ClearCache();
-  return ((TH3D*)_tru)->Fill (xt, yt, zt);
+  return ((TH3D*)_tru)->Fill (xt, yt, zt, w);
 }
 
 TH1D*
