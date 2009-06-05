@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.6 2008-08-14 14:14:12 adye Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.7 2009-06-05 22:43:35 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -25,11 +25,9 @@
 
 #include <cfloat>
 #if !defined(__CINT__) || defined(__MAKECINT__)
-#include <math.h>
+#include <cmath>
 #include <iostream>
-using std::cout;
-using std::cerr;
-using std::endl;
+#include <sstream>
 
 #include "TROOT.h"
 #include "TObject.h"
@@ -59,6 +57,15 @@ using std::endl;
 #include "RooUnfoldTestPdfRooFit.icc"
 #else
 #include "RooUnfoldTestPdf.icc"
+#endif
+
+#if !defined(__CINT__) || defined(__MAKECINT__)
+using std::fabs;
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::setw;
+using std::setprecision;
 #endif
 
 //==============================================================================
@@ -140,7 +147,7 @@ Double_t smear (Double_t xt, Int_t nb, Double_t xlo, Double_t xhi)
 // Train unfolding algorithm
 //==============================================================================
 
-Int_t Train (Int_t ftrain, Int_t nb, Int_t ntrain, Double_t xlo, Double_t xhi)
+Int_t Train (Int_t ftrain, Int_t nm, Int_t nt, Int_t ntrain, Double_t xlo, Double_t xhi)
 {
   const Int_t nbPDF= 500;
   TVectorD xtrue(ntrain);
@@ -148,22 +155,22 @@ Int_t Train (Int_t ftrain, Int_t nb, Int_t ntrain, Double_t xlo, Double_t xhi)
   hPDF->SetLineColor(kGreen);
   hPDF->SetLineWidth(2);
   if (!RooUnfoldTestPdf (ftrain, ntrain, xlo, xhi, xtrue, hPDF)) return 0;
-  hPDF->Scale (nbPDF/Double_t(nb));
+  hPDF->Scale (nbPDF/Double_t(nt));
 
 
-  hTrainTrue= new TH1D ("traintrue", "Training Truth", nb, xlo, xhi);
+  hTrainTrue= new TH1D ("traintrue", "Training Truth", nt, xlo, xhi);
   hTrainTrue->SetLineColor(kBlue);
-  hTrain= new TH1D ("train", "Training Measured", nb, xlo, xhi);
+  hTrain= new TH1D ("train", "Training Measured", nm, xlo, xhi);
   hTrain->SetLineColor(kRed);
-  hResmat= new TH2D ("resmat", "Response Matrix", nb, xlo, xhi, nb, xlo, xhi);
+  hResmat= new TH2D ("resmat", "Response Matrix", nm, xlo, xhi, nt, xlo, xhi);
 
-  response->Setup (nb, xlo, xhi);
+  response->Setup (nm, xlo, xhi, nt, xlo, xhi);
   //  response->Setup (hTrain, hTrainTrue);
 
   for (Int_t i= 0; i<ntrain; i++) {
     Double_t xt= xtrue[i];
     hTrainTrue->Fill (xt);
-    Double_t x= smear (xt, nb, xlo, xhi);
+    Double_t x= smear (xt, nt, xlo, xhi);
     if (x!=cutdummy) {
       hTrain ->Fill (x);
       hResmat->Fill  (x, xt);
@@ -191,7 +198,7 @@ Int_t Train (Int_t ftrain, Int_t nb, Int_t ntrain, Double_t xlo, Double_t xhi)
 // Test distribution
 //==============================================================================
 
-Int_t Test (Int_t ftest, Int_t nb, Int_t ntest, Double_t xlo, Double_t xhi)
+Int_t Test (Int_t ftest, Int_t nm, Int_t nt, Int_t ntest, Double_t xlo, Double_t xhi)
 {
   const Int_t nbPDF= 500;
   TVectorD xtest(ntest);
@@ -199,16 +206,16 @@ Int_t Test (Int_t ftest, Int_t nb, Int_t ntest, Double_t xlo, Double_t xhi)
   hTestPDF->SetLineColor(kGreen); // green
   hTestPDF->SetLineWidth(2);
   if (!RooUnfoldTestPdf (ftest, ntest, xlo, xhi, xtest, hTestPDF, 1.0, 2.0)) return 0;
-  hTestPDF->Scale (nbPDF/Double_t(nb));
+  hTestPDF->Scale (nbPDF/Double_t(nt));
 
-  hTrue= new TH1D ("true", "Test Truth", nb, xlo, xhi);
+  hTrue= new TH1D ("true", "Test Truth", nt, xlo, xhi);
   hTrue->SetLineColor(kBlue); // Blue
-  hMeas= new TH1D ("meas", "Test Measured", nb, xlo, xhi);
+  hMeas= new TH1D ("meas", "Test Measured", nm, xlo, xhi);
   hMeas->SetLineColor(kRed); // Red
   for (Int_t i=0; i<ntest ; i++) {
     Double_t xt= xtest[i];
     hTrue->Fill(xt);
-    Double_t x = smear (xt, nb, xlo, xhi);
+    Double_t x = smear (xt, nt, xlo, xhi);
     if (x!=cutdummy)
       hMeas->Fill(x);
   }
@@ -220,7 +227,7 @@ Int_t Test (Int_t ftest, Int_t nb, Int_t ntest, Double_t xlo, Double_t xhi)
 // Unfold
 //==============================================================================
 
-void Unfold (Int_t method, Int_t nb, Double_t xlo, Double_t xhi)
+void Unfold (Int_t method, Int_t nm, Int_t nt, Double_t xlo, Double_t xhi)
 {
   switch (method) {
     case 1:  unfold= new RooUnfoldBayes    (response, hMeas, regparm);
@@ -251,10 +258,10 @@ void Unfold (Int_t method, Int_t nb, Double_t xlo, Double_t xhi)
   // don't include that twice when calculating residuals.
   hTrue0= (TH1D*) hTrue->Clone();
   hTrue0->SetNameTitle("true0", "Truth with zero errors");
-  for (Int_t i = 0 ; i <= nb+1 ; i++)
+  for (Int_t i = 0 ; i <= nt+1 ; i++)
     hTrue0->SetBinError (i, 0.0);
 
-  hRes= new TH1D ("reco-true", "Residuals", nb, xlo, xhi);
+  hRes= new TH1D ("reco-true", "Residuals", nt, xlo, xhi);
   hRes->SetMarkerStyle(kFullDotLarge);
   hRes->Sumw2();
   hRes->Add (hTrue0, hReco, -1, 1);
@@ -263,38 +270,79 @@ void Unfold (Int_t method, Int_t nb, Double_t xlo, Double_t xhi)
   if (!onepage || onepage >= 2) {
     hRes->Draw();
     TLine l; // draw a line at y=0;
-    l.DrawLine(hRes->GetBinLowEdge(1), 0.0, hRes->GetBinLowEdge(nb+1), 0.0);
+    l.DrawLine(hRes->GetBinLowEdge(1), 0.0, hRes->GetBinLowEdge(nt+1), 0.0);
     //   canvas->Update();
   }
 
   // how about doing some pulls
-  Double_t ypull(0);
-  hPulls = new TH1D ("pulls", "Pulls", nb, xlo, xhi);
+  hPulls = new TH1D ("pulls", "Pulls", nt, xlo, xhi);
   const Double_t MAXPULL = 5.0;
-  for (Int_t i = 0 ; i <= nb; i++) {
+  Double_t chi2= 0.0;
+  Int_t ndf= 0;
+
+#if !defined(__CINT__) || defined(__MAKECINT__)
+  // cint doesn't know about setw() etc, so we don't bother with this table in cint
+  std::ostringstream fmt;
+  fmt.copyfmt (cout);
+  cout << "=========================================================" << endl
+       << setw(3) << ""      << setw(9) << "Train" << setw(9) << "Train"    << setw(9) << "Test"  << setw(9) << "Unfolded" << setw(9) << "Diff" << setw(9) << "Pull" << endl
+       << setw(3) << "Bin"   << setw(9) << "Truth" << setw(9) << "Measured" << setw(9) << "Input" << setw(9) << "Output"   << endl
+       << "=========================================================" << endl;
+#endif
+
+  for (Int_t i = 0 ; i <= nt+1; i++) {
     
     Double_t ydiff    = hRes->GetBinContent(i);
     Double_t ydiffErr = hRes->GetBinError(i);
 
+    Double_t ypull;
     if (ydiffErr==0) {
-      ydiff> 0 ? ypull = MAXPULL : ypull = -MAXPULL;
+      ypull= ydiff> 0 ? MAXPULL : -MAXPULL;
     } else {
       ypull = ydiff/ydiffErr;
+      chi2 += ypull*ypull;
+      ndf++;
     }
+
+#if !defined(__CINT__) || defined(__MAKECINT__)
+    cout        << setw(3) << i << std::fixed << setprecision(0)
+         << ' ' << setw(8) << hTrainTrue->GetBinContent(i)
+         << ' ' << setw(8) << hTrain->GetBinContent(i)
+         << ' ' << setw(8) << hMeas->GetBinContent(i) << setprecision(1)
+         << ' ' << setw(8) << hReco->GetBinContent(i)
+         << ' ' << setw(8) << ydiff;
+    if (ydiffErr!=0) {
+      cout << setprecision(3) << ' ' << setw(8) << ypull;
+    }
+    cout << endl;
+#endif
+
     //cout << ypull << " " << ydiffErr << endl;
 
     if (fabs(ypull)<=MAXPULL) {
       hPulls->SetBinContent(i,ypull);
-      //hPulls->SetBinError(i,ydiffErr);
+      hPulls->SetBinError(i,1.0);
     }
   }
+#if !defined(__CINT__) || defined(__MAKECINT__)
+  cout << "=========================================================" << endl
+       << setw(3) << "" << std::fixed << setprecision(0)
+       << ' ' << setw(8)  << hTrainTrue->Integral()
+       << ' ' << setw(8)  << hTrain->Integral()
+       << ' ' << setw(8)  << hMeas->Integral() << setprecision(1)
+       << ' ' << setw(8) << hReco->Integral()
+       << endl
+       << "=========================================================" << endl;
+  cout.copyfmt (fmt);
+#endif
+  cout << "Chi^2/NDF=" << chi2 << "/" << ndf << endl;
 
   if (onepage>=2) canvas->cd(++ipad);
   if (!onepage || onepage >= 2) {
     hPulls->SetMarkerStyle(kFullDotLarge);
     hPulls->Draw("P");
     TLine l; // draw a line at y=0;
-    l.DrawLine(hPulls->GetBinLowEdge(1), 0.0, hPulls->GetBinLowEdge(nb+1), 0.0);
+    l.DrawLine(hPulls->GetBinLowEdge(1), 0.0, hPulls->GetBinLowEdge(nt+1), 0.0);
     //    canvas->Update();
   }
  canvas->Update();
@@ -310,13 +358,14 @@ void RooUnfoldTest (
                     Int_t    stage=       0,
                     Int_t    ftrain=      2,
                     Int_t    ftest=       5,
-                    Int_t    nb=         40,
+                    Int_t    nt=         40,
                     Int_t    ntest=   10000,
                     Int_t    ntrain= 100000,
                     Double_t xlo=     -12.5,
                     Double_t xhi=      10.0,
                     Int_t    regparm_in= -999,  // Bayes niter=4, SVD kterm=20
-                    Int_t    ntoys_in= 1000   // SVD only
+                    Int_t    ntoys_in= 1000,   // SVD only
+                    Int_t    nm=         -1
                    )
 {
 #ifdef __CINT__
@@ -328,8 +377,9 @@ void RooUnfoldTest (
   gDirectory->Clear();
   hPDF= hTestPDF= hTrain= hTrainTrue= hResmat= hTrue= hMeas= hReco= hTrue0= hRes= 0;
 #endif
+  if (nm==-1) nm= nt;
   regparm= regparm_in!=-999 ? regparm_in : (method==1 ?  4 :
-                                            method==2 ? 20 : 0);
+                                            method==2 ? (nt>5 ? nt/2 : 2) : 0);
   if (method == 3) nosmear= true;  // bin-by-bin can't handle smearing or bias
 
   ntoys= ntoys_in;
@@ -338,13 +388,14 @@ void RooUnfoldTest (
        << ", stage="  << stage   // 1=train (writes RooUnfoldTest.root), 2=test (reads), 0=both (default)
        << ", ftrain=" << ftrain  // selected training function
        << ", ftest="  << ftest   // selected test function
-       << ", nb="     << nb      // #bins
+       << ", nt="     << nt      // #truth bins
        << ", ntest="  << ntest   // # events to use for unsmearing
        << ", ntrain=" << ntrain  // #events to use for training
        << ", xlo="    << xlo     // range minimum
        << ", xhi="    << xhi     // range maximum
        << ", regparm="<< regparm // regularisation parameter (eg. number of iterations)
        << ", ntoys="  << ntoys   // number of toys used to obtain SVD covariances
+       << ", nm="     << nm      // #measured bins
        << ")" << endl;
 
   // some stupid tests
@@ -352,8 +403,9 @@ void RooUnfoldTest (
   if (xlo >= xhi) { cout << "Error: xlo (" << xlo << ") >= xhi(" << xhi << ")" << endl; statusOk = false;}
   if (ntest<=0) {cout << "Error: ntest (" << ntest << ") <= 0" << endl; statusOk = false;}
   if (ntrain<=0) {cout << "Error: ntrain (" << ntrain << ") <= 0" << endl; statusOk = false;}
-  if (nb<=0) {cout << "Error: nb (" << nb << ") <= 0" << endl; statusOk = false;}
-  if (ftest<1) {cout << "Error: ftest (" << nb << ") < 1" << endl; statusOk = false;}
+  if (nm<=0) {cout << "Error: nm (" << nm << ") <= 0" << endl; statusOk = false;}
+  if (nt<=0) {cout << "Error: nt (" << nt << ") <= 0" << endl; statusOk = false;}
+  if (ftest<1) {cout << "Error: ftest (" << ftest << ") < 1" << endl; statusOk = false;}
 
   if (!statusOk) {exit(1);}
 
@@ -386,7 +438,7 @@ void RooUnfoldTest (
     response= new RooUnfoldResponse ("response", "test 1-D Unfolding");
     if (!response) return;
     cout   << "==================================== TRAIN ====================================" << endl;
-    if (Train (ftrain, nb, ntrain, xlo, xhi)) {
+    if (Train (ftrain, nm, nt, ntrain, xlo, xhi)) {
       TFile f ("RooUnfoldTest.root", "recreate");
       f.WriteTObject (response, "response");
       f.Close();
@@ -405,9 +457,9 @@ void RooUnfoldTest (
       }
     }
     cout   << "==================================== TEST =====================================" << endl;
-    if (Test (ftest,  nb, ntest,  xlo, xhi)) {
+    if (Test (ftest,  nm, nt, ntest,  xlo, xhi)) {
       cout << "==================================== UNFOLD ===================================" << endl;
-      Unfold (method, nb,         xlo, xhi);
+      Unfold (method, nm, nt,         xlo, xhi);
     }
   }
 
@@ -434,6 +486,7 @@ int main (int argc, char *argv[])
     case 10:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atof(argv[8]), atof(argv[9])); break;
     case 11:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atof(argv[8]), atof(argv[9]), atoi(argv[10])); break;
     case 12:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atof(argv[8]), atof(argv[9]), atoi(argv[10]), atoi(argv[11])); break;
+    case 13:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atof(argv[8]), atof(argv[9]), atoi(argv[10]), atoi(argv[11]), atoi(argv[12])); break;
     default: cerr << argv[0] << ": too many arguments (" << argc-1 << ")" << endl;
              return 1;
   }

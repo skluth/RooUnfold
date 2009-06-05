@@ -1,12 +1,22 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.27 2009-05-27 15:36:30 adye Exp $
+$Id: History,v 1.28 2009-06-05 22:43:31 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye          5-Jun-2009 tja090605a
+  o bin-by-bin was actually running the full bayes code.
+    *** bin-by-bin unfold() gives zeros ***
+  o SVD prints error if kterm is negative or greater than the number of bins.
+  o Tidy up some includes and namespaces in RooUnfoldBayesImpl.cxx and
+    RooUnfoldTest.cxx.
+  o RooUnfoldTest can test different numbers of bins in truth and measured
+    distributions.
+  o RooUnfoldTest prints a table of the results (not in cint) and Chi^2/NDF.
 
 Tim Adye         26-May-2009 tja090527a
   o Allow weight to be specified with RooUnfoldResponse::Fill() and Miss().

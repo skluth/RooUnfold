@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.2 2008-01-23 23:27:26 adye Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.3 2009-06-05 22:43:37 adye Exp $
 //
 // Description:
 //      Unfold
@@ -97,6 +97,16 @@ RooUnfoldSvd::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm,
   _train1d= _res->Hmeasured1D();
   _truth1d= _res->Htruth1D();
   TH1::AddDirectory (oldstat);
+
+  if (_kterm < 0) {
+    cout << "RooUnfoldSvd invalid kterm: " << _kterm << endl;
+    return *this;
+  }
+  Int_t nb= _nm < _nt ? _nm : _nt;
+  if (_kterm > nb) {
+    cout << "RooUnfoldSvd invalid kterm=" << _kterm << " with " << nb << " bins" << endl;
+    return *this;
+  }
 
   _svd->init (_meas1d, _train1d, _truth1d, _res->Hresponse(), false);
 

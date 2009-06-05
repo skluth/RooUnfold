@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------
 //
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.7 2009-05-22 17:10:20 adye Exp $
+//   $Id: RooUnfoldBayesImpl.cxx,v 1.8 2009-06-05 22:43:36 adye Exp $
 //
 // Description:
 //   Bayesian Unfolding class 
@@ -20,11 +20,11 @@
 //------------------------------------------------------------------
 #include "RooUnfoldBayesImpl.h"
 
-#include "Riostream.h"
-
-//#include <iostream>
 #include <vector>
-#include <math.h>
+#include <cmath>
+#include <algorithm>
+#include <iostream>
+#include <iomanip>
 
 #include "TStopwatch.h"
 #include "TH1.h"
@@ -34,9 +34,15 @@
 #include "Array2D.h"
 
 using std::vector;
+using std::fabs;
+using std::sqrt;
+using std::min;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::setw;
+using std::left;
+using std::right;
 
 ClassImp(RooUnfoldBayesImpl);
 
@@ -674,7 +680,7 @@ RooUnfoldBayesImpl::info(Int_t level) const
   cout << "-------------------------------------------\n" << endl;
 
   if ((sum(_nEj)!=0) || (sum(_nCi)!=0)) {
-    Int_t iend = std::min(_nCi.size(),_nEj.size());
+    Int_t iend = min(_nCi.size(),_nEj.size());
     if (_ndims==2) {
       cout << "    \t     \t     \t Train \t Train\t Test\t Unfolded"<< endl;
       cout << "Bin \tBin x\tBin y\t Truth \t Reco\t Input\t Output"<< endl;
@@ -909,9 +915,9 @@ RooUnfoldBayesImpl::getCovariance()
     for (Int_t k = 0 ; k < _nc ; k++) {
       for (Int_t l = 0 ; l < _nc ; l++) {
 	if (_Vij->Get(k,l) == 0) {continue;}
-	cout << setiosflags(ios::left) << setw(4) << k << setw(4) << l 
+	cout << left << setw(4) << k << setw(4) << l 
 	     << setw(11) << Vc0->Get(k,l) << setw(10) << Vc1->Get(k,l) 
-	     << setw(10)<< _Vij->Get(k,l) << endl;
+	     << setw(10)<< _Vij->Get(k,l) << right << endl;
       }
     }
   }

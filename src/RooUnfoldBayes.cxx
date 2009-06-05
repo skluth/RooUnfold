@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.3 2009-05-22 17:10:20 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.4 2009-06-05 22:43:36 adye Exp $
 //
 // Description:
 //      Unfold
@@ -85,7 +85,7 @@ RooUnfoldBayes::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t nite
   _bayes->build (1, vector<Int_t>(1,_nt), vector<Double_t>(1,0.0), vector<Double_t>(1,1.0),
                  1, vector<Int_t>(1,_nm), vector<Double_t>(1,0.0), vector<Double_t>(1,1.0));
 
-  if (verbose() >= 1) Print();
+  if (verbose() >= 2) Print();
 
   vector<Double_t> vtruth(_nt), vtrain(_nm), vmeasured(_nm);
   Array2D aresp(_nt,_nm);
@@ -93,18 +93,18 @@ RooUnfoldBayes::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t nite
                        H2VD (_res->Hmeasured(), vtrain),
                        H2AD (_res->Hresponse(), aresp));
 
-  if (verbose() >= 1) Print();
+  if (verbose() >= 2) Print();
 
-  _bayes->train (_niter, _smoothit);
+  train();
 
-  if (verbose() >= 1) Print();
+  if (verbose() >= 2) Print();
 
   _bayes->setupUnfold (H2VD (_meas,             vmeasured));
 
-  if (verbose() >= 1) Print();
+  if (verbose() >= 2) Print();
 
   vector<Double_t> causes;
-  _bayes->unfold (causes);
+  unfold (causes);
 
   if (verbose() >= 1) Print();
 
