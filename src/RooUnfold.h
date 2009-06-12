@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.3 2009-05-22 17:10:20 adye Exp $
+//      $Id: RooUnfold.h,v 1.4 2009-06-12 00:44:42 adye Exp $
 //
 // Description:
 //      Unfold
@@ -34,7 +34,7 @@ public:
   RooUnfold (const TString& name, const TString& title); // named constructor
   RooUnfold (const RooUnfold& rhs); // copy constructor
   virtual ~RooUnfold(); // destructor
-  virtual RooUnfold& operator= (const RooUnfold& rhs); // assignment operator
+  RooUnfold& operator= (const RooUnfold& rhs); // assignment operator
 
   // Special constructors
 
@@ -59,11 +59,14 @@ public:
 
   virtual Int_t                    verbose() const;
 
+  virtual void PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError= true) const;
+
 protected:
 
   virtual RooUnfold& Setup();
   virtual void SetNameTitleDefault();
   virtual void GetCov() const;  // actually updates mutable _cov
+  virtual void Assign (const RooUnfold& rhs); // implementation of assignment operator
 
   // instance variables
 
@@ -87,6 +90,7 @@ inline RooUnfold::RooUnfold()                                           : TNamed
 inline RooUnfold::RooUnfold (const char*    name, const char*    title) : TNamed(name,title) {Setup();}
 inline RooUnfold::RooUnfold (const TString& name, const TString& title) : TNamed(name,title) {Setup();}
 inline RooUnfold::~RooUnfold()                                                               {Clear();}
+inline RooUnfold& RooUnfold::operator= (const RooUnfold& rhs) {Assign(rhs); return *this;}
 
 inline Int_t                    RooUnfold::verbose()   const { return _verbose; }
 inline const RooUnfoldResponse* RooUnfold::response()  const { return _res;     }

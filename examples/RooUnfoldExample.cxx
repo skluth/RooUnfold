@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldExample.cxx,v 1.1.1.1 2007-04-04 21:27:25 adye Exp $
+//      $Id: RooUnfoldExample.cxx,v 1.2 2009-06-12 00:44:40 adye Exp $
 //
 // Description:
 //      Simple example usage of the RooUnfold package using toy MC.
@@ -69,10 +69,12 @@ void RooUnfoldExample()
   }
 
   cout << "==================================== TEST =====================================" << endl;
+  TH1D* hTrue= new TH1D ("true", "Test Truth",    40, -10.0, 10.0);
   TH1D* hMeas= new TH1D ("meas", "Test Measured", 40, -10.0, 10.0);
   // Test with a Gaussian, mean 0 and width 2.
   for (Int_t i=0; i<10000; i++) {
-    Double_t x= smear (gRandom->Gaus (0.0, 2.0));
+    Double_t xt= gRandom->Gaus (0.0, 2.0), x= smear (xt);
+    hTrue->Fill(xt);
     if (x!=cutdummy) hMeas->Fill(x);
   }
 
@@ -83,6 +85,7 @@ void RooUnfoldExample()
 
   TH1D* hReco= (TH1D*) unfold.Hreco();
 
+  unfold.PrintTable (cout, hTrue);
   hReco->Draw();
   hMeas->Draw("SAME");
 }

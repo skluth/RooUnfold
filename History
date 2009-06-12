@@ -1,16 +1,26 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.28 2009-06-05 22:43:31 adye Exp $
+$Id: History,v 1.29 2009-06-12 00:44:37 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
 
+Tim Adye          5-Jun-2009 tja090612a
+  o RooUnfold::PrintTable prints a table of the results and Chi^2/NDF
+    (copied from RooUnfoldTest).
+  o RooUnfoldTest prints RooUnfold object.
+  o Fix assignment of RooUnfold derived classes.
+  o Don't repeat RooUnfold::Setup when constructing derived classes.
+  o Fix RooUnfoldBinByBin construction, which was actually doing the
+    RooUnfoldBayes setup.
+  o Add missing RooUnfoldBinByBin constructors.
+  o Add make VERBOSE=1 to display compilation commands.
+
 Tim Adye          5-Jun-2009 tja090605a
   o bin-by-bin was actually running the full bayes code.
-    *** bin-by-bin unfold() gives zeros ***
   o SVD prints error if kterm is negative or greater than the number of bins.
   o Tidy up some includes and namespaces in RooUnfoldBayesImpl.cxx and
     RooUnfoldTest.cxx.

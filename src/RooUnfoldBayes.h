@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBayes.h,v 1.2 2009-05-22 17:10:20 adye Exp $
+//      $Id: RooUnfoldBayes.h,v 1.3 2009-06-12 00:44:42 adye Exp $
 //
 // Description:
 //      Unfold
@@ -36,6 +36,7 @@ public:
   RooUnfoldBayes (const char*    name, const char*    title); // named constructor
   RooUnfoldBayes (const TString& name, const TString& title); // named constructor
   RooUnfoldBayes (const RooUnfoldBayes& rhs); // copy constructor
+  RooUnfoldBayes& operator= (const RooUnfoldBayes& rhs); // assignment operator
 
   // Special constructors
   RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, Int_t niter= 4, Bool_t smoothit= false,
@@ -46,7 +47,7 @@ public:
   virtual RooUnfoldBayes& Setup (const RooUnfoldBayes& rhs);
   virtual RooUnfoldBayes& Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t niter= 4, Bool_t smoothit= false);
 
-  virtual void Print (Option_t* o= 0) const;
+  virtual void Print (Option_t* option= "") const;
 
   static vector<Double_t>& H2VD (const TH1*  h, vector<Double_t>& v);
   static Array2D&          H2AD (const TH2D* h, Array2D& m, const TH1* norm= 0);
@@ -56,6 +57,7 @@ public:
 protected:
 
   virtual RooUnfoldBayes& Setup();
+  virtual RooUnfoldBayes& Setup (Int_t niter, Bool_t smoothit);
   virtual Int_t unfold (vector<Double_t>& causes);
   virtual Int_t train();
   virtual Int_t getCovariance() const;
@@ -76,5 +78,6 @@ public:
 inline RooUnfoldBayes::RooUnfoldBayes()                                           : RooUnfold()           {Setup();}
 inline RooUnfoldBayes::RooUnfoldBayes (const char* name, const char* title)       : RooUnfold(name,title) {Setup();}
 inline RooUnfoldBayes::RooUnfoldBayes (const TString& name, const TString& title) : RooUnfold(name,title) {Setup();}
+inline RooUnfoldBayes& RooUnfoldBayes::operator= (const RooUnfoldBayes& rhs) {Assign(rhs); return *this;}
 
 #endif

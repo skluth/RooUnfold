@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldTest2D.cxx,v 1.5 2009-05-22 17:10:15 adye Exp $
+//      $Id: RooUnfoldTest2D.cxx,v 1.6 2009-06-12 00:44:40 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -259,6 +259,7 @@ Int_t Test2 (Int_t fxtest, Int_t fytest, Int_t nb, Int_t ntest,
 
 void Unfold2 (Int_t method, Int_t nb, Double_t xlo, Double_t xhi, Double_t ylo, Double_t yhi)
 {
+  cout << "Create RooUnfold object for method " << method << endl;
   switch (method) {
     case 1:  unfold= new RooUnfoldBayes    (response, hMeas2, regparm);
              break;
@@ -269,12 +270,14 @@ void Unfold2 (Int_t method, Int_t nb, Double_t xlo, Double_t xhi, Double_t ylo, 
     default: cerr << "Unknown RooUnfold method " << method << endl;
              return;
   }
+  cout << "Created "; unfold->Print();
   bool withError= !(dynamic_cast<RooUnfoldBayes*>(unfold) && nb > 20);   // nb^4<160000 (causes*effects, where each is nb*nb)
   if (!withError) {
     cerr << "Don't calculate errors - this would take too long ("
-         << nb*nb << " bins - should be no more than 400 for Bayes algorithm)" << endl;
+         << nb*nb << " bins - skip if more than 400 for Bayes algorithm)" << endl;
   }
   hReco2= (TH2D*) unfold->Hreco(withError);
+  unfold->PrintTable (cout, hTrue2, withError);
 
   hRecoX= hReco2->ProjectionX("Reconstructed X", -1, -1, "E");
   hRecoY= hReco2->ProjectionY("Reconstructed Y", -1, -1, "E");

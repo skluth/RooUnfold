@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.7 2009-06-05 22:43:35 adye Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.8 2009-06-12 00:44:40 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -27,7 +27,6 @@
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <cmath>
 #include <iostream>
-#include <sstream>
 
 #include "TROOT.h"
 #include "TObject.h"
@@ -64,8 +63,6 @@ using std::fabs;
 using std::cout;
 using std::cerr;
 using std::endl;
-using std::setw;
-using std::setprecision;
 #endif
 
 //==============================================================================
@@ -229,6 +226,7 @@ Int_t Test (Int_t ftest, Int_t nm, Int_t nt, Int_t ntest, Double_t xlo, Double_t
 
 void Unfold (Int_t method, Int_t nm, Int_t nt, Double_t xlo, Double_t xhi)
 {
+  cout << "Create RooUnfold object for method " << method << endl;
   switch (method) {
     case 1:  unfold= new RooUnfoldBayes    (response, hMeas, regparm);
              break;
@@ -239,9 +237,11 @@ void Unfold (Int_t method, Int_t nm, Int_t nt, Double_t xlo, Double_t xhi)
     default: cerr << "Unknown RooUnfold method " << method << endl;
              return;
   }
+  cout << "Created "; unfold->Print();
 
   // Unfolded distribution
   hReco= (TH1D*) unfold->Hreco();
+  unfold->PrintTable (cout, hTrue);
 
   hReco->SetLineColor(kBlack);
   hReco->SetMarkerStyle(kFullDotLarge);
@@ -277,18 +277,6 @@ void Unfold (Int_t method, Int_t nm, Int_t nt, Double_t xlo, Double_t xhi)
   // how about doing some pulls
   hPulls = new TH1D ("pulls", "Pulls", nt, xlo, xhi);
   const Double_t MAXPULL = 5.0;
-  Double_t chi2= 0.0;
-  Int_t ndf= 0;
-
-#if !defined(__CINT__) || defined(__MAKECINT__)
-  // cint doesn't know about setw() etc, so we don't bother with this table in cint
-  std::ostringstream fmt;
-  fmt.copyfmt (cout);
-  cout << "=========================================================" << endl
-       << setw(3) << ""      << setw(9) << "Train" << setw(9) << "Train"    << setw(9) << "Test"  << setw(9) << "Unfolded" << setw(9) << "Diff" << setw(9) << "Pull" << endl
-       << setw(3) << "Bin"   << setw(9) << "Truth" << setw(9) << "Measured" << setw(9) << "Input" << setw(9) << "Output"   << endl
-       << "=========================================================" << endl;
-#endif
 
   for (Int_t i = 0 ; i <= nt+1; i++) {
     
@@ -300,22 +288,7 @@ void Unfold (Int_t method, Int_t nm, Int_t nt, Double_t xlo, Double_t xhi)
       ypull= ydiff> 0 ? MAXPULL : -MAXPULL;
     } else {
       ypull = ydiff/ydiffErr;
-      chi2 += ypull*ypull;
-      ndf++;
     }
-
-#if !defined(__CINT__) || defined(__MAKECINT__)
-    cout        << setw(3) << i << std::fixed << setprecision(0)
-         << ' ' << setw(8) << hTrainTrue->GetBinContent(i)
-         << ' ' << setw(8) << hTrain->GetBinContent(i)
-         << ' ' << setw(8) << hMeas->GetBinContent(i) << setprecision(1)
-         << ' ' << setw(8) << hReco->GetBinContent(i)
-         << ' ' << setw(8) << ydiff;
-    if (ydiffErr!=0) {
-      cout << setprecision(3) << ' ' << setw(8) << ypull;
-    }
-    cout << endl;
-#endif
 
     //cout << ypull << " " << ydiffErr << endl;
 
@@ -324,18 +297,6 @@ void Unfold (Int_t method, Int_t nm, Int_t nt, Double_t xlo, Double_t xhi)
       hPulls->SetBinError(i,1.0);
     }
   }
-#if !defined(__CINT__) || defined(__MAKECINT__)
-  cout << "=========================================================" << endl
-       << setw(3) << "" << std::fixed << setprecision(0)
-       << ' ' << setw(8)  << hTrainTrue->Integral()
-       << ' ' << setw(8)  << hTrain->Integral()
-       << ' ' << setw(8)  << hMeas->Integral() << setprecision(1)
-       << ' ' << setw(8) << hReco->Integral()
-       << endl
-       << "=========================================================" << endl;
-  cout.copyfmt (fmt);
-#endif
-  cout << "Chi^2/NDF=" << chi2 << "/" << ndf << endl;
 
   if (onepage>=2) canvas->cd(++ipad);
   if (!onepage || onepage >= 2) {

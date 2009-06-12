@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.3 2009-06-05 22:43:37 adye Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.4 2009-06-12 00:44:42 adye Exp $
 //
 // Description:
 //      Unfold
@@ -63,20 +63,25 @@ RooUnfoldSvd::Setup()
   _svd= 0;
   _kterm= _ntoys= 0;
   _meas1d= _train1d= _truth1d= 0;
-  RooUnfold::Setup();
   return *this;
 }
 
 RooUnfoldSvd&
 RooUnfoldSvd::Setup (const RooUnfoldSvd& rhs)
 {
-  return Setup (rhs.response(), rhs.Hmeasured(), rhs._kterm, rhs._ntoys);
+  return Setup (rhs._kterm, rhs._ntoys);
 }
 
 RooUnfoldSvd&
 RooUnfoldSvd::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm, Int_t ntoys)
 {
   RooUnfold::Setup (res, meas);
+  return Setup (kterm, ntoys);
+}
+
+RooUnfoldSvd&
+RooUnfoldSvd::Setup (Int_t kterm, Int_t ntoys)
+{
   _kterm= kterm;
   _ntoys= ntoys;
 

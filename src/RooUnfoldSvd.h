@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldSvd.h,v 1.2 2008-01-23 23:27:32 adye Exp $
+//      $Id: RooUnfoldSvd.h,v 1.3 2009-06-12 00:44:42 adye Exp $
 //
 // Description:
 //      Unfold
@@ -33,6 +33,7 @@ public:
   RooUnfoldSvd (const char*    name, const char*    title); // named constructor
   RooUnfoldSvd (const TString& name, const TString& title); // named constructor
   RooUnfoldSvd (const RooUnfoldSvd& rhs); // copy constructor
+  RooUnfoldSvd& operator= (const RooUnfoldSvd& rhs); // assignment operator
 
   // Special constructors
   RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm= 1, Int_t ntoys= 1000,
@@ -46,6 +47,7 @@ public:
 protected:
 
   virtual RooUnfoldSvd& Setup();
+  virtual RooUnfoldSvd& Setup (Int_t kterm, Int_t ntoys);
 
   // instance variables
   TUnfHisto* _svd;
@@ -64,5 +66,6 @@ public:
 inline RooUnfoldSvd::RooUnfoldSvd()                                           : RooUnfold()           {Setup();}
 inline RooUnfoldSvd::RooUnfoldSvd (const char* name, const char* title)       : RooUnfold(name,title) {Setup();}
 inline RooUnfoldSvd::RooUnfoldSvd (const TString& name, const TString& title) : RooUnfold(name,title) {Setup();}
+inline RooUnfoldSvd& RooUnfoldSvd::operator= (const RooUnfoldSvd& rhs) {Assign(rhs); return *this;}
 
 #endif

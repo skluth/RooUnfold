@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.h,v 1.2 2009-05-22 17:10:20 adye Exp $
+//      $Id: RooUnfoldBinByBin.h,v 1.3 2009-06-12 00:44:42 adye Exp $
 //
 // Description:
 //      Unfold
@@ -25,6 +25,14 @@ class RooUnfoldBinByBin : public RooUnfoldBayes {
 
 public:
 
+  // Standard methods
+
+  RooUnfoldBinByBin(); // default constructor
+  RooUnfoldBinByBin (const char*    name, const char*    title); // named constructor
+  RooUnfoldBinByBin (const TString& name, const TString& title); // named constructor
+  RooUnfoldBinByBin (const RooUnfoldBinByBin& rhs); // copy constructor
+  RooUnfoldBinByBin& operator= (const RooUnfoldBinByBin& rhs); // assignment operator
+
   // Special constructors
   RooUnfoldBinByBin (const RooUnfoldResponse* res, const TH1* meas, Bool_t smoothit= false,
                      const char* name= 0, const char* title= 0);
@@ -44,5 +52,12 @@ public:
 
   ClassDef (RooUnfoldBinByBin, 0) // Bin-by-bin Unfolding
 };
+
+// Inline method definitions
+
+inline RooUnfoldBinByBin::RooUnfoldBinByBin()                                           : RooUnfoldBayes()           {}
+inline RooUnfoldBinByBin::RooUnfoldBinByBin (const char* name, const char* title)       : RooUnfoldBayes(name,title) {}
+inline RooUnfoldBinByBin::RooUnfoldBinByBin (const TString& name, const TString& title) : RooUnfoldBayes(name,title) {}
+inline RooUnfoldBinByBin& RooUnfoldBinByBin::operator= (const RooUnfoldBinByBin& rhs) {Assign(rhs); return *this;}
 
 #endif

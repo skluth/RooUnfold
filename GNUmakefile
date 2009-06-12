@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.8 2008-08-13 18:42:27 adye Exp $
+#      $Id: GNUmakefile,v 1.9 2009-06-12 00:44:37 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -18,6 +18,7 @@
 #          (libRooUnfold.so). Otherwise links with static library
 #          (libRooUnfold.a).
 #        - Add ROOTBUILD=debug for debug version.
+#        - Add VERBOSE=1 to show main commands as they are executed
 #
 # Build targets:
 #      shlib   - make libRooUnfold.so (default target)
@@ -31,7 +32,7 @@
 #      Tim Adye <T.J.Adye@rl.ac.uk>
 #
 # Copyright Information:
-#      Copyleft (C) 2007 Rutherford Appleton Laboratory
+#      Copyleft (c) 2007, 2009 Rutherford Appleton Laboratory
 #
 #===============================================================================
 
@@ -62,6 +63,11 @@ LDFLAGS      += -g
 endif
 else
 ROOTINCLUDES  = -I$(shell $(ROOTCONFIG) --incdir)
+endif
+ifeq ($(VERBOSE),1)
+_             =
+else
+_             = @
 endif
 
 # === RooUnfold directories and options ========================================
@@ -149,7 +155,7 @@ $(DEPDIR)%.d : $(SRCDIR)%.cxx
 	@echo "Making $@"
 	@mkdir -p $(DEPDIR)
 	@rm -f $@
-	@set -e; \
+	$(_)set -e; \
 	 $(CC) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $< \
 	 | sed 's,\($(notdir $*)\.o\) *:,$(OBJDIR)\1 $@ :,g' > $@; \
 	 [ -s $@ ] || rm -f $@
@@ -158,7 +164,7 @@ $(DEPDIR)%.d : $(EXESRC)%.cxx
 	@echo "Making $@"
 	@mkdir -p $(DEPDIR)
 	@rm -f $@
-	@set -e; \
+	$(_)set -e; \
 	 $(CC) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $< \
 	 | sed 's,\($(notdir $*)\.o\) *:,$(OBJDIR)\1 $@ :,g' > $@; \
 	 [ -s $@ ] || rm -f $@
@@ -167,13 +173,13 @@ $(DEPDIR)%.d : $(EXESRC)%.cxx
 $(OBJDIR)%.o : $(SRCDIR)%.cxx $(HDEP)
 	@echo "Compiling $<"
 	@mkdir -p $(OBJDIR)
-	@$(CC) $(CCFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
+	$(_)$(CC) $(CCFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
 
 # Implicit rule to compile main program
 $(OBJDIR)%.o : $(EXESRC)%.cxx $(HDEP)
 	@echo "Compiling main program $<"
 	@mkdir -p $(OBJDIR)
-	@$(CC) $(CCFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
+	$(_)$(CC) $(CCFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
 
 
 # === Explicit rules ===========================================================
@@ -185,16 +191,16 @@ $(CINTOBJ) : $(HLIST)
 	@mkdir -p $(WORKDIR)
 	@mkdir -p $(OBJDIR)
 	@echo "Running rootcint for $(SRCDIR)$(PACKAGE)_LinkDef.h"
-	@cd $(SRC) ; $(ROOTSYS)/bin/rootcint -f $(CINTFILE) -c -p $(INCLUDES) $(HLIST)
+	$(_)cd $(SRC) ; $(ROOTSYS)/bin/rootcint -f $(CINTFILE) -c -p $(INCLUDES) $(HLIST)
 	@echo "Compiling $(CINTFILE)"
-	@$(CC) $(CCFLAGS) $(CPPFLAGS) -c $(CINTFILE) -o $(CINTOBJ) $(INCLUDES)
+	$(_)$(CC) $(CCFLAGS) $(CPPFLAGS) -c $(CINTFILE) -o $(CINTOBJ) $(INCLUDES)
 
 # Rule to combine objects into a library
 $(LIBFILE) : $(OLIST) $(CINTOBJ)
 	@echo "Making $(LIBFILE)"
 	@mkdir -p $(LIBDIR)
 	@rm -f $(LIBFILE)
-	@ar q $(LIBFILE) $(OLIST) $(CINTOBJ)
+	$(_)ar q $(LIBFILE) $(OLIST) $(CINTOBJ)
 	@ranlib $(LIBFILE)
 
 # Rule to combine objects into a shared library
@@ -202,12 +208,12 @@ $(SHLIBFILE) : $(OLIST) $(CINTOBJ)
 	@echo "Making $(SHLIBFILE)"
 	@mkdir -p $(SHLIBDIR)
 	@rm -f $(SHLIBFILE)
-	@$(LD) $(SOFLAGS) $(LDFLAGS) $(OLIST) $(CINTOBJ) $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS)
+	$(_)$(LD) $(SOFLAGS) $(LDFLAGS) $(OLIST) $(CINTOBJ) $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS)
 
 $(MAINEXE) : $(EXEDIR)%$(ExeSuf) : $(OBJDIR)%.o $(LINKLIB)
 	@echo "Making executable $@"
 	@mkdir -p $(EXEDIR)
-	@$(LD) $(LDFLAGS) $< $(OutPutOpt)$@ $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(if $(findstring $<,$(ROOFITCLIENTS)),$(ROOFITLIBS))
+	$(_)$(LD) $(LDFLAGS) $< $(OutPutOpt)$@ $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(if $(findstring $<,$(ROOFITCLIENTS)),$(ROOFITLIBS))
 
 # Useful build targets
 include: $(DLIST)

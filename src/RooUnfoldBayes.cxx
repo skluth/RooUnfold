@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.4 2009-06-05 22:43:36 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.5 2009-06-12 00:44:42 adye Exp $
 //
 // Description:
 //      Unfold
@@ -63,20 +63,25 @@ RooUnfoldBayes::Setup()
   _bayes= 0;
   _niter= 0;
   _smoothit= false;
-  RooUnfold::Setup();
   return *this;
 }
 
 RooUnfoldBayes&
 RooUnfoldBayes::Setup (const RooUnfoldBayes& rhs)
 {
-  return Setup (rhs.response(), rhs.Hmeasured(), rhs._niter, rhs._smoothit);
+  return Setup (rhs._niter, rhs._smoothit);
 }
 
 RooUnfoldBayes&
 RooUnfoldBayes::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t niter, Bool_t smoothit)
 {
   RooUnfold::Setup (res, meas);
+  return Setup (niter, smoothit);
+}
+
+RooUnfoldBayes&
+RooUnfoldBayes::Setup (Int_t niter, Bool_t smoothit)
+{
   _niter= niter;
   _smoothit= smoothit;
 
@@ -106,7 +111,7 @@ RooUnfoldBayes::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t nite
   vector<Double_t> causes;
   unfold (causes);
 
-  if (verbose() >= 1) Print();
+  if (verbose() >= 2) Print();
 
   _rec.ResizeTo (_nm);
   VD2V (causes, _rec);
@@ -136,9 +141,9 @@ Int_t RooUnfoldBayes::train()                           { return _bayes->train (
 Int_t RooUnfoldBayes::getCovariance() const             { return _bayes->getCovariance();           }
 
 void
-RooUnfoldBayes::Print(Option_t* o) const
+RooUnfoldBayes::Print(Option_t* option) const
 {
-  RooUnfold::Print(o);
+  RooUnfold::Print (option);
   _bayes->info();
 }
 

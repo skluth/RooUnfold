@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.cxx,v 1.2 2009-05-22 17:10:20 adye Exp $
+//      $Id: RooUnfoldBinByBin.cxx,v 1.3 2009-06-12 00:44:42 adye Exp $
 //
 // Description:
 //      Unfold
@@ -17,7 +17,6 @@
 
 #include <vector>
 
-#include "TNamed.h"
 #include "RooUnfoldBayes.h"
 #include "RooUnfoldBayesImpl.h"
 
@@ -27,9 +26,15 @@ using std::vector;
 
 ClassImp (RooUnfoldBinByBin);
 
+RooUnfoldBinByBin::RooUnfoldBinByBin (const RooUnfoldBinByBin& rhs)
+  : RooUnfoldBayes (rhs) {}
+
 RooUnfoldBinByBin::RooUnfoldBinByBin (const RooUnfoldResponse* res, const TH1* meas, Bool_t smoothit,
                                       const char* name, const char* title)
-  : RooUnfoldBayes (res, meas, 0, smoothit, name, title) {}
+  : RooUnfoldBayes(name, title)
+{
+  Setup (res, meas, smoothit);
+}
 
 RooUnfoldBinByBin&
 RooUnfoldBinByBin::Setup (const RooUnfoldResponse* res, const TH1* meas, Bool_t smoothit)
