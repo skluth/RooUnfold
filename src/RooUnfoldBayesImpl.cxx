@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------
 //
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.8 2009-06-05 22:43:36 adye Exp $
+//   $Id: RooUnfoldBayesImpl.cxx,v 1.9 2009-08-24 16:14:39 adye Exp $
 //
 // Description:
 //   Bayesian Unfolding class 
@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
+#include <cstdlib>
 
 #include "TStopwatch.h"
 #include "TH1.h"
@@ -43,6 +44,7 @@ using std::endl;
 using std::setw;
 using std::left;
 using std::right;
+using std::exit;
 
 ClassImp(RooUnfoldBayesImpl);
 

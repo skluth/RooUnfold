@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.5 2009-05-27 15:36:34 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.6 2009-08-24 16:14:39 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -160,12 +160,12 @@ inline TH2D*        RooUnfoldResponse::Hresponse()                  { return _re
 inline TH1D*        RooUnfoldResponse::Hmeasured1D()          const { return H2H1D (_mes, _nm); }
 inline TH1D*        RooUnfoldResponse::Htruth1D()             const { return H2H1D (_tru, _nt); }
 
-inline const TVectorD& RooUnfoldResponse::Vmeasured()         const { if (!_vMes) _cached= _vMes= H2V  (_mes, _nm); return *_vMes; }
-inline const TVectorD& RooUnfoldResponse::Emeasured()         const { if (!_eMes) _cached= _eMes= H2VE (_mes, _nm); return *_eMes; }
-inline const TVectorD& RooUnfoldResponse::Vtruth()            const { if (!_vTru) _cached= _vTru= H2V  (_tru, _nt); return *_vTru; }
-inline const TVectorD& RooUnfoldResponse::Etruth()            const { if (!_eTru) _cached= _eTru= H2VE (_tru, _nt); return *_eTru; }
-inline const TMatrixD& RooUnfoldResponse::Mresponse()         const { if (!_mRes) _cached= _mRes= H2M  (_res, _nm, _nt, _tru); return *_mRes; }
-inline const TMatrixD& RooUnfoldResponse::Eresponse()         const { if (!_eRes) _cached= _eRes= H2ME (_res, _nm, _nt, _tru); return *_eRes; }
+inline const TVectorD& RooUnfoldResponse::Vmeasured()         const { if (!_vMes) _cached= (_vMes= H2V  (_mes, _nm)); return *_vMes; }
+inline const TVectorD& RooUnfoldResponse::Emeasured()         const { if (!_eMes) _cached= (_eMes= H2VE (_mes, _nm)); return *_eMes; }
+inline const TVectorD& RooUnfoldResponse::Vtruth()            const { if (!_vTru) _cached= (_vTru= H2V  (_tru, _nt)); return *_vTru; }
+inline const TVectorD& RooUnfoldResponse::Etruth()            const { if (!_eTru) _cached= (_eTru= H2VE (_tru, _nt)); return *_eTru; }
+inline const TMatrixD& RooUnfoldResponse::Mresponse()         const { if (!_mRes) _cached= (_mRes= H2M  (_res, _nm, _nt, _tru)); return *_mRes; }
+inline const TMatrixD& RooUnfoldResponse::Eresponse()         const { if (!_eRes) _cached= (_eRes= H2ME (_res, _nm, _nt, _tru)); return *_eRes; }
 
 inline Double_t RooUnfoldResponse::operator() (Int_t r, Int_t t) const { return Mresponse()(r,t); }
 inline Int_t    RooUnfoldResponse::GetBin (const TH1* h, size_t i) { return (h->GetDimension()<2) ? i+1 : GetBinDim(h,i); }
