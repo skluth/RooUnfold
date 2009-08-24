@@ -1,12 +1,15 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.29 2009-06-12 00:44:37 adye Exp $
+$Id: History,v 1.30 2009-08-24 16:16:08 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye         24-Aug-2009 tja090824a
+  o Fixes for GCC 4.3.3, suggested by Ioana Maris.
 
 Tim Adye          5-Jun-2009 tja090612a
   o RooUnfold::PrintTable prints a table of the results and Chi^2/NDF
