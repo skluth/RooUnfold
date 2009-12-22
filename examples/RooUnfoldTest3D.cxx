@@ -1,9 +1,9 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldTest2D.cxx,v 1.7 2009-12-22 17:11:36 adye Exp $
+//      $Id: RooUnfoldTest3D.cxx,v 1.1 2009-12-22 17:11:36 adye Exp $
 //
 // Description:
-//      2D test of RooUnfold package using toy MC generated according to PDFs
+//      3D test of RooUnfold package using toy MC generated according to PDFs
 //      defined in RooUnfoldTestPdf.icc or RooUnfoldTestPdfRooFit.icc.
 //
 // Environment:
@@ -35,7 +35,7 @@ using std::endl;
 #include "TRandom.h"
 #include "TPostScript.h"
 #include "TH1D.h"
-#include "TH2D.h"
+#include "TH3D.h"
 #include "TFile.h"
 #include "TVectorD.h"
 
@@ -61,12 +61,18 @@ using std::endl;
 // Global definitions
 //==============================================================================
 
+// Does TH3D support ProjectX and ProjectY methods?
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,24,0)
+#define PROJECT3D 1
+#endif
+
 const Double_t cutdummy= -99999.0;
 Bool_t nosmear= false;
 TCanvas* canvas= 0;
-TH2D *hTrain2= 0, *hTrainTrue2= 0, *hTrue2= 0, *hMeas2= 0, *hReco2= 0, *hRes2= 0, *hTrue02=   0;
+TH3D *hTrain3= 0, *hTrainTrue3= 0, *hTrue3= 0, *hMeas3= 0, *hReco3= 0, *hTrue03=   0;
 TH1D *hTrainX= 0, *hTrainTrueX= 0, *hTrueX= 0, *hMeasX= 0, *hRecoX= 0, *hPDFx= 0, *hTestPDFx= 0;
 TH1D *hTrainY= 0, *hTrainTrueY= 0, *hTrueY= 0, *hMeasY= 0, *hRecoY= 0, *hPDFy= 0, *hTestPDFy= 0;
+TH1D *hTrainZ= 0, *hTrainTrueZ= 0, *hTrueZ= 0, *hMeasZ= 0, *hRecoZ= 0, *hPDFz= 0, *hTestPDFz= 0;
 
 RooUnfoldResponse* response= 0;
 RooUnfold*         unfold=   0;
@@ -137,15 +143,24 @@ void rot (Double_t& x, Double_t& y)
   y= yr;
 }
 
-Bool_t smear (Double_t& x, Double_t& y, Int_t nx, Double_t xlo, Double_t xhi, Int_t ny, Double_t ylo, Double_t yhi)
+Bool_t smear (Double_t& x, Double_t& y, Double_t& z,
+              Int_t nx, Double_t xlo, Double_t xhi,
+              Int_t ny, Double_t ylo, Double_t yhi,
+              Int_t nz, Double_t zlo, Double_t zhi)
 {
   Double_t xs= smear (x, nx, xlo, xhi);
   if (xs==cutdummy) return false;
   Double_t ys= smear (y, ny, ylo, yhi);
   if (ys==cutdummy) return false;
+  Double_t zs= smear (z, nz, zlo, zhi);
+  if (ys==cutdummy) return false;
   x= xs;
   y= ys;
-  if (!nosmear) rot (x, y);
+  z= zs;
+  if (nosmear) return true;
+  rot (x, y);
+  rot (x, z);
+  rot (y, z);
   return true;
 }
 
@@ -153,11 +168,11 @@ Bool_t smear (Double_t& x, Double_t& y, Int_t nx, Double_t xlo, Double_t xhi, In
 // Train unfolding algorithm
 //==============================================================================
 
-Int_t Train2 (Int_t fxtrain, Int_t fytrain, Int_t nb, Int_t ntrain,
-              Double_t xlo, Double_t xhi, Double_t ylo, Double_t yhi)
+Int_t Train3 (Int_t fxtrain, Int_t fytrain, Int_t fztrain, Int_t nb, Int_t ntrain,
+              Double_t xlo, Double_t xhi, Double_t ylo, Double_t yhi, Double_t zlo, Double_t zhi)
 {
   const Int_t nbPDF= 500;
-  TVectorD xtrue(ntrain), ytrue(ntrain);
+  TVectorD xtrue(ntrain), ytrue(ntrain), ztrue(ntrain);
 
   hPDFx= new TH1D ("trainpdfx", "Training PDF X", nbPDF, xlo, xhi);
   hPDFx->SetLineColor(3);
@@ -171,43 +186,57 @@ Int_t Train2 (Int_t fxtrain, Int_t fytrain, Int_t nb, Int_t ntrain,
   if (!RooUnfoldTestPdf (fytrain, ntrain, ylo, yhi, ytrue, hPDFy)) return 0;
   hPDFy->Scale (nbPDF/Double_t(nb));
 
-  hTrainTrue2= new TH2D ("traintrue", "Training Truth", nb, xlo, xhi, nb, ylo, yhi);
-  hTrainTrue2->SetLineColor(4);
-  hTrain2= new TH2D ("train", "Training Measured", nb, xlo, xhi, nb, ylo, yhi);
-  hTrain2->SetLineColor(2);
+  hPDFz= new TH1D ("trainpdfz", "Training PDF Z", nbPDF, zlo, zhi);
+  hPDFz->SetLineColor(3);
+  hPDFz->SetLineWidth(2);
+  if (!RooUnfoldTestPdf (fztrain, ntrain, zlo, zhi, ztrue, hPDFz)) return 0;
+  hPDFz->Scale (nbPDF/Double_t(nb));
 
-  response->Setup (hTrain2, hTrainTrue2);
+  hTrainTrue3= new TH3D ("traintrue", "Training Truth", nb, xlo, xhi, nb, ylo, yhi, nb, zlo, zhi);
+  hTrainTrue3->SetLineColor(4);
+  hTrain3= new TH3D ("train", "Training Measured", nb, xlo, xhi, nb, ylo, yhi, nb, zlo, zhi);
+  hTrain3->SetLineColor(2);
+
+  response->Setup (hTrain3, hTrainTrue3);
 
   for (Int_t i= 0; i<ntrain; i++) {
-    Double_t xt= xtrue[i], yt= ytrue[i];
-    hTrainTrue2->Fill (xt, yt);
+    Double_t xt= xtrue[i], yt= ytrue[i], zt= ztrue[i];
+    hTrainTrue3->Fill (xt, yt, zt);
 
-    Double_t x= xt, y= yt;
-    if (smear (x, y, nb, xlo, xhi, nb, ylo, yhi)) {
-      hTrain2 ->Fill (x, y);
-      response->Fill (x, y, xt, yt);
+    Double_t x= xt, y= yt, z= zt;
+    if (smear (x, y, z, nb, xlo, xhi, nb, ylo, yhi, nb, zlo, zhi)) {
+      hTrain3 ->Fill (x, y, z);
+      response->Fill (x, y, z, xt, yt, zt);
     } else {
-      response->Miss (xt, yt);
+      response->Miss (xt, yt, zt);
     }
   }
 
-  hTrainTrueX= hTrainTrue2->ProjectionX("Training Truth X");
-  hTrainTrueY= hTrainTrue2->ProjectionY("Training Truth Y");
-  hTrainX=     hTrain2    ->ProjectionX("Training Measured X");
-  hTrainY=     hTrain2    ->ProjectionY("Training Measured Y");
-
+#if PROJECT3D
+  hTrainTrueX= hTrainTrue3->ProjectionX("Training Truth X");
+  hTrainX=     hTrain3    ->ProjectionX("Training Measured X");
   setmax (hTrainTrueX, hPDFx, hTrainX);
-  setmax (hTrainTrueY, hPDFy, hTrainY);
-
   canvas->cd(1);
   hTrainTrueX->Draw();
   hPDFx      ->Draw("LSAME");
   hTrainX    ->Draw("SAME");
 
+  hTrainTrueY= hTrainTrue3->ProjectionY("Training Truth Y");
+  hTrainY=     hTrain3    ->ProjectionY("Training Measured Y");
+  setmax (hTrainTrueY, hPDFy, hTrainY);
   canvas->cd(2);
   hTrainTrueY->Draw();
   hPDFy      ->Draw("LSAME");
   hTrainY    ->Draw("SAME");
+#endif
+
+  hTrainTrueZ= hTrainTrue3->ProjectionZ("Training Truth Z");
+  hTrainZ=     hTrain3    ->ProjectionZ("Training Measured Z");
+  setmax (hTrainTrueZ, hPDFz, hTrainZ);
+  canvas->cd(3);
+  hTrainTrueZ->Draw();
+  hPDFz      ->Draw("LSAME");
+  hTrainZ    ->Draw("SAME");
 
   canvas->Update();
 
@@ -218,11 +247,11 @@ Int_t Train2 (Int_t fxtrain, Int_t fytrain, Int_t nb, Int_t ntrain,
 // Test unfolding algorithm
 //==============================================================================
 
-Int_t Test2 (Int_t fxtest, Int_t fytest, Int_t nb, Int_t ntest,
-             Double_t xlo, Double_t xhi, Double_t ylo, Double_t yhi)
+Int_t Test3 (Int_t fxtest, Int_t fytest, Int_t fztest, Int_t nb, Int_t ntest,
+             Double_t xlo, Double_t xhi, Double_t ylo, Double_t yhi, Double_t zlo, Double_t zhi)
 {
   const Int_t nbPDF= 500;
-  TVectorD xtest(ntest), ytest(ntest);
+  TVectorD xtest(ntest), ytest(ntest), ztest(ntest);
 
   hTestPDFx= new TH1D ("pdfx", "PDF X", nbPDF, xlo, xhi);
   hTestPDFx->SetLineColor(3);
@@ -236,23 +265,33 @@ Int_t Test2 (Int_t fxtest, Int_t fytest, Int_t nb, Int_t ntest,
   if (!RooUnfoldTestPdf (fytest, ntest, ylo, yhi, ytest, hTestPDFy, -0.5, 2.5)) return 0;
   hTestPDFy->Scale (nbPDF/Double_t(nb));
 
-  hTrue2= new TH2D ("true", "Test Truth", nb, xlo, xhi, nb, ylo, yhi);
-  hTrue2->SetLineColor(4);
-  hMeas2= new TH2D ("meas", "Test Measured", nb, xlo, xhi, nb, ylo, yhi);
-  hMeas2->SetLineColor(2);
+  hTestPDFz= new TH1D ("pdfz", "PDF Z", nbPDF, zlo, zhi);
+  hTestPDFz->SetLineColor(3);
+  hTestPDFz->SetLineWidth(2);
+  if (!RooUnfoldTestPdf (fztest, ntest, zlo, zhi, ztest, hTestPDFz, -0.5, 2.5)) return 0;
+  hTestPDFz->Scale (nbPDF/Double_t(nb));
+
+  hTrue3= new TH3D ("true", "Test Truth", nb, xlo, xhi, nb, ylo, yhi, nb, zlo, zhi);
+  hTrue3->SetLineColor(4);
+  hMeas3= new TH3D ("meas", "Test Measured", nb, xlo, xhi, nb, ylo, yhi, nb, zlo, zhi);
+  hMeas3->SetLineColor(2);
 
   for (Int_t i=0; i<ntest ; i++) {
-    Double_t xt= xtest[i], yt= ytest[i];
-    hTrue2->Fill (xt, yt);
-    Double_t x= xt, y= yt;
-    if (smear (x, y, nb, xlo, xhi, nb, ylo, yhi))
-      hMeas2->Fill (x, y);
+    Double_t xt= xtest[i], yt= ytest[i], zt= ztest[i];
+    hTrue3->Fill (xt, yt, zt);
+    Double_t x= xt, y= yt, z= zt;
+    if (smear (x, y, z, nb, xlo, xhi, nb, ylo, yhi, nb, zlo, zhi))
+      hMeas3->Fill (x, y, z);
   }
 
-  hTrueX= hTrue2->ProjectionX("Test Truth X");
-  hTrueY= hTrue2->ProjectionY("Test Truth Y");
-  hMeasX= hMeas2->ProjectionX("Test Measured X");
-  hMeasY= hMeas2->ProjectionY("Test Measured Y");
+#if PROJECT3D
+  hTrueX= hTrue3->ProjectionX("Test Truth X");
+  hMeasX= hMeas3->ProjectionX("Test Measured X");
+  hTrueY= hTrue3->ProjectionY("Test Truth Y");
+  hMeasY= hMeas3->ProjectionY("Test Measured Y");
+#endif
+  hTrueZ= hTrue3->ProjectionZ("Test Truth Z");
+  hMeasZ= hMeas3->ProjectionZ("Test Measured Z");
 
   return 1;
 }
@@ -261,15 +300,15 @@ Int_t Test2 (Int_t fxtest, Int_t fytest, Int_t nb, Int_t ntest,
 // Unfold
 //==============================================================================
 
-void Unfold2 (Int_t method, Int_t nb, Double_t xlo, Double_t xhi, Double_t ylo, Double_t yhi)
+void Unfold3 (Int_t method, Int_t nb, Double_t xlo, Double_t xhi, Double_t ylo, Double_t yhi, Double_t zlo, Double_t zhi)
 {
   cout << "Create RooUnfold object for method " << method << endl;
   switch (method) {
-    case 1:  unfold= new RooUnfoldBayes    (response, hMeas2, regparm);
+    case 1:  unfold= new RooUnfoldBayes    (response, hMeas3, regparm);
              break;
-    case 2:  unfold= new RooUnfoldSvd      (response, hMeas2, regparm, ntoys);
+    case 2:  unfold= new RooUnfoldSvd      (response, hMeas3, regparm, ntoys);
              break;
-    case 3:  unfold= new RooUnfoldBinByBin (response, hMeas2);
+    case 3:  unfold= new RooUnfoldBinByBin (response, hMeas3);
              break;
     default: cerr << "Unknown RooUnfold method " << method << endl;
              return;
@@ -280,55 +319,47 @@ void Unfold2 (Int_t method, Int_t nb, Double_t xlo, Double_t xhi, Double_t ylo, 
     cerr << "Don't calculate errors - this would take too long ("
          << nb*nb << " bins - skip if more than 400 for Bayes algorithm)" << endl;
   }
-  hReco2= (TH2D*) unfold->Hreco(withError);
-  unfold->PrintTable (cout, hTrue2, withError);
+  hReco3= (TH3D*) unfold->Hreco(withError);
+  unfold->PrintTable (cout, hTrue3, withError);
 
-  hRecoX= hReco2->ProjectionX("Reconstructed X", -1, -1, "E");
-  hRecoY= hReco2->ProjectionY("Reconstructed Y", -1, -1, "E");
+#if PROJECT3D
+  hRecoX= hReco3->ProjectionX("Reconstructed X", 0, 0, 0, 0, "E");
   hRecoX->SetMarkerStyle(8);
-  hRecoY->SetMarkerStyle(8);
-
   setmax (hTrueX, hTestPDFx, hMeasX, hRecoX);
-  setmax (hTrueY, hTestPDFy, hMeasY, hRecoY);
-
-  canvas->cd(3);
+  canvas->cd(4);
   hTrueX   ->Draw();
   hTestPDFx->Draw("LSAME");
   hMeasX   ->Draw("SAME");
   hRecoX   ->Draw("SAME");
 
-  canvas->cd(4);
+  hRecoY= hReco3->ProjectionY("Reconstructed Y", 0, 0, 0, 0, "E");
+  hRecoY->SetMarkerStyle(8);
+  setmax (hTrueY, hTestPDFy, hMeasY, hRecoY);
+  canvas->cd(5);
   hTrueY   ->Draw();
   hTestPDFy->Draw("LSAME");
   hMeasY   ->Draw("SAME");
   hRecoY   ->Draw("SAME");
+#endif
 
-  canvas->cd(5);
-  hTrue2->Draw();
-
+  hRecoZ= hReco3->ProjectionZ("Reconstructed Z", 0, 0, 0, 0, "E");
+  hRecoZ->SetMarkerStyle(8);
+  setmax (hTrueZ, hTestPDFz, hMeasZ, hRecoZ);
   canvas->cd(6);
-  hMeas2->Draw();
+  hTrueZ   ->Draw();
+  hTestPDFz->Draw("LSAME");
+  hMeasZ   ->Draw("SAME");
+  hRecoZ   ->Draw("SAME");
 
   canvas->cd(7);
-  hReco2->Draw();
-
-  // I think hReco2 already includes the statistical error on hTrue2, so
-  // don't include that twice when calculating residuals.
-  hRes2= new TH2D ("res", "Pull (reco-true)/error", nb, xlo, xhi, nb, ylo, yhi);
-  for (Int_t i= 0; i <= nb+1; i++) {
-    for (Int_t j= 0; j <= nb+1; j++) {
-      Double_t rec= hReco2->GetBinContent (i, j);
-      Double_t tru= hTrue2->GetBinContent (i, j);
-      Double_t err=  hReco2->GetBinError   (i, j);
-      if      (err > 0)
-        hRes2->SetBinContent (i, j, (rec-tru)/err);
-      else if (rec > 0)
-        hRes2->SetBinContent (i, j, (rec-tru)/sqrt(rec));
-    }
-  }
+  hTrue3->Draw();
 
   canvas->cd(8);
-  hRes2->Draw("COLZ");
+  hMeas3->Draw();
+
+  canvas->cd(9);
+  hReco3->Draw();
+
   canvas->Update();
 }
 
@@ -336,20 +367,24 @@ void Unfold2 (Int_t method, Int_t nb, Double_t xlo, Double_t xhi, Double_t ylo, 
 // Controlling routine
 //==============================================================================
 
-void RooUnfoldTest2D (
+void RooUnfoldTest3D (
                       Int_t    method=      1,
                       Int_t    stage=       0,
                       Int_t    ftrainx=     1,
                       Int_t    ftrainy=     1,
+                      Int_t    ftrainz=     1,
                       Int_t    ftestx=      3,
                       Int_t    ftesty=      5,
-                      Int_t    nb=         40,
+                      Int_t    ftestz=      5,
+                      Int_t    nb=          6,
                       Int_t    ntest=   10000,
                       Int_t    ntrain= 100000,
                       Double_t xlo=     -12.5,
                       Double_t xhi=      10.0,
                       Double_t ylo=     -12.5,
                       Double_t yhi=      10.0,
+                      Double_t zlo=     -12.5,
+                      Double_t zhi=      10.0,
                       Int_t    regparm_in= -999,  // Bayes niter=4, SVD kterm=20
                       Int_t    ntoys_in= 1000   // SVD only
                      )
@@ -361,7 +396,7 @@ void RooUnfoldTest2D (
   delete unfold;   unfold= 0;
   delete canvas;   canvas= 0;
   gDirectory->Clear();
-  hTrain2= hTrainTrue2= hTrue2= hMeas2= hReco2= hRes2= hTrue02=   0;
+  hTrain3= hTrainTrue3= hTrue3= hMeas3= hReco3= hTrue03=   0;
   hTrainX= hTrainTrueX= hTrueX= hMeasX= hRecoX= hPDFx= hTestPDFx= 0;
   hTrainY= hTrainTrueY= hTrueY= hMeasY= hRecoY= hPDFy= hTestPDFy= 0;
 #endif
@@ -369,13 +404,15 @@ void RooUnfoldTest2D (
                                             method==2 ? 20 : 0);
   if (method == 3) nosmear= true;  // bin-by-bin can't handle smearing or bias
   ntoys= ntoys_in;
-  cout << "RooUnfoldTest2D"
+  cout << "RooUnfoldTest3D"
        << " (method="  << method  // RooUnfold method: 1=Bayes, 2=SVD, 3=bin-by-bin
-       << ", stage="   << stage   // 1=train (writes RooUnfoldTest2D.root), 2=test (reads), 0=both (default)
+       << ", stage="   << stage   // 1=train (writes RooUnfoldTest3D.root), 2=test (reads), 0=both (default)
        << ", ftrainx=" << ftrainx // selected X training function
        << ", ftestx="  << ftestx  // selected X test function
        << ", ftrainy=" << ftrainy // selected Y training function
        << ", ftesty="  << ftesty  // selected Y test function
+       << ", ftrainz=" << ftrainz // selected Z training function
+       << ", ftestz="  << ftestz  // selected Z test function
        << ", nb="      << nb      // #bins
        << ", ntest="   << ntest   // # events to use for unsmearing
        << ", ntrain="  << ntrain  // #events to use for training
@@ -383,21 +420,23 @@ void RooUnfoldTest2D (
        << ", xhi="     << xhi     // range maximum
        << ", ylo="     << ylo     // range minimum
        << ", yhi="     << yhi     // range maximum
+       << ", zlo="     << zlo     // range minimum
+       << ", zhi="     << zhi     // range maximum
        << ", regparm=" << regparm // regularisation parameter (eg. number of iterations)
        << ", ntoys="   << ntoys   // number of toys used to obtain SVD covariances
        << ")" << endl;
   gROOT->SetStyle("Plain");
   gStyle->SetOptStat(0);
-  TPostScript ps("RooUnfoldTest2D.ps", 111);
-  canvas= new TCanvas("RooUnfoldTest2D","RooUnfoldTest2D",1);
+  TPostScript ps("RooUnfoldTest3D.ps", 111);
+  canvas= new TCanvas("RooUnfoldTest3D","RooUnfoldTest3D",1);
   canvas->SetGrid();
-  canvas->Divide(2,4);
+  canvas->Divide(2,5);
 
   if (stage != 2) {
-    response= new RooUnfoldResponse ("response", "test 2-D Unfolding");
+    response= new RooUnfoldResponse ("response", "test 3-D Unfolding");
     cout   << "==================================== TRAIN ========================" << endl;
-    if (Train2 (ftrainx, ftrainy, nb, ntrain, xlo, xhi, ylo, yhi)) {
-      TFile f ("RooUnfoldTest2D.root", "recreate");
+    if (Train3 (ftrainx, ftrainy, ftrainz, nb, ntrain, xlo, xhi, ylo, yhi, zlo, zhi)) {
+      TFile f ("RooUnfoldTest3D.root", "recreate");
       f.WriteTObject (response, "response");
       f.Close();
     } else
@@ -406,18 +445,18 @@ void RooUnfoldTest2D (
 
   if (stage != 1) {
     if (!response) {
-      TFile f ("RooUnfoldTest2D.root");
+      TFile f ("RooUnfoldTest3D.root");
       f.GetObject ("response", response);
       if (!response) {
-        cerr << "could not read 'response' object from file RooUnfoldTest2D.root" << endl;
+        cerr << "could not read 'response' object from file RooUnfoldTest3D.root" << endl;
         return;
       }
       f.Close();
     }
     cout   << "==================================== TEST =========================" << endl;
-    if (Test2 (ftestx, ftesty, nb, ntest,  xlo, xhi, ylo, yhi)) {
+    if (Test3 (ftestx, ftesty, ftestz, nb, ntest,  xlo, xhi, ylo, yhi, zlo, zhi)) {
       cout << "==================================== UNFOLD =======================" << endl;
-      Unfold2 (method,         nb,         xlo, xhi, ylo, yhi);
+      Unfold3 (method,         nb,         xlo, xhi, ylo, yhi, zlo, zhi);
     }
   }
 
@@ -432,22 +471,22 @@ void RooUnfoldTest2D (
 int main (int argc, char *argv[])
 {
   switch (argc) {
-    case  1:  RooUnfoldTest2D(); break;
-    case  2:  RooUnfoldTest2D(atoi(argv[1])); break;
-    case  3:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2])); break;
-    case  4:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3])); break;
-    case  5:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4])); break;
-    case  6:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5])); break;
-    case  7:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6])); break;
-    case  8:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7])); break;
-    case  9:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8])); break;
-    case 10:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9])); break;
-    case 11:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atof(argv[10])); break;
-    case 12:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atof(argv[10]), atof(argv[11])); break;
-    case 13:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atof(argv[10]), atof(argv[11]), atof(argv[12])); break;
-    case 14:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atof(argv[10]), atof(argv[11]), atof(argv[12]), atof(argv[13])); break;
-    case 15:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atof(argv[10]), atof(argv[11]), atof(argv[12]), atof(argv[13]), atoi(argv[14])); break;
-    case 16:  RooUnfoldTest2D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atof(argv[10]), atof(argv[11]), atof(argv[12]), atof(argv[13]), atoi(argv[14]), atoi(argv[15])); break;
+    case  1:  RooUnfoldTest3D(); break;
+    case  2:  RooUnfoldTest3D(atoi(argv[1])); break;
+    case  3:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2])); break;
+    case  4:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3])); break;
+    case  5:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4])); break;
+    case  6:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5])); break;
+    case  7:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6])); break;
+    case  8:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7])); break;
+    case  9:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8])); break;
+    case 10:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9])); break;
+    case 11:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10])); break;
+    case 12:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10]), atoi(argv[11])); break;
+    case 13:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10]), atoi(argv[11]), atof(argv[12])); break;
+    case 14:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10]), atoi(argv[11]), atof(argv[12]), atof(argv[13])); break;
+    case 15:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10]), atoi(argv[11]), atof(argv[12]), atof(argv[13]), atof(argv[14])); break;
+    case 16:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10]), atoi(argv[11]), atof(argv[12]), atof(argv[13]), atof(argv[14]), atof(argv[15])); break;
     default: cerr << argv[0] << ": too many arguments (" << argc-1 << ")" << endl;
              return 1;
   }
