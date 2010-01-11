@@ -1,12 +1,16 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.32 2009-12-22 17:11:31 adye Exp $
+$Id: History,v 1.33 2010-01-11 21:48:39 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye         11-Jan-2010 tja100111a
+  o Move RooUnfoldBayesImpl.cxx description to top of file and tidy.
+  o Remove unneccessary vector copy.
 
 Tim Adye         22-Dec-2009 tja091222a
   o RooUnfoldTest2D: fix 2D rotation.

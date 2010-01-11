@@ -1,23 +1,59 @@
-//-----------------------------------------------------------------
-//
+//==============================================================================
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.9 2009-08-24 16:14:39 adye Exp $
+//   $Id: RooUnfoldBayesImpl.cxx,v 1.10 2010-01-11 21:48:44 adye Exp $
 //
 // Description:
-//   Bayesian Unfolding class 
+//   A class for unfolding 1, 2 or 3 dimensions of data using the
+//   Bayesian Unfolding algorithm.
+//
+// Example (1-D):
+//
+//   // Training
+//   // --------
+//   // Create a new object
+//   RooUnfoldBayesImpl* mytest= new RooUnfoldBayesImpl("unfold","test 1-D Unfolding");
+//   // initialise the generated truth arrays and the reconstructed/measured arrays.
+//   // in this example both have 30 bins and are in the range -12.5 to 10.0
+//   ntdims = 1 ; ntrue.push_back(30) ; tmin.push_back(-12.5) ; tmax.push_back(10.0);
+//   nrdims = 1 ; rtrue.push_back(30) ; rmin.push_back(-12.5) ; rmax.push_back(10.0);
+//   mytest.build(ntdims, ntrue, tmin, tmax, nrdims, rtrue, rmin, rmax) ;
+//   // Now train. For each event, pass the true generated value and the measured value. If the
+//   // the measured value does not exist (because it failed a trigger cut say),
+//   // then the measured array should have zero length.
+//   for (int ievt=0; ievt < ngenerated; ievt++) {
+//      // example event where measured value is accepted
+//     xtrue.clear() ; xtrue.push_back(3.56); // generated value
+//     xmeas.clear() ; xmeas.push_back(2.75); // measured value
+//     mytest.accumulate(xtrue,xmeas);
+//      // example event where measured value is rejected
+//     xtrue.clear() ; xtrue.push_back(3.56); // generated value
+//     xmeas.clear() ;                        // measured value failed cut
+//     mytest.accumulate(xtrue,xmeas);
+//   }
+//   // etc...
+//   // After accumulating all the training events, you now calculated the unfolding matrix
+//   mytest.train() ;
+//   // You can now save the unfolding matrix if you like.
+//
+//   // Unfolding
+//   // ---------
+//   // Accumulate the measured variables you wish to unfold
+//   for (int ievt=0; ievt < nmeasured; ievt++) {
+//     xmeas.clear() ; xmeas.push_back(4.15); // measured value
+//     mytest.accumulate(xmeas); // etc..
+//   }
+//   //when finished unfold and return the unfolded vector of values
+//   vector<Double_t> causes;
+//   mytest.unfold(causes);
 //
 // Author List:
-//   F.Wilson, T.Adye
+//   Fergus Wilson <fwilson@slac.stanford.edu>, Tim Adye <T.J.Adye@rl.ac.uk>
 //
 // Copyright Information:
-//   Copyright (C) 2005-2006 Rutherford Appleton Laboratory
+//   Copyleft (C) 2005-2006 Rutherford Appleton Laboratory
 //
-// Author: Fergus Wilson <mailto:fwilson@slac.stanford.edu>, Tim Adye <mailto:T.J.Adye@rl.ac.uk>
-// @(#)
-/*
- * Copyright (C) 2005-2006 Rutherford Appleton Laboratory
- */
-//------------------------------------------------------------------
+//==============================================================================
+
 #include "RooUnfoldBayesImpl.h"
 
 #include <vector>
@@ -52,48 +88,6 @@ ClassImp(RooUnfoldBayesImpl);
 // default constructor
 RooUnfoldBayesImpl::RooUnfoldBayesImpl(): TNamed()
 {
-  // A class for unfolding 1, 2 or 3 dimensions of data using the Bayesian Unfolding algorithm.
-  // Example (1-D):
-  //
-  // Training
-  // --------
-  // // Create a new object
-  // RooUnfoldBayesImpl* mytest= new RooUnfoldBayesImpl("unfold","test 1-D Unfolding");
-  // // initialise the generated truth arrays and the reconstructed/measured arrays.
-  // // in this example both have 30 bins and are in the range -12.5 to 10.0
-  // ntdims = 1 ; ntrue.push_back(30) ; tmin.push_back(-12.5) ; tmax.push_back(10.0);
-  // nrdims = 1 ; rtrue.push_back(30) ; rmin.push_back(-12.5) ; rmax.push_back(10.0);
-  // mytest.build(ntdims, ntrue, tmin, tmax, nrdims, rtrue, rmin, rmax) ;
-  // // Now train. For each event, pass the true generated value and the measured value. If the
-  // // the measured value does not exist (because it failed a trigger cut say), 
-  // // then the measured array should have zero length.
-  // for (int ievt=0; ievt < ngenerated; ievt++) {
-  //    // example event where measured value is accepted
-  //   xtrue.clear() ; xtrue.push_back(3.56); // generated value
-  //   xmeas.clear() ; xmeas.push_back(2.75); // measured value
-  //   mytest.accumulate(xtrue,xmeas);
-  //    // example event where measured value is rejected
-  //   xtrue.clear() ; xtrue.push_back(3.56); // generated value
-  //   xmeas.clear() ;                        // measured value failed cut
-  //   mytest.accumulate(xtrue,xmeas);
-  // }
-  // // etc...
-  // // After accumulating all the training events, you now calculated the unfolding matrix
-  // mytest.train() ; 
-  // // You can now save the unfolding matirx if you like.
-  //
-  // Unfolding
-  // ---------
-  // // Accumulate the measured variables you wish to unfold
-  // for (int ievt=0; ievt < nmeasured; ievt++) {
-  //   xmeas.clear() ; xmeas.push_back(4.15); // measured value
-  //   mytest.accumulate(xmeas); // etc..
-  // }
-  // //when finished unfold and return the unfolded vector of values
-  // vector<Double_t> causes;
-  // mytest.unfold(causes);
-  //
-
   init();
 }
 
@@ -528,7 +522,7 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
       //cout << "efficiency i " << i << " :  " << _efficiencyCi[i] << endl;;
     }
 
-    vector<Double_t> nbarCi(_nCi);
+    vector<Double_t> nbarCi(_nc);
 
     _nbartrue = 0.0;
 
@@ -552,8 +546,8 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
     //cout << "nbartrue " << _nbartrue << endl;
     for (UInt_t i = 0 ; i < nbarCi.size(); i++) {
       PbarCi[i] /= _nbartrue;
-      cout << "i PbarCi P0C " << i 
-	   << "\t" << PbarCi[i]*_nbartrue 
+      cout << "i PbarCi P0C " << i
+	   << "\t" << PbarCi[i]*_nbartrue
 	   << "\t" << P0C[i]*_nbartrue << endl;
     }
 
@@ -586,8 +580,8 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
 Int_t
 RooUnfoldBayesImpl::smooth(vector<Double_t>& PbarCi, Double_t nevts) const
 {
-  // Smooth unfolding distribution. PbarCi is the array of proababilities 
-  // to be smoothed PbarCi; nevts is the numbers of events 
+  // Smooth unfolding distribution. PbarCi is the array of proababilities
+  // to be smoothed PbarCi; nevts is the numbers of events
   // (needed to calculate suitable errors for the smearing).
   // PbarCi is returned with the smoothed distribution.
 
@@ -617,8 +611,8 @@ RooUnfoldBayesImpl::smooth(vector<Double_t>& PbarCi, Double_t nevts) const
 
 //-------------------------------------------------------------------------
 Double_t
-RooUnfoldBayesImpl::getChi2(const vector<Double_t> prob1, 
-			    const vector<Double_t> prob2, 
+RooUnfoldBayesImpl::getChi2(const vector<Double_t> prob1,
+			    const vector<Double_t> prob2,
 			    Double_t nevents) const
 {
   // calculate the chi^2. prob1 and prob2 are the probabilities
@@ -704,7 +698,7 @@ RooUnfoldBayesImpl::info(Int_t level) const
 	     << "\t " << _nEj[i] << "\t " << _nEstj[i] << "\t " << _causes[i] << endl;
       }
     }
-    
+
     // if the number of bins is different
     if (_nCi.size() > _nEj.size() ) {
       for (UInt_t i=iend; i < _nCi.size() ; i++) {
@@ -784,7 +778,7 @@ RooUnfoldBayesImpl::getCovarianceBinByBin()
       }
       _Vij->Set(k, l, variance);
     }
-  }  
+  }
   _nCausesError = getError();
   return(1);
 }
@@ -795,7 +789,7 @@ RooUnfoldBayesImpl::getCovariance()
 {
   const vector<Double_t>& effects= _nEstj;
   // Create the covariance matrix
-  if (_nc*_ne >= 50000) 
+  if (_nc*_ne >= 50000)
     cout << "getCovariance (this takes some time with many bins)." << endl;
   vector<Double_t> dummy;
   Double_t nbartrue = getnbarCi(effects,dummy);
@@ -830,13 +824,13 @@ RooUnfoldBayesImpl::getCovariance()
   }
   clock.Stop();
   //Double_t nsecs  = clock.RealTime();
-  
+
   // error due to uncertainty on unfolding matrix M
   Array2D *Vc1 = new Array2D(_nc,_nc);  // automatically zeroed
   Bool_t doUnfoldSystematic = false;
   if (doUnfoldSystematic) {
     cout << "Calculating covariance due to unfolding matrix..." << endl;
-    
+
     // Pre-compute some numbers
     vector<Double_t> inv_nCi(_nCi);
     Array2D *inv_npec = new Array2D(_nc,_ne);  // automatically zeroed
@@ -859,7 +853,7 @@ RooUnfoldBayesImpl::getCovariance()
 	  * (inv_npec->Get(u,i) - inv_nCi[u]);
 	M_tmp->Add(i, i, temp);
       }
-      
+
       // off-diagonal element
       for (Int_t j = i+1 ; j < _ne ; j++) {
 	for (Int_t u = 0 ; u < _nc ; u++) {
@@ -878,13 +872,13 @@ RooUnfoldBayesImpl::getCovariance()
       for (Int_t l = k ; l < _nc ; l++) {
 	for (Int_t i = 0 ; i < _ne ; i++) {
 	  for (Int_t j = 0 ; j < _ne ; j++) {
-	    Double_t covM = _Mij->Get(i,l) * inv_nCi[l] + 
+	    Double_t covM = _Mij->Get(i,l) * inv_nCi[l] +
 	                    _Mij->Get(j,k) * inv_nCi[k] + M_tmp->Get(j,i);
 	    if (k==l) {
 	      covM -= neff_inv;
 	      if (i==j) {covM += inv_npec->Get(k,i);}
 	    }
-	    if (i==j) { 
+	    if (i==j) {
 	      covM -=  (_Mij->Get(i,l) * _efficiencyCi[l] * inv_npec->Get(l,i) +
 			_Mij->Get(i,k) * _efficiencyCi[k] * inv_npec->Get(k,i) );
 	    }
@@ -909,7 +903,7 @@ RooUnfoldBayesImpl::getCovariance()
       _Vij->Set(k,l,temp);
       _Vij->Set(l,k,temp);
     }
-  }  
+  }
 
   Bool_t printCovar = false;
   if (printCovar) {
@@ -917,8 +911,8 @@ RooUnfoldBayesImpl::getCovariance()
     for (Int_t k = 0 ; k < _nc ; k++) {
       for (Int_t l = 0 ; l < _nc ; l++) {
 	if (_Vij->Get(k,l) == 0) {continue;}
-	cout << left << setw(4) << k << setw(4) << l 
-	     << setw(11) << Vc0->Get(k,l) << setw(10) << Vc1->Get(k,l) 
+	cout << left << setw(4) << k << setw(4) << l
+	     << setw(11) << Vc0->Get(k,l) << setw(10) << Vc1->Get(k,l)
 	     << setw(10)<< _Vij->Get(k,l) << right << endl;
       }
     }
@@ -933,7 +927,7 @@ Double_t
 RooUnfoldBayesImpl::deltaM(Int_t k, Int_t i, Int_t r, Int_t u) const
 {
   // Helper function for getCovariance. Calculates derivative
-  // d M_{ki} / d P(E_r | C_u) 
+  // d M_{ki} / d P(E_r | C_u)
   //
   Double_t temp(0);
 

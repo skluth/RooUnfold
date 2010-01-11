@@ -1,9 +1,9 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.5 2009-06-12 00:44:42 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.6 2010-01-11 21:48:44 adye Exp $
 //
 // Description:
-//      Unfold
+//      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
 //
 // Author List:
 //      Tim Adye <T.J.Adye@rl.ac.uk>
