@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldTest3D.cxx,v 1.1 2009-12-22 17:11:36 adye Exp $
+//      $Id: RooUnfoldTest3D.cxx,v 1.2 2010-01-13 00:18:19 adye Exp $
 //
 // Description:
 //      3D test of RooUnfold package using toy MC generated according to PDFs
@@ -44,6 +44,8 @@ using std::endl;
 #include "RooUnfoldSvd.h"
 #include "RooUnfoldBinByBin.h"
 #endif
+
+#include "RooUnfoldTestArgs.icc"
 
 //==============================================================================
 // MC generation routine: RooUnfoldTestPdf()
@@ -464,32 +466,71 @@ void RooUnfoldTest3D (
 }
 
 //==============================================================================
+// Parse arguments and set defaults (uses RooUnfoldTestArgs.icc).
+// Defaults here should probably match those in RooUnfoldTest3D(method,...) above.
+//==============================================================================
+
+int RooUnfoldTest3D (int argc, const char* const* argv, Bool_t split= false)
+{
+  Int_t    method=      1;
+  Int_t    stage=       0;
+  Int_t    ftrainx=     1;
+  Int_t    ftrainy=     1;
+  Int_t    ftrainz=     1;
+  Int_t    ftestx=      3;
+  Int_t    ftesty=      5;
+  Int_t    ftestz=      5;
+  Int_t    nb=          6;
+  Int_t    ntest=   10000;
+  Int_t    ntrain= 100000;
+  Double_t xlo=     -12.5;
+  Double_t xhi=      10.0;
+  Double_t ylo=     -12.5;
+  Double_t yhi=      10.0;
+  Double_t zlo=     -12.5;
+  Double_t zhi=      10.0;
+  Int_t    regparm=  -999;
+  Int_t    ntoys=    1000;
+  const setargs_t args[]= {
+    { "method",  &method,  0 },
+    { "stage",   &stage,   0 },
+    { "ftrainx", &ftrainx, 0 },
+    { "ftrainy", &ftrainy, 0 },
+    { "ftrainz", &ftrainz, 0 },
+    { "ftestx",  &ftestx,  0 },
+    { "ftesty",  &ftesty,  0 },
+    { "ftestz",  &ftestz,  0 },
+    { "nb",      &nb,      0 },
+    { "ntest",   &ntest,   0 },
+    { "ntrain",  &ntrain,  0 },
+    { "xlo",     0,     &xlo },
+    { "xhi",     0,     &xhi },
+    { "ylo",     0,     &ylo },
+    { "yhi",     0,     &yhi },
+    { "zlo",     0,     &zlo },
+    { "zhi",     0,     &zhi },
+    { "regparm", &regparm, 0 },
+    { "ntoys",   &ntoys,   0 },
+  };
+  if (!setargs (args, (sizeof(args)/sizeof(setargs_t)), argc, argv, split)) return 1;
+  RooUnfoldTest3D (method, stage, ftrainx, ftrainy, ftrainz, ftestx, ftesty, ftestz, nb, ntest, ntrain, xlo, xhi, ylo, yhi, zlo, zhi, regparm, ntoys);
+  return 0;
+}
+
+//==============================================================================
+// Routine to run with parameters specified as a string
+//==============================================================================
+
+int RooUnfoldTest3D (const char* args)
+{
+  const char* const argv[]= { "RooUnfoldTest3D", args };
+  return RooUnfoldTest3D (2, argv, true);
+}
+
+//==============================================================================
 // Main program when run stand-alone
 //==============================================================================
 
 #ifndef __CINT__
-int main (int argc, char *argv[])
-{
-  switch (argc) {
-    case  1:  RooUnfoldTest3D(); break;
-    case  2:  RooUnfoldTest3D(atoi(argv[1])); break;
-    case  3:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2])); break;
-    case  4:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3])); break;
-    case  5:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4])); break;
-    case  6:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5])); break;
-    case  7:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6])); break;
-    case  8:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7])); break;
-    case  9:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8])); break;
-    case 10:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9])); break;
-    case 11:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10])); break;
-    case 12:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10]), atoi(argv[11])); break;
-    case 13:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10]), atoi(argv[11]), atof(argv[12])); break;
-    case 14:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10]), atoi(argv[11]), atof(argv[12]), atof(argv[13])); break;
-    case 15:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10]), atoi(argv[11]), atof(argv[12]), atof(argv[13]), atof(argv[14])); break;
-    case 16:  RooUnfoldTest3D(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10]), atoi(argv[11]), atof(argv[12]), atof(argv[13]), atof(argv[14]), atof(argv[15])); break;
-    default: cerr << argv[0] << ": too many arguments (" << argc-1 << ")" << endl;
-             return 1;
-  }
-  return 0;
-}
+int main (int argc, char** argv) { return RooUnfoldTest3D (argc, argv); }
 #endif

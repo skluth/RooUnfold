@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.5 2009-06-12 00:44:42 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.6 2010-01-13 00:18:21 adye Exp $
 //
 // Description:
 //      Unfold
@@ -107,44 +107,66 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError) cons
 
   std::ostringstream fmt;
   fmt.copyfmt (o);   // save original ostream format
-  o << "=========================================================" << endl
-    << setw(3) << ""      << setw(9) << "Train" << setw(9) << "Train"    << setw(9) << "Test"  << setw(9) << "Unfolded" << setw(9) << "Diff" << setw(9) << "Pull" << endl
-    << setw(3) << "Bin"   << setw(9) << "Truth" << setw(9) << "Measured" << setw(9) << "Input" << setw(9) << "Output"   << endl
-    << "=========================================================" << endl;
+  o << "==================================================================" << endl
+    << setw(3) << ""      << setw(9) << "Train" << setw(9) << "Train"    << setw(9) << "Test"  << setw(9) << "Test"  << setw(9) << "Unfolded" << setw(9) << "Diff" << setw(9) << "Pull" << endl
+    << setw(3) << "Bin"   << setw(9) << "Truth" << setw(9) << "Measured" << setw(9) << "Truth" << setw(9) << "Input" << setw(9) << "Output"   << endl
+    << "==================================================================" << endl;
 
   Double_t chi2= 0.0;
   Int_t ndf= 0;
-  for (Int_t i = 0 ; i <= _nt+1; i++) {
-
-    Double_t ydiff    = hReco->GetBinContent(i) - hTrue->GetBinContent(i);
-    Double_t ydiffErr = hReco->GetBinError(i);
+  Int_t maxbin= _nt < _nm ? _nm : _nt;
+  for (Int_t i = 0 ; i <= maxbin+1; i++) {
 
     if (i <= 0) o << " <1";
-    else if (i>_nt) o << ">" << setw(2) << _nt;
-    else            o << setw(3) << i;
-    o << std::fixed << setprecision(0)
-      << ' ' << setw(8) << hTrainTrue->GetBinContent(i)
-      << ' ' << setw(8) << hTrain->GetBinContent(i)
-      << ' ' << setw(8) << hMeas->GetBinContent(i) << setprecision(1)
-      << ' ' << setw(8) << hReco->GetBinContent(i)
-      << ' ' << setw(8) << ydiff;
-    if (ydiffErr!=0) {
-      Double_t ypull = ydiff/ydiffErr;
-      chi2 += ypull*ypull;
-      ndf++;
-      o << setprecision(3) << ' ' << setw(8) << ypull;
+    else if (i>maxbin) o << ">" << setw(2) << maxbin;
+    else               o        << setw(3) << i;
+    o << std::fixed << setprecision(0);
+    if (i<=_nt+1)
+      o << ' ' << setw(8) << hTrainTrue->GetBinContent(i);
+    else
+      o << setw(9) << " ";
+    if (i<=_nm+1)
+      o << ' ' << setw(8) << hTrain->GetBinContent(i);
+    else
+      o << setw(9) << " ";
+    if (hTrue && i<=_nt+1)
+      o << ' ' << setw(8) << hTrue->GetBinContent(i);
+    else
+      o << setw(9) << " ";
+    if (i<=_nm+1)
+      o << ' ' << setw(8) << hMeas->GetBinContent(i);
+    else
+      o << setw(9) << " ";
+    o << setprecision(1);
+    if (i<=_nt+1) {
+      o << ' ' << setw(8) << hReco->GetBinContent(i);
+      if (hTrue) {
+        Double_t ydiff    = hReco->GetBinContent(i) - hTrue->GetBinContent(i);
+        Double_t ydiffErr = hReco->GetBinError(i);
+        o << ' ' << setw(8) << ydiff;
+        if (ydiffErr!=0) {
+          Double_t ypull = ydiff/ydiffErr;
+          chi2 += ypull*ypull;
+          ndf++;
+          o << setprecision(3) << ' ' << setw(8) << ypull;
+        }
+      }
     }
     o << endl;
   }
 
-  o << "=========================================================" << endl
+  o << "==================================================================" << endl
     << setw(3) << "" << std::fixed << setprecision(0)
-    << ' ' << setw(8)  << hTrainTrue->Integral()
-    << ' ' << setw(8)  << hTrain->Integral()
-    << ' ' << setw(8)  << hMeas->Integral() << setprecision(1)
+    << ' ' << setw(8) << hTrainTrue->Integral()
+    << ' ' << setw(8) << hTrain->Integral();
+  if (hTrue)
+    o << ' ' << setw(8) << hTrue->Integral();
+  else
+    o << setw(9) << " ";
+  o << ' ' << setw(8) << hMeas->Integral() << setprecision(1)
     << ' ' << setw(8) << hReco->Integral()
     << endl
-    << "=========================================================" << endl;
+    << "==================================================================" << endl;
   o.copyfmt (fmt);  // restore original ostream format
   o << "Chi^2/NDF=" << chi2 << "/" << ndf << endl;
 }

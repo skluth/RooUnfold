@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------
 //
-// $Id: RooUnfoldBayesImpl.h,v 1.3 2009-05-22 17:10:20 adye Exp $
+// $Id: RooUnfoldBayesImpl.h,v 1.4 2010-01-13 00:18:21 adye Exp $
 //
 //--------------------------------------------------------------------
 #ifndef ROOUNFOLDBAYESIMPL_HH
@@ -120,7 +120,7 @@ private:
   Int_t unfold(vector<Double_t>& causes); // unfold vector of causes after training
   Int_t unfoldBinByBin(vector<Double_t>& causes); // unfold vector of causes after training
 
-  Int_t getCovariance();
+  Int_t getCovariance(Bool_t doUnfoldSystematic = false);
   Int_t getCovarianceBinByBin();
   Double_t getError(); // Estimated error on number of unfolded events
 

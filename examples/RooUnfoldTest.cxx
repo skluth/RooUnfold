@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.8 2009-06-12 00:44:40 adye Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.9 2010-01-13 00:18:19 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -45,6 +45,8 @@
 #include "RooUnfoldSvd.h"
 #include "RooUnfoldBinByBin.h"
 #endif
+
+#include "RooUnfoldTestArgs.icc"
 
 //==============================================================================
 // MC generation routine: RooUnfoldTestPdf()
@@ -312,6 +314,7 @@ void Unfold (Int_t method, Int_t nm, Int_t nt, Double_t xlo, Double_t xhi)
 
 //==============================================================================
 // Controlling routine
+// Defaults here should probably match those in RooUnfoldTest(argc,...) below.
 //==============================================================================
 
 void RooUnfoldTest (
@@ -350,7 +353,7 @@ void RooUnfoldTest (
        << ", ftrain=" << ftrain  // selected training function
        << ", ftest="  << ftest   // selected test function
        << ", nt="     << nt      // #truth bins
-       << ", ntest="  << ntest   // # events to use for unsmearing
+       << ", ntest="  << ntest   // #events to use for unsmearing
        << ", ntrain=" << ntrain  // #events to use for training
        << ", xlo="    << xlo     // range minimum
        << ", xhi="    << xhi     // range maximum
@@ -428,29 +431,57 @@ void RooUnfoldTest (
 }
 
 //==============================================================================
+// Parse arguments and set defaults (uses RooUnfoldTestArgs.icc).
+// Defaults here should probably match those in RooUnfoldTest(method,...) above.
+//==============================================================================
+
+int RooUnfoldTest (int argc, const char* const* argv, Bool_t split= false)
+{
+  Int_t    method=      1;
+  Int_t    stage=       0;
+  Int_t    ftrain=      2;
+  Int_t    ftest=       5;
+  Int_t    nt=         40;
+  Int_t    ntest=   10000;
+  Int_t    ntrain= 100000;
+  Double_t xlo=     -12.5;
+  Double_t xhi=      10.0;
+  Int_t    regparm=  -999;
+  Int_t    ntoys=    1000;
+  Int_t    nm=         -1;
+  const setargs_t args[]= {
+    { "method",  &method,  0 },
+    { "stage",   &stage,   0 },
+    { "ftrain",  &ftrain,  0 },
+    { "ftest",   &ftest,   0 },
+    { "nt",      &nt,      0 },
+    { "ntest",   &ntest,   0 },
+    { "ntrain",  &ntrain,  0 },
+    { "xlo",     0,     &xlo },
+    { "xhi",     0,     &xhi },
+    { "regparm", &regparm, 0 },
+    { "ntoys",   &ntoys,   0 },
+    { "nm",      &nm,      0 }
+  };
+  if (!setargs (args, (sizeof(args)/sizeof(setargs_t)), argc, argv, split)) return 1;
+  RooUnfoldTest (method, stage, ftrain, ftest, nt, ntest, ntrain, xlo, xhi, regparm, ntoys, nm);
+  return 0;
+}
+
+//==============================================================================
+// Routine to run with parameters specified as a string
+//==============================================================================
+
+int RooUnfoldTest (const char* args)
+{
+  const char* const argv[]= { "RooUnfoldTest", args };
+  return RooUnfoldTest (2, argv, true);
+}
+
+//==============================================================================
 // Main program when run stand-alone
 //==============================================================================
 
 #ifndef __CINT__
-int main (int argc, char *argv[])
-{
-  switch (argc) {
-    case  1:  RooUnfoldTest(); break;
-    case  2:  RooUnfoldTest(atoi(argv[1])); break;
-    case  3:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2])); break;
-    case  4:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3])); break;
-    case  5:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4])); break;
-    case  6:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5])); break;
-    case  7:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6])); break;
-    case  8:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7])); break;
-    case  9:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atof(argv[8])); break;
-    case 10:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atof(argv[8]), atof(argv[9])); break;
-    case 11:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atof(argv[8]), atof(argv[9]), atoi(argv[10])); break;
-    case 12:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atof(argv[8]), atof(argv[9]), atoi(argv[10]), atoi(argv[11])); break;
-    case 13:  RooUnfoldTest(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]), atof(argv[8]), atof(argv[9]), atoi(argv[10]), atoi(argv[11]), atoi(argv[12])); break;
-    default: cerr << argv[0] << ": too many arguments (" << argc-1 << ")" << endl;
-             return 1;
-  }
-  return 0;
-}
+int main (int argc, char** argv) { return RooUnfoldTest (argc, argv); }
 #endif

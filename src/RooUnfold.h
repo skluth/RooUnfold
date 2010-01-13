@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.4 2009-06-12 00:44:42 adye Exp $
+//      $Id: RooUnfold.h,v 1.5 2010-01-13 00:18:21 adye Exp $
 //
 // Description:
 //      Unfold
@@ -59,7 +59,7 @@ public:
 
   virtual Int_t                    verbose() const;
 
-  virtual void PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError= true) const;
+  virtual void PrintTable (std::ostream& o, const TH1* hTrue= 0, Bool_t withError= true) const;
 
 protected:
 

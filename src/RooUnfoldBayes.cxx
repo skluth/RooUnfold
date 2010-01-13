@@ -1,9 +1,13 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.6 2010-01-11 21:48:44 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.7 2010-01-13 00:18:21 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
+//      Note that we use 1D distributions in RooUnfoldBayesImpl, even if we are
+//      unfolding multi-dimensional distributions: RooUnfold already converted
+//      to 1D. Except for smoothing (which RooUnfoldBayesImpl doesn't implement)
+//      this is just a matter of bookkeeping.
 //
 // Author List:
 //      Tim Adye <T.J.Adye@rl.ac.uk>
@@ -97,14 +101,11 @@ RooUnfoldBayes::Setup (Int_t niter, Bool_t smoothit)
   _bayes->setupTrain  (H2VD (_res->Htruth(),    vtruth),
                        H2VD (_res->Hmeasured(), vtrain),
                        H2AD (_res->Hresponse(), aresp));
+  _bayes->setupUnfold (H2VD (_meas,             vmeasured));
 
   if (verbose() >= 2) Print();
 
   train();
-
-  if (verbose() >= 2) Print();
-
-  _bayes->setupUnfold (H2VD (_meas,             vmeasured));
 
   if (verbose() >= 2) Print();
 

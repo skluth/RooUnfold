@@ -1,12 +1,30 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.33 2010-01-11 21:48:39 adye Exp $
+$Id: History,v 1.34 2010-01-13 00:18:15 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye         12-Jan-2010 tja100112a
+  o RooUnfoldBayesImpl::train should use data input rather than MC input for
+    n(Ej). This is _nEstj[] rather _nEj[]. This means that setupUnfold() must
+    be called before train() - maybe these routines need tidying up.
+    Problem reported Jan Kapitan.
+  o RooUnfoldBayesImpl::train should normalise _nCi to 1 for the initial P0(C)
+    rather than Nobs.
+  o RooUnfoldBayesImpl::train: remove redundent TStopwatch timer.
+  o RooUnfoldBayesImpl::getCovariance option doUnfoldSystematic to enable
+    systematic calculation. It remains disabled by default: I'm not sure it is
+    correct, it is very slow, and the effect should be small with good MC
+    statistics.
+  o RooUnfold::PrintTable fixed for _nm!=_nt. Print test truth (hTrue), which
+    is now optional.
+  o RooUnfoldTest(2D,3D) can now be run with parameters specified by name, not
+    just positional. Eg. RooUnfoldTest regparm=6 or RooUnfoldTest("regparm=6")
+    from the ROOT prompt.
 
 Tim Adye         11-Jan-2010 tja100111a
   o Move RooUnfoldBayesImpl.cxx description to top of file and tidy.

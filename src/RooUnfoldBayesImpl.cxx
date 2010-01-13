@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.10 2010-01-11 21:48:44 adye Exp $
+//   $Id: RooUnfoldBayesImpl.cxx,v 1.11 2010-01-13 00:18:21 adye Exp $
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the
@@ -63,7 +63,6 @@
 #include <iomanip>
 #include <cstdlib>
 
-#include "TStopwatch.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
@@ -477,13 +476,13 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
   for (Int_t i=0 ; i< _nc ; i++) {
     _efficiencyCi.push_back(0);
   }
-  Double_t nobs = sum(_nEj);
-  //cout << " efficiency "<< _efficiencyCi.size() << " " << nobs << endl;
+  Double_t ntrue = sum(_nCi);
+  //cout << " efficiency "<< _efficiencyCi.size() << " " << ntrue << endl;
 
   // Initial distribution
   vector<Double_t> P0C(_nCi);
   for (UInt_t i = 0 ; i <_nCi.size(); i++) {
-    P0C[i] /= nobs;
+    P0C[i] /= ntrue;
     //P0C[i] = 1.0/_nCi.size();
     //cout << "i _nCi P0C " << i << "\t" << _nCi[i] << "\t" << P0C[i] << endl;
   }
@@ -534,7 +533,7 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
         if (_efficiencyCi[i] <= 0.0) {continue;}
         Double_t x = _Sij->Get(i,j) / _efficiencyCi[i];
         _Mij->Set(i,j,x);
-        nbarCi[i] += (_nEj[j] * _Mij->Get(i,j));
+        nbarCi[i] += (_nEstj[j] * _Mij->Get(i,j));
         //      if (_Mij[i][j]>0) {cout << "Mij " << i << " " << j << " " << _Mij[i][j] << endl;}
       }
       //      _nbartrue += nbarCi[i];
@@ -563,7 +562,7 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
     }
 
     Double_t chi2 = getChi2(PbarCi, P0C, _nbartrue);
-    cout << "Chi^2 " << chi2 << endl;
+    cout << "Chi^2 of change " << chi2 << endl;
 
     // replace P0C
     P0C = PbarCi;
@@ -785,7 +784,7 @@ RooUnfoldBayesImpl::getCovarianceBinByBin()
 
 //-------------------------------------------------------------------------
 Int_t
-RooUnfoldBayesImpl::getCovariance()
+RooUnfoldBayesImpl::getCovariance(Bool_t doUnfoldSystematic)
 {
   const vector<Double_t>& effects= _nEstj;
   // Create the covariance matrix
@@ -795,8 +794,6 @@ RooUnfoldBayesImpl::getCovariance()
   Double_t nbartrue = getnbarCi(effects,dummy);
 
   // error  error from data
-  TStopwatch clock;
-  clock.Start();
   cout << "Calculating covariance due to number of measured events..." << endl;
   Array2D *Vc0 = new Array2D(_nc,_nc);
   for (Int_t k = 0 ; k < _nc ; k++) {
@@ -822,12 +819,11 @@ RooUnfoldBayesImpl::getCovariance()
       Vc0->Set(l,k,(temp-temp2)); // symmetric matrix
     }
   }
-  clock.Stop();
-  //Double_t nsecs  = clock.RealTime();
 
   // error due to uncertainty on unfolding matrix M
+  // This is disabled by default: I'm not sure it is correct, it is very slow, and
+  // the effect should be small with good MC statistics.
   Array2D *Vc1 = new Array2D(_nc,_nc);  // automatically zeroed
-  Bool_t doUnfoldSystematic = false;
   if (doUnfoldSystematic) {
     cout << "Calculating covariance due to unfolding matrix..." << endl;
 
@@ -894,12 +890,11 @@ RooUnfoldBayesImpl::getCovariance()
   } // if (doUnfodsystematic
 
   // to get complete covariance add together
-  // divide by nbartrue*nbartrue to get probability covariance matrix
-  //Double_t nbar2 = 1.0;
   Double_t nbar2 = nbartrue*nbartrue;
   for (Int_t k = 0 ; k < _nc ; k++) {
     for (Int_t l = k ; l < _nc ; l++) {
-      Double_t temp = (Vc0->Get(k,l) + Vc1->Get(k,l) / nbar2) ;
+      Double_t temp = Vc0->Get(k,l);
+      if (doUnfoldSystematic) temp += Vc1->Get(k,l) / nbar2;  // divide by nbartrue*nbartrue to get probability covariance matrix
       _Vij->Set(k,l,temp);
       _Vij->Set(l,k,temp);
     }
