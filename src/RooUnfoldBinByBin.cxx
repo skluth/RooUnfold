@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.cxx,v 1.3 2009-06-12 00:44:42 adye Exp $
+//      $Id: RooUnfoldBinByBin.cxx,v 1.4 2010-01-14 01:42:59 adye Exp $
 //
 // Description:
 //      Unfold
@@ -44,6 +44,5 @@ RooUnfoldBinByBin::Setup (const RooUnfoldResponse* res, const TH1* meas, Bool_t 
 }
 
 // Override RooUnfoldBayes routines.
-Int_t RooUnfoldBinByBin::unfold (vector<Double_t>& causes) { return _bayes->unfoldBinByBin (causes);   }
-Int_t RooUnfoldBinByBin::train()                           { return _bayes->trainBinByBin (_smoothit); }
-Int_t RooUnfoldBinByBin::getCovariance() const             { return _bayes->getCovarianceBinByBin();   }
+Int_t RooUnfoldBinByBin::unfold (vector<Double_t>& causes) { return _bayes->unfoldBinByBin (causes, _smoothit); }
+Int_t RooUnfoldBinByBin::getCovariance() const             { return _bayes->getCovarianceBinByBin();            }

@@ -13,21 +13,22 @@ using std::endl;
 
 typedef struct { const char *name; Int_t *ivar; Double_t *fvar; } setargs_t;
 
+void usage (const char* prog, const setargs_t* const args, int nargs)
+{
+  cout << "Defaults: " << prog;
+  for (int j= 0; j<nargs; j++) {
+    cout << ' ' << args[j].name << '=';
+    if (args[j].ivar) cout << *(args[j].ivar);
+    else              cout << *(args[j].fvar);
+  }
+  cout << endl;
+}
+
 bool setargs (const setargs_t* const args, int nargs, int argc, const char* const* argv, bool split= false)
 {
   const char* prog= strrchr (argv[0], '/');
   if (prog) prog++; else prog= argv[0];
-  if (argc==2 && (strcmp(argv[1],"-h")==0 || strcmp(argv[1],"--help")==0)) {
-    cout << "Defaults: " << prog;
-    for (int j= 0; j<nargs; j++) {
-      cout << ' ' << args[j].name << '=';
-      if (args[j].ivar) cout << *(args[j].ivar);
-      else              cout << *(args[j].fvar);
-    }
-    cout << endl;
-    return false;
-  }
-  int err= 0, iarg= 0;
+  int err= 0, iarg= 0, help= 0;
   for (int i= 1; i<argc; i++) {
     const char* p= argv[i];
     do {
@@ -36,6 +37,16 @@ bool setargs (const setargs_t* const args, int nargs, int argc, const char* cons
         if (*p=='\0') break;
       }
       bool found= false;
+      if (strcmp(p,"-h")==0 && p[2]=='\0' || (split && p[2]==' ')) {
+        help= 1;
+        p= (p[2]==' ') ? p += 3 : 0;
+        continue;
+      }
+      if (strcmp(p,"--help")==0 && p[6]=='\0' || (split && p[6]==' ')) {
+        help= 1;
+        p= (p[6]==' ') ? p += 7 : 0;
+        continue;
+      }
       const char* d= strchr (p, '=');
       const char* q= 0;
       if (d) {
@@ -68,7 +79,8 @@ bool setargs (const setargs_t* const args, int nargs, int argc, const char* cons
       p= q;
     } while (p);
   }
-  return !err;
+  if (help) usage (prog, args, nargs);
+  return !err && !help;
 }
 
 #endif

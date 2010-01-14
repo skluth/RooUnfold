@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.11 2010-01-13 00:18:21 adye Exp $
+//   $Id: RooUnfoldBayesImpl.cxx,v 1.12 2010-01-14 01:42:59 adye Exp $
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the
@@ -31,9 +31,7 @@
 //     mytest.accumulate(xtrue,xmeas);
 //   }
 //   // etc...
-//   // After accumulating all the training events, you now calculated the unfolding matrix
-//   mytest.train() ;
-//   // You can now save the unfolding matrix if you like.
+//   // You can now save the response matrix if you like.
 //
 //   // Unfolding
 //   // ---------
@@ -546,8 +544,8 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
     for (UInt_t i = 0 ; i < nbarCi.size(); i++) {
       PbarCi[i] /= _nbartrue;
       cout << "i PbarCi P0C " << i
-	   << "\t" << PbarCi[i]*_nbartrue
-	   << "\t" << P0C[i]*_nbartrue << endl;
+           << "\t" << PbarCi[i]*_nbartrue
+           << "\t" << P0C[i]*_nbartrue << endl;
     }
 
     // chi^2 (but need to calculate error)
@@ -611,8 +609,8 @@ RooUnfoldBayesImpl::smooth(vector<Double_t>& PbarCi, Double_t nevts) const
 //-------------------------------------------------------------------------
 Double_t
 RooUnfoldBayesImpl::getChi2(const vector<Double_t> prob1,
-			    const vector<Double_t> prob2,
-			    Double_t nevents) const
+                            const vector<Double_t> prob2,
+                            Double_t nevents) const
 {
   // calculate the chi^2. prob1 and prob2 are the probabilities
   // and nevents is the number of events used to calculate the probabilities
@@ -688,34 +686,34 @@ RooUnfoldBayesImpl::info(Int_t level) const
       ic = i / _nr[0];
       ir = i - (ic*_nr[0]);
       if ((_nCi[i] == 0) && (_nEj[i] == 0) &&
-	  (_nEstj[i] == 0) && (_causes[i]==0)) {continue;}
+          (_nEstj[i] == 0) && (_causes[i]==0)) {continue;}
       if (_ndims==2) {
-	cout << i << "\t " << ir << "\t " << ic << "\t" << _nCi[i] \
-	     << "\t " << _nEj[i] << "\t " << _nEstj[i] << "\t " << _causes[i] << endl;
+        cout << i << "\t " << ir << "\t " << ic << "\t" << _nCi[i] \
+             << "\t " << _nEj[i] << "\t " << _nEstj[i] << "\t " << _causes[i] << endl;
       } else {
-	cout << i << "\t" << _nCi[i] \
-	     << "\t " << _nEj[i] << "\t " << _nEstj[i] << "\t " << _causes[i] << endl;
+        cout << i << "\t" << _nCi[i] \
+             << "\t " << _nEj[i] << "\t " << _nEstj[i] << "\t " << _causes[i] << endl;
       }
     }
 
     // if the number of bins is different
     if (_nCi.size() > _nEj.size() ) {
       for (UInt_t i=iend; i < _nCi.size() ; i++) {
-	cout << i << "\t " << _nCi[i] << endl;
+        cout << i << "\t " << _nCi[i] << endl;
       }
     } else {
       for (UInt_t i=iend; i < _nEj.size() ; i++) {
-	cout << i << "\t \t " << _nEj[i] << endl;
+        cout << i << "\t \t " << _nEj[i] << endl;
       }
     }
 
     cout << "--------------------------------------------------------" << endl;
     if (_ndims==2) {
       cout << " \t\t\t" << sum(_nCi) << "\t " << sum(_nEj)
-	   << "\t " << sum(_nEstj) << "\t " << sum(_causes) << endl;
+           << "\t " << sum(_nEstj) << "\t " << sum(_causes) << endl;
     } else {
       cout << " \t" << sum(_nCi) << "\t " << sum(_nEj)
-	   << "\t " << sum(_nEstj) << "\t " << sum(_causes) << endl;
+           << "\t " << sum(_nEstj) << "\t " << sum(_causes) << endl;
     }
     cout << "--------------------------------------------------------\n" << endl;
   }
@@ -772,8 +770,8 @@ RooUnfoldBayesImpl::getCovarianceBinByBin()
     for (Int_t l = 0 ; l < _nc ; l++) {
       Double_t variance(0);
       if ((k==l) && (_nEj[k]>0) && (_nCi[k]>0) && (effects[k]>0)) {
-	Double_t f = effects[k] * _nCi[k] / _nEj[k];
-	variance = (1.0/effects[k] + 1.0/_nCi[k] + 1.0/_nEj[k]) * (f*f);
+        Double_t f = effects[k] * _nCi[k] / _nEj[k];
+        variance = (1.0/effects[k] + 1.0/_nCi[k] + 1.0/_nEj[k]) * (f*f);
       }
       _Vij->Set(k, l, variance);
     }
@@ -789,7 +787,7 @@ RooUnfoldBayesImpl::getCovariance(Bool_t doUnfoldSystematic)
   const vector<Double_t>& effects= _nEstj;
   // Create the covariance matrix
   if (_nc*_ne >= 50000)
-    cout << "getCovariance (this takes some time with many bins)." << endl;
+    cout << "getCovariance (this takes some time with " << _nc << " x " << _ne << " bins)." << endl;
   vector<Double_t> dummy;
   Double_t nbartrue = getnbarCi(effects,dummy);
 
@@ -802,10 +800,10 @@ RooUnfoldBayesImpl::getCovariance(Bool_t doUnfoldSystematic)
       Double_t temp(0), temp2(0);
       for (Int_t j = 0 ; j < _ne ; j++) {
         Double_t Mlj = _Mij->Get(l,j);
-	if (Mlj == 0) {continue;}  // skip zero elements
+        if (Mlj == 0) {continue;}  // skip zero elements
         Double_t Mkj = _Mij->Get(k,j);
 
-	Double_t ratio = effects[j]/nbartrue;
+        Double_t ratio = effects[j]/nbartrue;
         temp += (Mkj*Mlj*effects[j]*(1-ratio));
 
         for (Int_t i = 0 ; i < _ne ; i++) {
@@ -833,10 +831,10 @@ RooUnfoldBayesImpl::getCovariance(Bool_t doUnfoldSystematic)
     for (Int_t k = 0 ; k < _nc ; k++) {
       if (inv_nCi[k] != 0) {inv_nCi[k] = 1.0 / inv_nCi[k];}
       for (Int_t i = 0 ; i < _ne ; i++) {
-	if (inv_nCi[k] == 0) {continue;}
-	Double_t pec  = _Nij->Get(k,i) / _nCi[k];
-	Double_t temp = inv_nCi[k] / pec;
-	if (pec !=0) {inv_npec->Set(k,i,temp); }
+        if (inv_nCi[k] == 0) {continue;}
+        Double_t pec  = _Nij->Get(k,i) / _nCi[k];
+        Double_t temp = inv_nCi[k] / pec;
+        if (pec !=0) {inv_npec->Set(k,i,temp); }
       }
     }
     //
@@ -845,19 +843,19 @@ RooUnfoldBayesImpl::getCovariance(Bool_t doUnfoldSystematic)
       Double_t temp(0);
       // diagonal element
       for (Int_t u = 0 ; u < _nc ; u++) {
-	temp = _Mij->Get(i,u) * _Mij->Get(i,u) * _efficiencyCi[u] * _efficiencyCi[u]
-	  * (inv_npec->Get(u,i) - inv_nCi[u]);
-	M_tmp->Add(i, i, temp);
+        temp = _Mij->Get(i,u) * _Mij->Get(i,u) * _efficiencyCi[u] * _efficiencyCi[u]
+          * (inv_npec->Get(u,i) - inv_nCi[u]);
+        M_tmp->Add(i, i, temp);
       }
 
       // off-diagonal element
       for (Int_t j = i+1 ; j < _ne ; j++) {
-	for (Int_t u = 0 ; u < _nc ; u++) {
-	  temp = -1.0 * _Mij->Get(i,u) * _Mij->Get(j,u) * _efficiencyCi[u] * _efficiencyCi[u]
-	    * inv_nCi[u];
-	  M_tmp->Add(j, i, temp);
-	}
-	M_tmp->Set(i, j, M_tmp->Get(j, i)); // symmetric matrix
+        for (Int_t u = 0 ; u < _nc ; u++) {
+          temp = -1.0 * _Mij->Get(i,u) * _Mij->Get(j,u) * _efficiencyCi[u] * _efficiencyCi[u]
+            * inv_nCi[u];
+          M_tmp->Add(j, i, temp);
+        }
+        M_tmp->Set(i, j, M_tmp->Get(j, i)); // symmetric matrix
       }
     }
 
@@ -866,25 +864,25 @@ RooUnfoldBayesImpl::getCovariance(Bool_t doUnfoldSystematic)
     for (Int_t k = 0 ; k < _nc ; k++) {
       (_efficiencyCi[k] != 0) ? neff_inv = inv_nCi[k]  / _efficiencyCi[k] : neff_inv = 0;
       for (Int_t l = k ; l < _nc ; l++) {
-	for (Int_t i = 0 ; i < _ne ; i++) {
-	  for (Int_t j = 0 ; j < _ne ; j++) {
-	    Double_t covM = _Mij->Get(i,l) * inv_nCi[l] +
-	                    _Mij->Get(j,k) * inv_nCi[k] + M_tmp->Get(j,i);
-	    if (k==l) {
-	      covM -= neff_inv;
-	      if (i==j) {covM += inv_npec->Get(k,i);}
-	    }
-	    if (i==j) {
-	      covM -=  (_Mij->Get(i,l) * _efficiencyCi[l] * inv_npec->Get(l,i) +
-			_Mij->Get(i,k) * _efficiencyCi[k] * inv_npec->Get(k,i) );
-	    }
-	    covM +=  _Mij->Get(i,k) * _Mij->Get(j,l);
+        for (Int_t i = 0 ; i < _ne ; i++) {
+          for (Int_t j = 0 ; j < _ne ; j++) {
+            Double_t covM = _Mij->Get(i,l) * inv_nCi[l] +
+                            _Mij->Get(j,k) * inv_nCi[k] + M_tmp->Get(j,i);
+            if (k==l) {
+              covM -= neff_inv;
+              if (i==j) {covM += inv_npec->Get(k,i);}
+            }
+            if (i==j) {
+              covM -=  (_Mij->Get(i,l) * _efficiencyCi[l] * inv_npec->Get(l,i) +
+                        _Mij->Get(i,k) * _efficiencyCi[k] * inv_npec->Get(k,i) );
+            }
+            covM +=  _Mij->Get(i,k) * _Mij->Get(j,l);
 
-	    Double_t temp = effects[i] * effects[j] * covM;
-	    Vc1->Add(l, k, temp);
-	  } // j...
-	} // i...
-	Vc1->Set(k, l, Vc1->Get(l,k));
+            Double_t temp = effects[i] * effects[j] * covM;
+            Vc1->Add(l, k, temp);
+          } // j...
+        } // i...
+        Vc1->Set(k, l, Vc1->Get(l,k));
       } // l...
     } // k...
   } // if (doUnfodsystematic
@@ -905,10 +903,10 @@ RooUnfoldBayesImpl::getCovariance(Bool_t doUnfoldSystematic)
     cout << " k   l  Vc0(k,l)   Vc1(k,l)  _Vij(k,l)" << endl;
     for (Int_t k = 0 ; k < _nc ; k++) {
       for (Int_t l = 0 ; l < _nc ; l++) {
-	if (_Vij->Get(k,l) == 0) {continue;}
-	cout << left << setw(4) << k << setw(4) << l
-	     << setw(11) << Vc0->Get(k,l) << setw(10) << Vc1->Get(k,l)
-	     << setw(10)<< _Vij->Get(k,l) << right << endl;
+        if (_Vij->Get(k,l) == 0) {continue;}
+        cout << left << setw(4) << k << setw(4) << l
+             << setw(11) << Vc0->Get(k,l) << setw(10) << Vc1->Get(k,l)
+             << setw(10)<< _Vij->Get(k,l) << right << endl;
       }
     }
   }
@@ -1046,13 +1044,14 @@ RooUnfoldBayesImpl::getBin(Int_t index, Bool_t truth, vector<Int_t>& coords) con
 
 //----------------------------------------------------------------------
 Int_t
-RooUnfoldBayesImpl::unfold(vector<Double_t>& causes)
+RooUnfoldBayesImpl::unfold(vector<Double_t>& causes, Int_t iterations, Bool_t smoothit)
 {
   // Unfold the accumulated measured values and return the true values in a matrix.
   // causes = vector of unfolded values.
 
   cout << "Now unfolding..." << endl;
   // unfold
+  if (!train(iterations, smoothit)) return(0);
   _ncauses = getnbarCi(_nEstj, causes);
   _causes.clear();
   _causes = causes;
@@ -1062,13 +1061,14 @@ RooUnfoldBayesImpl::unfold(vector<Double_t>& causes)
 
 //----------------------------------------------------------------------
 Int_t
-RooUnfoldBayesImpl::unfoldBinByBin(vector<Double_t>& causes)
+RooUnfoldBayesImpl::unfoldBinByBin(vector<Double_t>& causes, Bool_t smoothit)
 {
   // Unfold the accumulated measured values and return the true values in a matrix.
   // causes = vector of unfolded values.
 
   cout << "Now unfolding (bin-by-bin)..." << endl;
   // unfold
+  if (!trainBinByBin(smoothit)) return(0);
   _ncauses = getnbarCi(_nEstj, causes);
   _causes.clear();
   _causes = causes;

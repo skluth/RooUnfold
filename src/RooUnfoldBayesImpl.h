@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------
 //
-// $Id: RooUnfoldBayesImpl.h,v 1.4 2010-01-13 00:18:21 adye Exp $
+// $Id: RooUnfoldBayesImpl.h,v 1.5 2010-01-14 01:42:59 adye Exp $
 //
 //--------------------------------------------------------------------
 #ifndef ROOUNFOLDBAYESIMPL_HH
@@ -36,9 +36,12 @@ private:
   Double_t getnbarCi(const vector<Double_t>& effects,
                      vector<Double_t> &causes) const;
   Int_t getBin(Int_t index, Bool_t truth, vector<Int_t>& coords) const;
-  Double_t getChi2(const vector<Double_t> prob1, 
-		   const vector<Double_t> prob2, 
-		   Double_t nevents) const;
+  Double_t getChi2(const vector<Double_t> prob1,
+                   const vector<Double_t> prob2,
+                   Double_t nevents) const;
+  // calculate unfolding matrix
+  Int_t train(Int_t iterations=3, Bool_t smoothit = false);
+  Int_t trainBinByBin(Bool_t smoothit = false);
 
   // Truth variables
   vector<Int_t> _nt;      // number of bins per dimension
@@ -110,15 +113,12 @@ private:
   // set the debug level
   Int_t setDebug(Int_t Db);
 
-  //
-  Int_t train(Int_t iterations=3, Bool_t smoothit = false);
-  Int_t trainBinByBin(Bool_t smoothit = false);
+  // print some useful info
+  Int_t info(Int_t level=0) const;
 
-  //
-  Int_t info(Int_t level=0) const; // print some useful info
-  //
-  Int_t unfold(vector<Double_t>& causes); // unfold vector of causes after training
-  Int_t unfoldBinByBin(vector<Double_t>& causes); // unfold vector of causes after training
+  // unfold vector of causes
+  Int_t unfold(vector<Double_t>& causes, Int_t iterations=3, Bool_t smoothit = false);
+  Int_t unfoldBinByBin(vector<Double_t>& causes, Bool_t smoothit = false);
 
   Int_t getCovariance(Bool_t doUnfoldSystematic = false);
   Int_t getCovarianceBinByBin();
@@ -133,7 +133,7 @@ private:
   const vector<Double_t>& output() const { return _causes; } // return unfold vector of causes
   const Array2D&      covariance() const { return *_Vij;   } // return unfold covariance matrix
   Double_t                error()  const { return _nCausesError; }  // return estimated error on number of unfolded events
-  
+
   ClassDef(RooUnfoldBayesImpl,1) // Bayes Unfolding Algorithms
 };
 

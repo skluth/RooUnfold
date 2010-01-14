@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldBayes.h,v 1.3 2009-06-12 00:44:42 adye Exp $
+//      $Id: RooUnfoldBayes.h,v 1.4 2010-01-14 01:42:59 adye Exp $
 //
 // Description:
 //      Unfold
@@ -59,7 +59,6 @@ protected:
   virtual RooUnfoldBayes& Setup();
   virtual RooUnfoldBayes& Setup (Int_t niter, Bool_t smoothit);
   virtual Int_t unfold (vector<Double_t>& causes);
-  virtual Int_t train();
   virtual Int_t getCovariance() const;
   virtual void GetCov() const;  // actually updates mutable _cov
 

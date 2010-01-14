@@ -1,12 +1,24 @@
 History for RooUnfold
 =====================
 
-$Id: History,v 1.34 2010-01-13 00:18:15 adye Exp $
+$Id: History,v 1.35 2010-01-14 01:42:53 adye Exp $
 
 Put notes on the changes to this package here (latest at the top).
 If you make a tag, please document it here as well.
 
 -------------------------------------------------------------------------
+
+Tim Adye         13-Jan-2010 tja100113a
+  o Small reorganisation of RooUnfoldBayesImpl. User no longer calls train()
+    or trainBinByBin() directly. This is now done in unfold() or
+    unfoldBinByBin() (which specify the unfolding algorithm parameters,
+    iterations and smoothit), since the training now requires the unfolding
+    input. Of course users of RooUnfoldBayes and RooUnfoldBinByBin won't see any
+    difference, since they wrap RooUnfoldBayesImpl.
+  o RooUnfoldTest uses new RooUnfoldTestHarness object to run tests and keeps
+    all test parameters, so we don't have to pass them everywhere.
+  o New RooUnfoldTest onepage parameter.
+  o RooUnfoldTest -h or --help displays defaults.
 
 Tim Adye         12-Jan-2010 tja100112a
   o RooUnfoldBayesImpl::train should use data input rather than MC input for
