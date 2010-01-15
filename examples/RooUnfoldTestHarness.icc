@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.1 2010-01-14 01:42:57 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.2 2010-01-15 20:00:41 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -13,6 +13,9 @@
 //      Copyleft (C) 2005-10    Rutherford Appleton Laboratory
 //
 //==============================================================================
+
+#ifndef ROOUNFOLDTESTHARNESS_ICC
+#define ROOUNFOLDTESTHARNESS_ICC
 
 #include "RooUnfoldTestHarness.h"
 
@@ -91,7 +94,7 @@ void RooUnfoldTestHarness::setmax (TH1* h,
 // Gaussian smearing, systematic translation, and variable inefficiency
 //==============================================================================
 
-Double_t RooUnfoldTestHarness::smear (Double_t xt)
+Double_t RooUnfoldTestHarness::smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi)
 {
   // Apply a gaussian smearing, systematic translation, and an efficiency
   // function to the truth.
@@ -144,7 +147,7 @@ Int_t RooUnfoldTestHarness::Train()
   for (Int_t i= 0; i<ntrain; i++) {
     Double_t xt= xtrue[i];
     hTrainTrue->Fill (xt);
-    Double_t x= smear (xt);
+    Double_t x= smear (xt, nt, xlo, xhi);
     if (x!=cutdummy) {
       hTrain ->Fill (x);
       hResmat->Fill  (x, xt);
@@ -189,7 +192,7 @@ Int_t RooUnfoldTestHarness::Test()
   for (Int_t i=0; i<ntest ; i++) {
     Double_t xt= xtest[i];
     hTrue->Fill(xt);
-    Double_t x = smear (xt);
+    Double_t x = smear (xt, nt, xlo, xhi);
     if (x!=cutdummy)
       hMeas->Fill(x);
   }
@@ -460,3 +463,5 @@ void RooUnfoldTestHarness::Defaults()
   nm=         -1;
   onepage=     4;
 }
+
+#endif

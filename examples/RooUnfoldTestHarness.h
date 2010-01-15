@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.1 2010-01-14 01:42:57 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.2 2010-01-15 20:00:41 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -62,7 +62,7 @@ public:
 
   void setmax (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
                        const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0);
-  Double_t smear (Double_t xt);
+  Double_t smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi);
 };
 
 #endif

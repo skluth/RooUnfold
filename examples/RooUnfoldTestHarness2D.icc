@@ -1,0 +1,288 @@
+//==============================================================================
+// File and Version Information:
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.1 2010-01-15 20:00:41 adye Exp $
+//
+// Description:
+//      2D test of RooUnfold package using toy MC generated according to PDFs
+//      defined in RooUnfoldTestPdf.icc or RooUnfoldTestPdfRooFit.icc.
+//
+// Environment:
+//      Software developed for the BaBar Detector at the SLAC B-Factory.
+//
+// Author List:
+//      Fergus Wilson <F.F.Wilson@rl.ac.uk>
+//      Tim Adye <T.J.Adye@rl.ac.uk>
+//
+// Copyright Information:
+//      Copyleft (C) 2005-6     Rutherford Appleton Laboratory
+//
+//==============================================================================
+
+#ifndef ROOUNFOLDTESTHARNESS2D_ICC
+#define ROOUNFOLDTESTHARNESS2D_ICC
+
+#include "RooUnfoldTestHarness2D.h"
+
+#include "RooUnfoldTestHarness.icc"
+
+//==============================================================================
+// Gaussian smearing, systematic translation, and variable inefficiency
+//==============================================================================
+
+void RooUnfoldTestHarness2D::rot (Double_t& x, Double_t& y)
+{
+  Double_t a= gRandom->Gaus (0.25, 0.05);
+  if      (a<0.0) a= 0.0;
+  else if (a>1.0) a= 1.0;
+  Double_t b= 1.0-a;
+  Double_t xr= a*x + b*y;
+  Double_t yr= b*x + a*y;
+  x= xr;
+  y= yr;
+}
+
+Bool_t RooUnfoldTestHarness2D::smear (Double_t& x, Double_t& y, Int_t nx, Double_t xlo, Double_t xhi, Int_t ny, Double_t ylo, Double_t yhi)
+{
+  Double_t xs= smear (x, nx, xlo, xhi);
+  if (xs==cutdummy) return false;
+  Double_t ys= smear (y, ny, ylo, yhi);
+  if (ys==cutdummy) return false;
+  x= xs;
+  y= ys;
+  if (!nosmear) rot (x, y);
+  return true;
+}
+
+//==============================================================================
+// Train unfolding algorithm
+//==============================================================================
+
+Int_t RooUnfoldTestHarness2D::Train ()
+{
+  const Int_t nbPDF= 500;
+  TVectorD xtrue(ntrain), ytrue(ntrain);
+
+  hPDFx= new TH1D ("trainpdfx", "Training PDF X", nbPDF, xlo, xhi);
+  hPDFx->SetLineColor(3);
+  hPDFx->SetLineWidth(2);
+  if (!RooUnfoldTestPdf (ftrainx, ntrain, xlo, xhi, xtrue, hPDFx)) return 0;
+  hPDFx->Scale (nbPDF/Double_t(nt));
+
+  hPDFy= new TH1D ("trainpdfy", "Training PDF Y", nbPDF, ylo, yhi);
+  hPDFy->SetLineColor(3);
+  hPDFy->SetLineWidth(2);
+  if (!RooUnfoldTestPdf (ftrainy, ntrain, ylo, yhi, ytrue, hPDFy)) return 0;
+  hPDFy->Scale (nbPDF/Double_t(nt));
+
+  hTrainTrue= new TH2D ("traintrue", "Training Truth", nt, xlo, xhi, nt, ylo, yhi);
+  hTrainTrue->SetLineColor(4);
+  hTrain= new TH2D ("train", "Training Measured", nm, xlo, xhi, nm, ylo, yhi);
+  hTrain->SetLineColor(2);
+
+  response->Setup (hTrain, hTrainTrue);
+
+  for (Int_t i= 0; i<ntrain; i++) {
+    Double_t xt= xtrue[i], yt= ytrue[i];
+    hTrainTrue->Fill (xt, yt);
+
+    Double_t x= xt, y= yt;
+    if (smear (x, y, nt, xlo, xhi, nt, ylo, yhi)) {
+      hTrain ->Fill (x, y);
+      response->Fill (x, y, xt, yt);
+    } else {
+      response->Miss (xt, yt);
+    }
+  }
+
+  hTrainTrueX= hTrainTrue->ProjectionX("Training Truth X");
+  hTrainTrueY= hTrainTrue->ProjectionY("Training Truth Y");
+  hTrainX=     hTrain    ->ProjectionX("Training Measured X");
+  hTrainY=     hTrain    ->ProjectionY("Training Measured Y");
+
+  setmax (hTrainTrueX, hPDFx, hTrainX);
+  setmax (hTrainTrueY, hPDFy, hTrainY);
+
+  canvas->cd(1);
+  hTrainTrueX->Draw();
+  hPDFx      ->Draw("LSAME");
+  hTrainX    ->Draw("SAME");
+
+  canvas->cd(2);
+  hTrainTrueY->Draw();
+  hPDFy      ->Draw("LSAME");
+  hTrainY    ->Draw("SAME");
+
+  canvas->Update();
+
+  return 1;
+}
+
+//==============================================================================
+// Test unfolding algorithm
+//==============================================================================
+
+Int_t RooUnfoldTestHarness2D::Test ()
+{
+  const Int_t nbPDF= 500;
+  TVectorD xtest(ntest), ytest(ntest);
+
+  hTestPDFx= new TH1D ("pdfx", "PDF X", nbPDF, xlo, xhi);
+  hTestPDFx->SetLineColor(3);
+  hTestPDFx->SetLineWidth(2);
+  if (!RooUnfoldTestPdf (ftestx, ntest, xlo, xhi, xtest, hTestPDFx, 1.0, 2.5)) return 0;
+  hTestPDFx->Scale (nbPDF/Double_t(nt));
+
+  hTestPDFy= new TH1D ("pdfy", "PDF Y", nbPDF, ylo, yhi);
+  hTestPDFy->SetLineColor(3);
+  hTestPDFy->SetLineWidth(2);
+  if (!RooUnfoldTestPdf (ftesty, ntest, ylo, yhi, ytest, hTestPDFy, -0.5, 2.5)) return 0;
+  hTestPDFy->Scale (nbPDF/Double_t(nt));
+
+  hTrue= new TH2D ("true", "Test Truth", nt, xlo, xhi, nt, ylo, yhi);
+  hTrue->SetLineColor(4);
+  hMeas= new TH2D ("meas", "Test Measured", nm, xlo, xhi, nm, ylo, yhi);
+  hMeas->SetLineColor(2);
+
+  for (Int_t i=0; i<ntest ; i++) {
+    Double_t xt= xtest[i], yt= ytest[i];
+    hTrue->Fill (xt, yt);
+    Double_t x= xt, y= yt;
+    if (smear (x, y, nt, xlo, xhi, nt, ylo, yhi))
+      hMeas->Fill (x, y);
+  }
+
+  hTrueX= hTrue->ProjectionX("Test Truth X");
+  hTrueY= hTrue->ProjectionY("Test Truth Y");
+  hMeasX= hMeas->ProjectionX("Test Measured X");
+  hMeasY= hMeas->ProjectionY("Test Measured Y");
+
+  return 1;
+}
+
+//==============================================================================
+// Unfold
+//==============================================================================
+
+void RooUnfoldTestHarness2D::Unfold ()
+{
+  cout << "Create RooUnfold object for method " << method << endl;
+  switch (method) {
+    case 1:  unfold= new RooUnfoldBayes    (response, hMeas, regparm);
+             break;
+    case 2:  unfold= new RooUnfoldSvd      (response, hMeas, regparm, ntoys);
+             break;
+    case 3:  unfold= new RooUnfoldBinByBin (response, hMeas);
+             break;
+    default: cerr << "Unknown RooUnfold method " << method << endl;
+             return;
+  }
+  cout << "Created "; unfold->Print();
+  bool withError= !(dynamic_cast<RooUnfoldBayes*>(unfold) && nt*nm > 400);   // nt*nm^2<160000 (causes*effects, where each is nt*nm)
+  if (!withError) {
+    cerr << "Don't calculate errors - this would take too long ("
+         << nt*nm << " bins - skip if more than 400 for Bayes algorithm)" << endl;
+  }
+  hReco= (TH2D*) unfold->Hreco(withError);
+  unfold->PrintTable (cout, hTrue, withError);
+
+  hRecoX= hReco->ProjectionX("Reconstructed X", -1, -1, "E");
+  hRecoY= hReco->ProjectionY("Reconstructed Y", -1, -1, "E");
+  hRecoX->SetMarkerStyle(8);
+  hRecoY->SetMarkerStyle(8);
+
+  setmax (hTrueX, hTestPDFx, hMeasX, hRecoX);
+  setmax (hTrueY, hTestPDFy, hMeasY, hRecoY);
+
+  canvas->cd(3);
+  hTrueX   ->Draw();
+  hTestPDFx->Draw("LSAME");
+  hMeasX   ->Draw("SAME");
+  hRecoX   ->Draw("SAME");
+
+  canvas->cd(4);
+  hTrueY   ->Draw();
+  hTestPDFy->Draw("LSAME");
+  hMeasY   ->Draw("SAME");
+  hRecoY   ->Draw("SAME");
+
+  canvas->cd(5);
+  hTrue->Draw();
+
+  canvas->cd(6);
+  hMeas->Draw();
+
+  canvas->cd(7);
+  hReco->Draw();
+
+  // I think hReco already includes the statistical error on hTrue, so
+  // don't include that twice when calculating residuals.
+  hRes= new TH2D ("res", "Pull (reco-true)/error", nt, xlo, xhi, nt, ylo, yhi);
+  for (Int_t i= 0; i <= nt+1; i++) {
+    for (Int_t j= 0; j <= nt+1; j++) {
+      Double_t rec= hReco->GetBinContent (i, j);
+      Double_t tru= hTrue->GetBinContent (i, j);
+      Double_t err=  hReco->GetBinError   (i, j);
+      if      (err > 0)
+        hRes->SetBinContent (i, j, (rec-tru)/err);
+      else if (rec > 0)
+        hRes->SetBinContent (i, j, (rec-tru)/sqrt(rec));
+    }
+  }
+
+  canvas->cd(8);
+  hRes->Draw("COLZ");
+  canvas->Update();
+}
+
+
+//==============================================================================
+// Constructor
+//==============================================================================
+
+void RooUnfoldTestHarness2D::Reset()
+{
+  RooUnfoldTestHarness::Reset();
+  hPDF= hTestPDF= hTrain= hTrainTrue= hTrue= hMeas= hReco= hTrue0= hRes= hPulls= 0;
+  hTrainX= hTrainTrueX= hTrueX= hMeasX= hRecoX= hPDFx= hTestPDFx=
+  hTrainY= hTrainTrueY= hTrueY= hMeasY= hRecoY= hPDFy= hTestPDFy= 0;
+  Defaults();
+}
+
+int RooUnfoldTestHarness2D::SetArgs (int argc, const char* const* argv, bool split)
+{
+  RooUnfoldTestHarness2D* h= this;   // work round CINT bug: reference our parameters via h
+  const setargs_t args[]= {
+    { "method",  &h->method,  0 },
+    { "stage",   &h->stage,   0 },
+    { "ftrainx", &h->ftrainx, 0 },
+    { "ftrainy", &h->ftrainy, 0 },
+    { "ftestx",  &h->ftestx,  0 },
+    { "ftesty",  &h->ftesty,  0 },
+    { "nt",      &h->nt,      0 },
+    { "ntest",   &h->ntest,   0 },
+    { "ntrain",  &h->ntrain,  0 },
+    { "xlo",     0,     &h->xlo },
+    { "xhi",     0,     &h->xhi },
+    { "ylo",     0,     &h->ylo },
+    { "yhi",     0,     &h->yhi },
+    { "regparm", &h->regparm, 0 },
+    { "ntoys",   &h->ntoys,   0 },
+    { "nm",      &h->nm,      0 },
+    { "onepage", &h->onepage, 0 }
+  };
+  if (!setargs (args, (sizeof(args)/sizeof(setargs_t)), argc, argv, split)) return 1;
+  return 0;
+}
+
+void RooUnfoldTestHarness2D::Defaults()
+{
+  RooUnfoldTestHarness::Defaults();
+  ftrainx=     1;
+  ftrainy=     1;
+  ftestx=      3;
+  ftesty=      5;
+  xlo=     -12.5;
+  xhi=      10.0;
+}
+
+#endif
