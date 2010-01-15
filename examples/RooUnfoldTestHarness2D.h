@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.h,v 1.1 2010-01-15 20:00:41 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.h,v 1.2 2010-01-15 21:02:07 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -21,6 +21,8 @@
 #define ROOUNFOLDTESTHARNESS2D_HH
 
 #include "RooUnfoldTestHarness.h"
+#include "TH1.h"
+#include "TH2.h"
 
 class RooUnfoldTestHarness2D : public RooUnfoldTestHarness {
 public:
@@ -28,7 +30,6 @@ public:
   Int_t    ftrainx, ftrainy, ftestx, ftesty;
   Double_t ylo, yhi;
 
-  TH2D *hPDF, *hTrain, *hTrainTrue, *hTestPDF, *hTrue, *hMeas, *hReco, *hTrue0, *hRes, *hPulls;
   TH1D *hTrainX, *hTrainTrueX, *hTrueX, *hMeasX, *hRecoX, *hPDFx, *hTestPDFx;
   TH1D *hTrainY, *hTrainTrueY, *hTrueY, *hMeasY, *hRecoY, *hPDFy, *hTestPDFy;
 
@@ -48,6 +49,11 @@ public:
   void rot (Double_t& x, Double_t& y);
   Double_t smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi) { return RooUnfoldTestHarness::smear(xt,nt,xlo,xhi); }
   Bool_t smear (Double_t& x, Double_t& y, Int_t nx, Double_t xlo, Double_t xhi, Int_t ny, Double_t ylo, Double_t yhi);
+
+  static TH1D* ProjectionX (const TH1* h, const char* name="_px", Int_t firstybin= 0, Int_t lastybin= -1, Option_t* option= "")
+    {return dynamic_cast<const TH2*>(h)->ProjectionX(name,firstybin,lastybin,option);}
+  static TH1D* ProjectionY (const TH1* h, const char* name="_py", Int_t firstxbin= 0, Int_t lastxbin= -1, Option_t* option= "")
+    {return dynamic_cast<const TH2*>(h)->ProjectionY(name,firstxbin,lastxbin,option);}
 };
 
 #endif

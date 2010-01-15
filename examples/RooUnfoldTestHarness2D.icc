@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.1 2010-01-15 20:00:41 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.2 2010-01-15 21:02:08 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -94,10 +94,10 @@ Int_t RooUnfoldTestHarness2D::Train ()
     }
   }
 
-  hTrainTrueX= hTrainTrue->ProjectionX("Training Truth X");
-  hTrainTrueY= hTrainTrue->ProjectionY("Training Truth Y");
-  hTrainX=     hTrain    ->ProjectionX("Training Measured X");
-  hTrainY=     hTrain    ->ProjectionY("Training Measured Y");
+  hTrainTrueX= ProjectionX (hTrainTrue, "Training Truth X");
+  hTrainTrueY= ProjectionY (hTrainTrue, "Training Truth Y");
+  hTrainX=     ProjectionX (hTrain,     "Training Measured X");
+  hTrainY=     ProjectionY (hTrain,      "Training Measured Y");
 
   setmax (hTrainTrueX, hPDFx, hTrainX);
   setmax (hTrainTrueY, hPDFy, hTrainY);
@@ -151,10 +151,10 @@ Int_t RooUnfoldTestHarness2D::Test ()
       hMeas->Fill (x, y);
   }
 
-  hTrueX= hTrue->ProjectionX("Test Truth X");
-  hTrueY= hTrue->ProjectionY("Test Truth Y");
-  hMeasX= hMeas->ProjectionX("Test Measured X");
-  hMeasY= hMeas->ProjectionY("Test Measured Y");
+  hTrueX= ProjectionX (hTrue, "Test Truth X");
+  hTrueY= ProjectionY (hTrue, "Test Truth Y");
+  hMeasX= ProjectionX (hMeas, "Test Measured X");
+  hMeasY= ProjectionY (hMeas, "Test Measured Y");
 
   return 1;
 }
@@ -185,8 +185,8 @@ void RooUnfoldTestHarness2D::Unfold ()
   hReco= (TH2D*) unfold->Hreco(withError);
   unfold->PrintTable (cout, hTrue, withError);
 
-  hRecoX= hReco->ProjectionX("Reconstructed X", -1, -1, "E");
-  hRecoY= hReco->ProjectionY("Reconstructed Y", -1, -1, "E");
+  hRecoX= ProjectionX (hReco, "Reconstructed X", -1, -1, "E");
+  hRecoY= ProjectionY (hReco, "Reconstructed Y", -1, -1, "E");
   hRecoX->SetMarkerStyle(8);
   hRecoY->SetMarkerStyle(8);
 

@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.2 2010-01-15 20:00:41 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.3 2010-01-15 21:02:07 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -39,7 +39,7 @@ public:
   Bool_t             nosmear;
   Int_t              error, ipad;
   TCanvas*           canvas;
-  TH1D               *hPDF, *hTrain, *hTrainTrue, *hTestPDF, *hTrue, *hMeas, *hReco, *hTrue0, *hRes, *hPulls;
+  TH1                *hPDF, *hTrain, *hTrainTrue, *hTestPDF, *hTrue, *hMeas, *hReco, *hTrue0, *hRes, *hPulls;
   TH2D*              hResmat;
   RooUnfoldResponse* response;
   RooUnfold*         unfold;
