@@ -11,7 +11,7 @@ using std::cerr;
 using std::endl;
 #endif
 
-typedef struct { const char *name; Int_t *ivar; Double_t *fvar; } setargs_t;
+typedef struct setargs { const char *name; Int_t *ivar; Double_t *fvar; } setargs_t;
 
 void usage (const char* prog, const setargs_t* const args, int nargs)
 {

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.4 2009-05-22 17:10:15 adye Exp $
+//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.5 2010-01-16 01:58:39 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented with RooFit.
@@ -12,6 +12,7 @@
 //        3: Double-sided exponential decay
 //        4: Breit-Wigner
 //        5: Double Breit-Wigner, peaking at mean-width and mean+width.
+//        6: Gaussian resonance on an exponential background
 //
 // Environment:
 //      Software developed for the BaBar Detector at the SLAC B-Factory.
@@ -33,11 +34,10 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-#include "TH1D.h"
+#include "TH1.h"
 #include "TVectorD.h"
 #endif
 
-#include "RooGlobalFunc.h"
 #include "RooArgList.h"
 #include "RooAbsPdf.h"
 #include "RooRealVar.h"
@@ -53,18 +53,19 @@ using std::endl;
 #include "RooParametricStepFunction.h"
 
 Int_t mcgenpdf (const RooAbsPdf& pdf, RooRealVar& xvar, Int_t nx,
-                 TVectorD& x, TH1* h= 0, Double_t offset= 0.0)
+                TVectorD& x, TH1* h= 0, Double_t offset= 0.0)
 {
   using namespace RooFit;
 
   pdf.Print();
-  RooDataSet* ds= pdf.generate (xvar, nx);
+  const RooDataSet* ds= pdf.generate (xvar, nx);
 
   Int_t ngen= ds->numEntries();
 
+  const RooArgSet* row= ds->get();
+  const RooRealVar* xrow= dynamic_cast<RooRealVar*> (row->find(xvar.GetName()));
   for (Int_t i= 0; i<ngen; i++) {
-    const RooArgSet* row= ds->get(i);
-    RooRealVar* xrow= (RooRealVar*) row->find("xvar");
+    ds->get(i);
     x[i]= xrow->getVal()+offset;
   }
   if (h) {
@@ -146,13 +147,13 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
 
       // Background
       RooRealVar ptau("ptau","inverse tau", invtau);
-      RooExponential expon("pdf1","Gaussian",xvar,ptau);
+      RooExponential expon("pdf1","Exponential",xvar,ptau);
       RooRealVar fexp("fexp1","Background fraction",0.9);
 
       // Resonance
       RooRealVar p31("p31","mean",mymean-mywidth);
       RooRealVar p32("p32","width", mywidth);
-      RooGaussian gaus("pdf1","Gaussian",xvar,p31,p32);
+      RooGaussian gaus("pdf2","Gaussian",xvar,p31,p32);
 
       return mcgenpdf (RooAddPdf("pdf","Resonace+background", 
 				 RooArgList(expon,gaus),RooArgList(fexp)), xvar, nx, x, h);

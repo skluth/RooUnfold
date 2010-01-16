@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.3 2010-01-15 21:02:07 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.4 2010-01-16 01:58:38 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -22,6 +22,7 @@
 
 #include "TNamed.h"
 
+typedef struct setargs setargs_t;
 class TCanvas;
 class TH1;
 class TH1D;
@@ -32,7 +33,7 @@ class RooUnfold;
 class RooUnfoldTestHarness : public TNamed {
 public:
   // Parameters
-  Int_t    method, stage, ftrain, ftest, nt, ntest, ntrain;
+  Int_t    method, stage, ftrainx, ftestx, nt, ntest, ntrain;
   Double_t xlo, xhi;
   Int_t    regparm, ntoys, nm, onepage;
 
@@ -58,6 +59,9 @@ public:
   virtual Int_t Test();
   virtual void  Unfold();
   virtual Int_t Run();
+  virtual void  Print (std::ostream& o) const;
+  virtual Int_t Check();
+  virtual int Parms (const setargs_t*& args);
   virtual int SetArgs (int argc, const char* const* argv, bool split= false);
 
   void setmax (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,

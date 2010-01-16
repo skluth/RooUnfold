@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.10 2009-08-24 16:14:38 adye Exp $
+#      $Id: GNUmakefile,v 1.11 2010-01-16 01:58:38 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -231,14 +231,17 @@ commands :
 	@echo
 	@echo "Make executable $(EXEDIR)RooUnfoldTest$(ExeSuf):	$(LD) $(LDFLAGS) $(OBJDIR)RooUnfoldTest.o $(OutPutOpt)$(EXEDIR)RooUnfoldTest$(ExeSuf) $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(ROOFITLIBS)"
 
-clean :
+clean : cleanbin
 	rm -f $(DLIST)
 	rm -f $(CINTFILE) $(basename $(CINTFILE)).h
 	rm -f $(OLIST) $(CINTOBJ)
 	rm -f $(LIBFILE)
 	rm -f $(SHLIBFILE)
+
+cleanbin :
 	rm -f $(addprefix $(OBJDIR),$(patsubst %.cxx,%.o,$(MAIN)))
 	rm -f $(MAINEXE)
+
 
 .PHONY : include shlib lib bin default clean
 

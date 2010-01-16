@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.h,v 1.2 2010-01-15 21:02:07 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.h,v 1.3 2010-01-16 01:58:39 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -27,16 +27,16 @@
 class RooUnfoldTestHarness2D : public RooUnfoldTestHarness {
 public:
   // Parameters
-  Int_t    ftrainx, ftrainy, ftestx, ftesty;
+  Int_t    ftrainy, ftesty;
   Double_t ylo, yhi;
 
   TH1D *hTrainX, *hTrainTrueX, *hTrueX, *hMeasX, *hRecoX, *hPDFx, *hTestPDFx;
   TH1D *hTrainY, *hTrainTrueY, *hTrueY, *hMeasY, *hRecoY, *hPDFy, *hTestPDFy;
 
   // Constructors
-  RooUnfoldTestHarness2D (const char* name= "RooUnfoldTest2D")                 : RooUnfoldTestHarness(name) {}
-  RooUnfoldTestHarness2D (const char* name, const char* args)                  : RooUnfoldTestHarness(name,args) {}
-  RooUnfoldTestHarness2D (const char* name, int argc, const char* const* argv) : RooUnfoldTestHarness(name,argc,argv) {}
+  RooUnfoldTestHarness2D (const char* name= "RooUnfoldTest2D");
+  RooUnfoldTestHarness2D (const char* name, const char* args);
+  RooUnfoldTestHarness2D (const char* name, int argc, const char* const* argv);
   virtual ~RooUnfoldTestHarness2D() {}
 
   virtual void  Reset();
@@ -44,16 +44,17 @@ public:
   virtual Int_t Train();
   virtual Int_t Test();
   virtual void  Unfold();
-  virtual int SetArgs (int argc, const char* const* argv, bool split= false);
+  virtual Int_t Check();
+  virtual int Parms (const setargs_t*& args);
 
   void rot (Double_t& x, Double_t& y);
   Double_t smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi) { return RooUnfoldTestHarness::smear(xt,nt,xlo,xhi); }
   Bool_t smear (Double_t& x, Double_t& y, Int_t nx, Double_t xlo, Double_t xhi, Int_t ny, Double_t ylo, Double_t yhi);
 
-  static TH1D* ProjectionX (const TH1* h, const char* name="_px", Int_t firstybin= 0, Int_t lastybin= -1, Option_t* option= "")
-    {return dynamic_cast<const TH2*>(h)->ProjectionX(name,firstybin,lastybin,option);}
-  static TH1D* ProjectionY (const TH1* h, const char* name="_py", Int_t firstxbin= 0, Int_t lastxbin= -1, Option_t* option= "")
-    {return dynamic_cast<const TH2*>(h)->ProjectionY(name,firstxbin,lastxbin,option);}
+  static TH1D* ProjectionX (const TH1* h, const char* name="_px", Int_t first=0, Int_t last=-1, Option_t* opt="")
+    {return dynamic_cast<const TH2*>(h)->ProjectionX(name,first,last,opt);}
+  static TH1D* ProjectionY (const TH1* h, const char* name="_py", Int_t first=0, Int_t last=-1, Option_t* opt="")
+    {return dynamic_cast<const TH2*>(h)->ProjectionY(name,first,last,opt);}
 };
 
 #endif

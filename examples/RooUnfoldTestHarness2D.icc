@@ -1,6 +1,6 @@
 //==============================================================================
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.2 2010-01-15 21:02:08 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.3 2010-01-16 01:58:39 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -97,7 +97,7 @@ Int_t RooUnfoldTestHarness2D::Train ()
   hTrainTrueX= ProjectionX (hTrainTrue, "Training Truth X");
   hTrainTrueY= ProjectionY (hTrainTrue, "Training Truth Y");
   hTrainX=     ProjectionX (hTrain,     "Training Measured X");
-  hTrainY=     ProjectionY (hTrain,      "Training Measured Y");
+  hTrainY=     ProjectionY (hTrain,     "Training Measured Y");
 
   setmax (hTrainTrueX, hPDFx, hTrainX);
   setmax (hTrainTrueY, hPDFy, hTrainY);
@@ -234,10 +234,39 @@ void RooUnfoldTestHarness2D::Unfold ()
   canvas->Update();
 }
 
+Int_t RooUnfoldTestHarness2D::Check()
+{
+  RooUnfoldTestHarness::Check();
+  if (ylo >= yhi) {cout << "Error: ylo ("    << ylo    << ") >= yhi(" << yhi << ")" << endl; error = 2;}
+  if (ftrainy<1)  {cout << "Error: ftrainy ("<< ftrainy<< ") < 1"                   << endl; error = 2;}
+  if (ftesty<1)   {cout << "Error: ftesty (" << ftesty << ") < 1"                   << endl; error = 2;}
+  return error;
+}
+
 
 //==============================================================================
 // Constructor
 //==============================================================================
+
+RooUnfoldTestHarness2D::RooUnfoldTestHarness2D (const char* name)
+  : RooUnfoldTestHarness(name)
+{
+  Reset();
+}
+
+RooUnfoldTestHarness2D::RooUnfoldTestHarness2D (const char* name, int argc, const char* const* argv)
+  : RooUnfoldTestHarness(name)
+{
+  Reset();
+  error= SetArgs (argc, argv);
+}
+
+RooUnfoldTestHarness2D::RooUnfoldTestHarness2D (const char* name, const char* args)
+{
+  Reset();
+  const char* const argv[]= { name, args };
+  error= SetArgs (2, argv, true);
+}
 
 void RooUnfoldTestHarness2D::Reset()
 {
@@ -248,30 +277,30 @@ void RooUnfoldTestHarness2D::Reset()
   Defaults();
 }
 
-int RooUnfoldTestHarness2D::SetArgs (int argc, const char* const* argv, bool split)
+int RooUnfoldTestHarness2D::Parms (const setargs_t*& args)
 {
   RooUnfoldTestHarness2D* h= this;   // work round CINT bug: reference our parameters via h
-  const setargs_t args[]= {
-    { "method",  &h->method,  0 },
-    { "stage",   &h->stage,   0 },
-    { "ftrainx", &h->ftrainx, 0 },
-    { "ftrainy", &h->ftrainy, 0 },
-    { "ftestx",  &h->ftestx,  0 },
-    { "ftesty",  &h->ftesty,  0 },
-    { "nt",      &h->nt,      0 },
-    { "ntest",   &h->ntest,   0 },
-    { "ntrain",  &h->ntrain,  0 },
-    { "xlo",     0,     &h->xlo },
-    { "xhi",     0,     &h->xhi },
-    { "ylo",     0,     &h->ylo },
-    { "yhi",     0,     &h->yhi },
-    { "regparm", &h->regparm, 0 },
-    { "ntoys",   &h->ntoys,   0 },
-    { "nm",      &h->nm,      0 },
+  static const setargs_t sargs[]= {
+    { "method",  &h->method,  0 },   // RooUnfold method: 1=Bayes, 2=SVD, 3=bin-by-bin
+    { "stage",   &h->stage,   0 },   // 1=train (writes RooUnfoldTest2D.root), 2=test (reads), 0=both (default)
+    { "ftrainx", &h->ftrainx, 0 },   // selected X training function
+    { "ftrainy", &h->ftrainy, 0 },   // selected X test function
+    { "ftestx",  &h->ftestx,  0 },   // selected Y training function
+    { "ftesty",  &h->ftesty,  0 },   // selected Y test function
+    { "nt",      &h->nt,      0 },   // #truth bins
+    { "ntest",   &h->ntest,   0 },   // #events to use for unsmearing
+    { "ntrain",  &h->ntrain,  0 },   // #events to use for training
+    { "xlo",     0,     &h->xlo },   // range minimum
+    { "xhi",     0,     &h->xhi },   // range maximum
+    { "ylo",     0,     &h->ylo },   // range minimum
+    { "yhi",     0,     &h->yhi },   // range maximum
+    { "regparm", &h->regparm, 0 },   // regularisation parameter (eg. number of iterations)
+    { "ntoys",   &h->ntoys,   0 },   // number of toys used to obtain SVD covariances
+    { "nm",      &h->nm,      0 },   // #measured bins
     { "onepage", &h->onepage, 0 }
   };
-  if (!setargs (args, (sizeof(args)/sizeof(setargs_t)), argc, argv, split)) return 1;
-  return 0;
+  args= sargs;
+  return sizeof(sargs)/sizeof(setargs_t);
 }
 
 void RooUnfoldTestHarness2D::Defaults()
@@ -281,8 +310,9 @@ void RooUnfoldTestHarness2D::Defaults()
   ftrainy=     1;
   ftestx=      3;
   ftesty=      5;
-  xlo=     -12.5;
-  xhi=      10.0;
+  ylo=     -12.5;
+  yhi=      10.0;
+  onepage=     8;
 }
 
 #endif
