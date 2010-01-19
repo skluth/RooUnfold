@@ -1,18 +1,11 @@
+//=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldExample.cxx,v 1.2 2009-06-12 00:44:40 adye Exp $
+//      $Id: RooUnfoldExample.cxx,v 1.3 2010-01-19 15:33:45 adye Exp $
 //
 // Description:
 //      Simple example usage of the RooUnfold package using toy MC.
 //
-// Environment:
-//      Software developed for the BaBar Detector at the SLAC B-Factory.
-//
-// Author List:
-//      Fergus Wilson <F.F.Wilson@rl.ac.uk>
-//      Tim Adye <T.J.Adye@rl.ac.uk>
-//
-// Copyright Information:
-//      Copyleft (C) 2005-6     Rutherford Appleton Laboratory
+// Authors: Tim Adye <T.J.Adye@rl.ac.uk> and Fergus Wilson <fwilson@slac.stanford.edu>
 //
 //==============================================================================
 

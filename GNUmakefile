@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.12 2010-01-19 00:05:52 adye Exp $
+#      $Id: GNUmakefile,v 1.13 2010-01-19 15:33:42 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -26,13 +26,10 @@
 #      lib     - make libRooUnfold.a
 #      bin     - make lib and example programs
 #      commands- show commands to make each type of target
+#      cleanbin- delete test binaries and objects
 #      clean   - delete all intermediate and final build objects
 #
-# Author List:
-#      Tim Adye <T.J.Adye@rl.ac.uk>
-#
-# Copyright Information:
-#      Copyleft (c) 2007, 2009 Rutherford Appleton Laboratory
+# Author: Tim Adye <T.J.Adye@rl.ac.uk>
 #
 #===============================================================================
 

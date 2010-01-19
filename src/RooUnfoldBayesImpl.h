@@ -1,8 +1,15 @@
-//--------------------------------------------------------------------
+//=====================================================================-*-C++-*-
+// File and Version Information:
+//      $Id: RooUnfoldBayesImpl.h,v 1.6 2010-01-19 15:33:47 adye Exp $
 //
-// $Id: RooUnfoldBayesImpl.h,v 1.5 2010-01-14 01:42:59 adye Exp $
+// Description:
+//   A class for unfolding 1, 2 or 3 dimensions of data using the
+//   Bayesian Unfolding algorithm.
 //
-//--------------------------------------------------------------------
+// Authors: Fergus Wilson <fwilson@slac.stanford.edu> and Tim Adye <T.J.Adye@rl.ac.uk>
+//
+//==============================================================================
+
 #ifndef ROOUNFOLDBAYESIMPL_HH
 #define ROOUNFOLDBAYESIMPL_HH
 

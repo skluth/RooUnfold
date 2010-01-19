@@ -1,16 +1,12 @@
+//=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.4 2010-01-19 00:05:55 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.5 2010-01-19 15:33:45 adye Exp $
 //
 // Description:
-//      Tests RooUnfold package using toy MC generated according to PDFs defined
-//      in RooUnfoldTestPdf.icc or RooUnfoldTestPdfRooFit.icc.
+//      Harness class to test the RooUnfold package using toy MC generated
+//      according to PDFs defined in RooUnfoldTestPdf.icc or RooUnfoldTestPdfRooFit.icc.
 //
-// Author List:
-//      Tim Adye <T.J.Adye@rl.ac.uk>
-//      Fergus Wilson <F.F.Wilson@rl.ac.uk>
-//
-// Copyright Information:
-//      Copyleft (C) 2005-10    Rutherford Appleton Laboratory
+// Authors: Tim Adye <T.J.Adye@rl.ac.uk> and Fergus Wilson <fwilson@slac.stanford.edu>
 //
 //==============================================================================
 
@@ -121,7 +117,7 @@ Double_t RooUnfoldTestHarness::smear (Double_t xt, Int_t nt, Double_t xlo, Doubl
 }
 
 TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char* title,
-                                      Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, 
+                                      Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi,
                                       Double_t mean, Double_t width)
 {
   TH1D* hPDF= new TH1D (name, title, nbPDF, xlo, xhi);

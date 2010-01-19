@@ -1,6 +1,6 @@
-//==============================================================================
+//=====================================================================-*-C++-*-
 // File and Version Information:
-//   $Id: RooUnfoldBayesImpl.cxx,v 1.12 2010-01-14 01:42:59 adye Exp $
+//      $Id: RooUnfoldBayesImpl.cxx,v 1.13 2010-01-19 15:33:47 adye Exp $
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the
@@ -44,11 +44,7 @@
 //   vector<Double_t> causes;
 //   mytest.unfold(causes);
 //
-// Author List:
-//   Fergus Wilson <fwilson@slac.stanford.edu>, Tim Adye <T.J.Adye@rl.ac.uk>
-//
-// Copyright Information:
-//   Copyleft (C) 2005-2006 Rutherford Appleton Laboratory
+// Authors: Fergus Wilson <fwilson@slac.stanford.edu> and Tim Adye <T.J.Adye@rl.ac.uk>
 //
 //==============================================================================
 

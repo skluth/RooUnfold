@@ -1,19 +1,14 @@
-History for RooUnfold
-=====================
+History of RooUnfold     $Id: History,v 1.37 2010-01-19 15:33:42 adye Exp $
+====================
 
-$Id: History,v 1.36 2010-01-19 00:05:52 adye Exp $
-
-Put notes on the changes to this package here (latest at the top).
-If you make a tag, please document it here as well.
-
--------------------------------------------------------------------------
+Tim Adye         19-Jan-2010 tja100119b
+  o Tidy up comments.
 
 Tim Adye         19-Jan-2010 tja100119a
   o New RooUnfoldTestHarness2D inherits from RooUnfoldTestHarness and
     RooUnfoldTestHarness3D inherits from that.
   o Arguments now parsed with examples/ArgVars.
-  o RooUnfoldTest(2D,3D) can now have separate ntx, ntx, ntz, nmx, nmy, nmz.
-  o Various other changes to RooUnfoldTest(2D,3D).
+  o RooUnfoldTest(2D,3D) can now have separate ntx, nty, ntz, nmx, nmy, nmz.
 
 Tim Adye         13-Jan-2010 tja100113a
   o Small reorganisation of RooUnfoldBayesImpl. User no longer calls train()
@@ -116,7 +111,7 @@ Tim Adye         14-Aug-2008 tja080814a
     to 1 at high x as before.
 
 Fergus Wilson    14-Aug-2008 ffw140808a
-  o Bayesian Systematc error calculation due to unfolding matrix 
+  o Bayesian Systematc error calculation due to unfolding matrix
     disabled while investigate normalisation.
 
 Tim Adye          6-Aug-2008 tja080813b

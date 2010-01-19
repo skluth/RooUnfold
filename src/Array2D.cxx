@@ -1,18 +1,14 @@
-//-------------------------------------------------------------------------
-//
+//=====================================================================-*-C++-*-
 // File and Version Information:
-//   $Id: Array2D.cxx,v 1.1.1.1 2007-04-04 21:27:25 adye Exp $
+//      $Id: Array2D.cxx,v 1.2 2010-01-19 15:33:47 adye Exp $
 //
 // Description:
-//  A helper class designed to store an 2 dimensional array as a 1-D array. 
+//      A helper class designed to store an 2 dimensional array as a 1-D array.
 //
-// Author List:
-//   F.Wilson, T.Adye
+// Authors: Fergus Wilson <fwilson@slac.stanford.edu> and Tim Adye <T.J.Adye@rl.ac.uk>
 //
-// Copyright Information:
-//   Copyright (C) 2005-2006 rutherford Appleton Laboratory
-//
-//-------------------------------------------------------------------------
+//==============================================================================
+
 #include "Array2D.h"
 
 ClassImp(Array2D);

@@ -1,7 +1,13 @@
-//=================================================================
+//=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: Array2D.h,v 1.1.1.1 2007-04-04 21:27:01 adye Exp $
-//=================================================================
+//      $Id: Array2D.h,v 1.2 2010-01-19 15:33:47 adye Exp $
+//
+// Description:
+//      A helper class designed to store an 2 dimensional array as a 1-D array.
+//
+// Authors: Fergus Wilson <fwilson@slac.stanford.edu> and Tim Adye <T.J.Adye@rl.ac.uk>
+//
+//==============================================================================
 
 #ifndef ARRAY2D_HH
 #define ARRAY2D_HH

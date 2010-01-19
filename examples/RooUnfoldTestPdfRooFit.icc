@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.6 2010-01-19 00:05:55 adye Exp $
+//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.7 2010-01-19 15:33:45 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented with RooFit.
@@ -14,14 +14,7 @@
 //        5: Double Breit-Wigner, peaking at mean-width and mean+width.
 //        6: Gaussian resonance on an exponential background
 //
-// Environment:
-//      Software developed for the BaBar Detector at the SLAC B-Factory.
-//
-// Author List:
-//      Tim Adye <T.J.Adye@rl.ac.uk>
-//
-// Copyright Information:
-//      Copyleft (C) 2005-6     Rutherford Appleton Laboratory
+// Author: Tim Adye <T.J.Adye@rl.ac.uk>
 //
 //==============================================================================
 
@@ -153,8 +146,8 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
       RooRealVar p32("p32","width", mywidth);
       RooGaussian gaus("pdf2","Gaussian",xvar,p31,p32);
 
-      return mcgenpdf (RooAddPdf("pdf","Resonace+background", 
-				 RooArgList(expon,gaus),RooArgList(fexp)), xvar, nx, x, h);
+      return mcgenpdf (RooAddPdf("pdf","Resonace+background",
+                                 RooArgList(expon,gaus),RooArgList(fexp)), xvar, nx, x, h);
 
    }
 

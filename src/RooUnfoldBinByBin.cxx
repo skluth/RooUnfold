@@ -1,15 +1,15 @@
-//==============================================================================
+//=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.cxx,v 1.4 2010-01-14 01:42:59 adye Exp $
+//      $Id: RooUnfoldBinByBin.cxx,v 1.5 2010-01-19 15:33:47 adye Exp $
 //
 // Description:
-//      Unfold
+//      Unfolding bin-by-bin. Just an interface to RooUnfoldBayesImpl.
+//      Note that we use 1D distributions in RooUnfoldBayesImpl, even if we are
+//      unfolding multi-dimensional distributions: RooUnfold already converted
+//      to 1D. Except for smoothing (which RooUnfoldBayesImpl doesn't implement)
+//      this is just a matter of bookkeeping.
 //
-// Author List:
-//      Tim Adye <T.J.Adye@rl.ac.uk>
-//
-// Copyright Information:
-//      Copyleft (C) 2006 Rutherford Appleton Laboratory
+// Author: Tim Adye <T.J.Adye@rl.ac.uk>
 //
 //==============================================================================
 

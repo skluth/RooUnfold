@@ -1,15 +1,11 @@
-//==============================================================================
+//=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.7 2009-05-27 15:36:34 adye Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.8 2010-01-19 15:33:47 adye Exp $
 //
 // Description:
 //      Response Matrix
 //
-// Author List:
-//      Tim Adye <T.J.Adye@rl.ac.uk>
-//
-// Copyright Information:
-//      Copyleft (C) 2006 Rutherford Appleton Laboratory
+// Author: Tim Adye <T.J.Adye@rl.ac.uk>
 //
 //==============================================================================
 

@@ -1,19 +1,14 @@
+//=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTest2D.cxx,v 1.11 2010-01-19 00:05:54 adye Exp $
+//      $Id: RooUnfoldTest2D.cxx,v 1.12 2010-01-19 15:33:45 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
 //      defined in RooUnfoldTestPdf.icc or RooUnfoldTestPdfRooFit.icc.
+//      This is the main program. The actual tests are performed using the
+//      RooUnfoldTestHarness2D class.
 //
-// Environment:
-//      Software developed for the BaBar Detector at the SLAC B-Factory.
-//
-// Author List:
-//      Fergus Wilson <F.F.Wilson@rl.ac.uk>
-//      Tim Adye <T.J.Adye@rl.ac.uk>
-//
-// Copyright Information:
-//      Copyleft (C) 2005-6     Rutherford Appleton Laboratory
+// Author: Tim Adye <T.J.Adye@rl.ac.uk>
 //
 //==============================================================================
 

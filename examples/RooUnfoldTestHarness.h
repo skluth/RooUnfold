@@ -1,19 +1,12 @@
+//=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.5 2010-01-19 00:05:55 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.6 2010-01-19 15:33:45 adye Exp $
 //
 // Description:
-//      Tests RooUnfold package using toy MC generated according to PDFs defined
-//      in RooUnfoldTestPdf.icc or RooUnfoldTestPdfRooFit.icc.
+//      Harness class to test the RooUnfold package using toy MC generated
+//      according to PDFs defined in RooUnfoldTestPdf.icc or RooUnfoldTestPdfRooFit.icc.
 //
-// Environment:
-//      Software developed for the BaBar Detector at the SLAC B-Factory.
-//
-// Author List:
-//      Fergus Wilson <F.F.Wilson@rl.ac.uk>
-//      Tim Adye <T.J.Adye@rl.ac.uk>
-//
-// Copyright Information:
-//      Copyleft (C) 2005-6     Rutherford Appleton Laboratory
+// Authors: Tim Adye <T.J.Adye@rl.ac.uk> and Fergus Wilson <fwilson@slac.stanford.edu>
 //
 //==============================================================================
 
@@ -68,7 +61,7 @@ public:
   RooUnfoldTestHarness (const char* name, int argc, const char* const* argv);
   virtual ~RooUnfoldTestHarness();
 
-  TH1D* Generate (TVectorD& x, const char* name, const char* title, Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, 
+  TH1D* Generate (TVectorD& x, const char* name, const char* title, Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi,
                   Double_t mean= 0.0, Double_t width= 2.5);
   virtual void  Reset();
   virtual void  Defaults();

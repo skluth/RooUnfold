@@ -1,15 +1,11 @@
-//==============================================================================
+//=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.5 2010-01-13 00:18:21 adye Exp $
+//      $Id: RooUnfold.h,v 1.6 2010-01-19 15:33:47 adye Exp $
 //
 // Description:
-//      Unfold
+//      Unfolding framework base class.
 //
-// Author List:
-//      Tim Adye <T.J.Adye@rl.ac.uk>
-//
-// Copyright Information:
-//      Copyleft (C) 2006 Rutherford Appleton Laboratory
+// Author: Tim Adye <T.J.Adye@rl.ac.uk>
 //
 //==============================================================================
 
