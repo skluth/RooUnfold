@@ -1,0 +1,128 @@
+// File and Version Information:
+//      $Id: ArgVars.icc,v 1.1 2010-01-19 00:05:54 adye Exp $
+//
+// Description:
+//      Parse argument list for parameter settings
+//
+// Author List:
+//      Tim Adye <T.J.Adye@rl.ac.uk>
+//
+// Copyright Information:
+//      Copyleft (C) 2010    Rutherford Appleton Laboratory
+//
+//==============================================================================
+
+#ifndef ARGVARS_ICC
+#define ARGVARS_ICC
+
+#include "ArgVars.h"
+
+#if !defined(__CINT__) || defined(__MAKECINT__)
+#include "TROOT.h"
+#include "TObject.h"
+#include "TList.h"
+#include <iostream>
+#include <cstring>
+#include <cstdlib>
+#endif
+
+ArgVars::~ArgVars()
+{
+  TIter next(&lst);
+  TObject* arg;
+  while (arg= next()) delete arg;
+}
+
+void ArgVars::Add(const ArgVars& args)
+{
+  TIter next(&args.lst);
+  const TObject* arg;
+  while (arg= next()) lst.Add (arg->Clone());
+}
+
+void ArgVars::Print (std::ostream& o, const char* sep) const
+{
+  Int_t kilroy= 0;
+  TIter next(&lst);
+  const ArgVar* arg;
+  while (arg= dynamic_cast<const ArgVar*>(next())) {
+    if (kilroy++) o << sep;
+    o << arg->name << '=';
+    if (arg->ivar) o << *(arg->ivar);
+    else           o << *(arg->fvar);
+  }
+}
+
+void ArgVars::Usage (const char* prog)
+{
+  std::cout << "Defaults: " << prog << ' ';
+  Print (std::cout);
+  std::cout << std::endl;
+}
+
+Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split)
+{
+  const char* prog= strrchr (argv[0], '/');
+  if (prog) prog++; else prog= argv[0];
+  int err= 0, iarg= 0, help= 0;
+  for (int i= 1; i<argc; i++) {
+    const char* p= argv[i];
+    do {
+      if (split) {
+        while (*p==' ') p++;
+        if (*p=='\0') break;
+      }
+      bool found= false;
+      if (strcmp(p,"-h")==0 && p[2]=='\0' || (split && p[2]==' ')) {
+        help= 1;
+        p= (p[2]==' ') ? p += 3 : 0;
+        continue;
+      }
+      if (strcmp(p,"--help")==0 && p[6]=='\0' || (split && p[6]==' ')) {
+        help= 1;
+        p= (p[6]==' ') ? p += 7 : 0;
+        continue;
+      }
+      const char* d= strchr (p, '=');
+      const char* q= 0;
+      ArgVar* arg;
+      if (d) {
+        size_t nv= d-p;
+        if (split) {
+          while (nv>0 && p[nv-1]==' ') nv--;
+        }
+        TIter next(&lst);
+        while (arg= dynamic_cast<ArgVar*>(next())) {
+          if (strncmp (p, arg->name, nv) == 0) {
+            char* nxt= 0;
+            if (arg->ivar) *(arg->ivar)= strtol (d+1, &nxt, 10);
+            else           *(arg->fvar)= strtod (d+1, &nxt);
+            found= (nxt && nxt>d+1 && (*nxt=='\0' || (split && *nxt==' ')));
+            if (split && nxt && *nxt==' ') q= nxt+1;
+            break;
+          }
+        }
+      } else if (arg= dynamic_cast<ArgVar*>(lst.At(iarg))) {  // positional argument?
+        char* nxt= 0;
+        if (arg->ivar) *(arg->ivar)= strtol (p, &nxt, 10);
+        else           *(arg->fvar)= strtod (p, &nxt);
+        found= (nxt && nxt>p && (*nxt=='\0' || (split && *nxt==' ')));
+        if (split && nxt && *nxt==' ') q= nxt+1;
+        iarg++;
+      }
+      if (!found) {
+        std::cerr << prog << ": unrecognised parameter: " << p << std::endl;
+        err++;
+      }
+      p= q;
+    } while (p);
+  }
+  if (help) {
+    Usage (prog);
+    return 1;
+  }
+  if (err) return 2;
+  return 0;
+}
+
+#endif

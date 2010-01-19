@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.5 2010-01-16 01:58:39 adye Exp $
+//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.6 2010-01-19 00:05:55 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented with RooFit.
@@ -61,12 +61,10 @@ Int_t mcgenpdf (const RooAbsPdf& pdf, RooRealVar& xvar, Int_t nx,
   const RooDataSet* ds= pdf.generate (xvar, nx);
 
   Int_t ngen= ds->numEntries();
-
-  const RooArgSet* row= ds->get();
-  const RooRealVar* xrow= dynamic_cast<RooRealVar*> (row->find(xvar.GetName()));
+  const RooRealVar* dsx= dynamic_cast<RooRealVar*> (ds->get()->find (xvar.GetName()));
   for (Int_t i= 0; i<ngen; i++) {
-    ds->get(i);
-    x[i]= xrow->getVal()+offset;
+    ds->get (i);
+    x[i]= dsx->getVal()+offset;
   }
   if (h) {
     Int_t nb= h->GetNbinsX();

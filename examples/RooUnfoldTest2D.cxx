@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTest2D.cxx,v 1.10 2010-01-16 01:58:38 adye Exp $
+//      $Id: RooUnfoldTest2D.cxx,v 1.11 2010-01-19 00:05:54 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -54,16 +54,13 @@ void RooUnfoldTest2D (
                       Int_t    method=      1,
                       Int_t    stage=       0,
                       Int_t    ftrainx=     1,
-                      Int_t    ftrainy=     1,
                       Int_t    ftestx=      3,
-                      Int_t    ftesty=      5,
-                      Int_t    nb=         40,
+                      Int_t    ntx=        40,
+                      Int_t    nmx=        -1,
                       Int_t    ntest=   10000,
                       Int_t    ntrain= 100000,
                       Double_t xlo=     -12.5,
                       Double_t xhi=      10.0,
-                      Double_t ylo=     -12.5,
-                      Double_t yhi=      10.0,
                       Int_t    regparm=  -999,  // Bayes niter=4, SVD kterm=20
                       Int_t    ntoys=    1000     // SVD only
                    )
@@ -75,16 +72,13 @@ void RooUnfoldTest2D (
   test2d->method=  method;
   test2d->stage=   stage;
   test2d->ftrainx= ftrainx;
-  test2d->ftrainy= ftrainy;
   test2d->ftestx=  ftestx;
-  test2d->ftesty=  ftesty;
-  test2d->nt=      nt;
+  test2d->ntx=     ntx;
+  test2d->nmx=     nmx;
   test2d->ntest=   ntest;
   test2d->ntrain=  ntrain;
   test2d->xlo=     xlo;
   test2d->xhi=     xhi;
-  test2d->ylo=     ylo;
-  test2d->yhi=     yhi;
   test2d->regparm= regparm;
   test2d->ntoys=   ntoys;
 

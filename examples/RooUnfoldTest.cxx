@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.10 2010-01-14 01:42:57 adye Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.11 2010-01-19 00:05:54 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -53,9 +53,10 @@ RooUnfoldTestError()
 void RooUnfoldTest (
                     Int_t    method=      1,
                     Int_t    stage=       0,
-                    Int_t    ftrain=      2,
-                    Int_t    ftest=       5,
-                    Int_t    nt=         40,
+                    Int_t    ftrainx=     2,
+                    Int_t    ftestx=      5,
+                    Int_t    ntx=        40,
+                    Int_t    nmx=        -1,
                     Int_t    ntest=   10000,
                     Int_t    ntrain= 100000,
                     Double_t xlo=     -12.5,
@@ -70,9 +71,10 @@ void RooUnfoldTest (
 
   test->method=  method;
   test->stage=   stage;
-  test->ftrain=  ftrain;
-  test->ftest=   ftest;
-  test->nt=      nt;
+  test->ftrainx= ftrainx;
+  test->ftestx=  ftestx;
+  test->ntx=     ntx;
+  test->nmx=     nmx;
   test->ntest=   ntest;
   test->ntrain=  ntrain;
   test->xlo=     xlo;

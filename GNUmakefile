@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.11 2010-01-16 01:58:38 adye Exp $
+#      $Id: GNUmakefile,v 1.12 2010-01-19 00:05:52 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -145,7 +145,7 @@ DLIST         = $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(notdir $(wildcard $
 
 ifeq ($(NOROOFIT),)
 # List of programs that use RooFit. Should only be those in $(EXESRC)
-ROOFITCLIENTS = $(patsubst $(DEPDIR)%.d,$(OBJDIR)%.o,$(shell fgrep -l '/RooGlobalFunc.h ' $(DLIST) 2>/dev/null))
+ROOFITCLIENTS = $(patsubst $(DEPDIR)%.d,$(OBJDIR)%.o,$(shell fgrep -l '/RooAbsArg.h ' $(DLIST) 2>/dev/null))
 endif
 endif
 

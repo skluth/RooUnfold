@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.h,v 1.3 2010-01-16 01:58:39 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.h,v 1.4 2010-01-19 00:05:55 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -21,16 +21,18 @@
 #define ROOUNFOLDTESTHARNESS2D_HH
 
 #include "RooUnfoldTestHarness.h"
-#include "TH1.h"
+#if !defined(__CINT__) || defined(__MAKECINT__)
+#include "TH1D.h"
 #include "TH2.h"
+#endif
 
 class RooUnfoldTestHarness2D : public RooUnfoldTestHarness {
 public:
   // Parameters
-  Int_t    ftrainy, ftesty;
+  Int_t    ftrainy, ftesty, nty, nmy;
   Double_t ylo, yhi;
 
-  TH1D *hTrainX, *hTrainTrueX, *hTrueX, *hMeasX, *hRecoX, *hPDFx, *hTestPDFx;
+  TH1D *hTrainX, *hTrainTrueX, *hTrueX, *hMeasX, *hRecoX;
   TH1D *hTrainY, *hTrainTrueY, *hTrueY, *hMeasY, *hRecoY, *hPDFy, *hTestPDFy;
 
   // Constructors
@@ -41,20 +43,21 @@ public:
 
   virtual void  Reset();
   virtual void  Defaults();
+  virtual void  Init();
   virtual Int_t Train();
   virtual Int_t Test();
-  virtual void  Unfold();
+  virtual void  Results();
   virtual Int_t Check();
-  virtual int Parms (const setargs_t*& args);
+  virtual void  Parms (ArgVars& args);
 
   void rot (Double_t& x, Double_t& y);
   Double_t smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi) { return RooUnfoldTestHarness::smear(xt,nt,xlo,xhi); }
   Bool_t smear (Double_t& x, Double_t& y, Int_t nx, Double_t xlo, Double_t xhi, Int_t ny, Double_t ylo, Double_t yhi);
 
-  static TH1D* ProjectionX (const TH1* h, const char* name="_px", Int_t first=0, Int_t last=-1, Option_t* opt="")
-    {return dynamic_cast<const TH2*>(h)->ProjectionX(name,first,last,opt);}
-  static TH1D* ProjectionY (const TH1* h, const char* name="_py", Int_t first=0, Int_t last=-1, Option_t* opt="")
-    {return dynamic_cast<const TH2*>(h)->ProjectionY(name,first,last,opt);}
+  static TH1D* ProjectionX (const TH1* h, const char* name="_px", Option_t* opt="")
+    {return dynamic_cast<const TH2*>(h)->ProjectionX(name,0,-1,opt);}
+  static TH1D* ProjectionY (const TH1* h, const char* name="_py", Option_t* opt="")
+    {return dynamic_cast<const TH2*>(h)->ProjectionY(name,0,-1,opt);}
 };
 
 #endif

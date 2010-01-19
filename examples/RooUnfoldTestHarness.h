@@ -1,5 +1,5 @@
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.4 2010-01-16 01:58:38 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.5 2010-01-19 00:05:55 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -20,9 +20,21 @@
 #ifndef ROOUNFOLDTESTHARNESS_HH
 #define ROOUNFOLDTESTHARNESS_HH
 
+#if !defined(__CINT__) || defined(__MAKECINT__)
 #include "TNamed.h"
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,0,0)
+#include "TVectorDfwd.h"
+#else
+class TVectorD;
+#endif
+#endif
 
-typedef struct setargs setargs_t;
+#ifdef __CINT__
+#include "ArgVars.h"
+#else
+class ArgVars;
+#endif
+
 class TCanvas;
 class TH1;
 class TH1D;
@@ -33,19 +45,22 @@ class RooUnfold;
 class RooUnfoldTestHarness : public TNamed {
 public:
   // Parameters
-  Int_t    method, stage, ftrainx, ftestx, nt, ntest, ntrain;
+  Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain;
   Double_t xlo, xhi;
-  Int_t    regparm, ntoys, nm, onepage;
+  Int_t    regparm, ntoys, nmx, onepage, doerror, dim;
 
   Bool_t             nosmear;
-  Int_t              error, ipad;
+  Int_t              error, ipad, ntbins, nmbins;
   TCanvas*           canvas;
-  TH1                *hPDF, *hTrain, *hTrainTrue, *hTestPDF, *hTrue, *hMeas, *hReco, *hTrue0, *hRes, *hPulls;
+  TH1                *hTrain, *hTrainTrue, *hTrue, *hMeas, *hReco, *hTrue0, *hRes, *hPulls;
   TH2D*              hResmat;
   RooUnfoldResponse* response;
   RooUnfold*         unfold;
 
+  static const Int_t    nbPDF=         500;
   static const Double_t cutdummy= -99999.0;
+
+  TH1D               *hPDFx, *hTestPDFx;
 
   // Constructors
   RooUnfoldTestHarness (const char* name= "RooUnfoldTest");
@@ -53,15 +68,22 @@ public:
   RooUnfoldTestHarness (const char* name, int argc, const char* const* argv);
   virtual ~RooUnfoldTestHarness();
 
+  TH1D* Generate (TVectorD& x, const char* name, const char* title, Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, 
+                  Double_t mean= 0.0, Double_t width= 2.5);
   virtual void  Reset();
   virtual void  Defaults();
+  virtual void  Init();
+  virtual void  Init2();
   virtual Int_t Train();
   virtual Int_t Test();
-  virtual void  Unfold();
+  virtual Int_t Unfold();
+  virtual void  Results();
   virtual Int_t Run();
-  virtual void  Print (std::ostream& o) const;
+  virtual Int_t RunStuff();
+  virtual void  Print      (std::ostream& o)                       const;
+  virtual void  PrintParms (std::ostream& o, const char* sep= " ") const;
   virtual Int_t Check();
-  virtual int Parms (const setargs_t*& args);
+  virtual void  Parms (ArgVars& args);
   virtual int SetArgs (int argc, const char* const* argv, bool split= false);
 
   void setmax (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
