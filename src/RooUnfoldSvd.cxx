@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.5 2010-01-19 15:33:47 adye Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.6 2010-01-19 23:30:59 adye Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -21,7 +21,6 @@
 #include "RooUnfoldResponse.h"
 #include "RooUnfHistoSvd.h"
 
-using std::cout;
 using std::cerr;
 using std::endl;
 
@@ -81,6 +80,10 @@ RooUnfoldSvd::Setup (Int_t kterm, Int_t ntoys)
   _kterm= kterm;
   _ntoys= ntoys;
 
+  if (_res->GetDimensionTruth() != 1 || _res->GetDimensionMeasured() != 1) {
+    cerr << "RooUnfoldSvd may not work very well for multi-dimensional distributions" << endl;
+  }
+
   _svd= new TUnfHisto (_nt, _nm);
 
   TMatrixD covMeas(_nm,_nm);
@@ -100,12 +103,12 @@ RooUnfoldSvd::Setup (Int_t kterm, Int_t ntoys)
   TH1::AddDirectory (oldstat);
 
   if (_kterm < 0) {
-    cout << "RooUnfoldSvd invalid kterm: " << _kterm << endl;
+    cerr << "RooUnfoldSvd invalid kterm: " << _kterm << endl;
     return *this;
   }
   Int_t nb= _nm < _nt ? _nm : _nt;
   if (_kterm > nb) {
-    cout << "RooUnfoldSvd invalid kterm=" << _kterm << " with " << nb << " bins" << endl;
+    cerr << "RooUnfoldSvd invalid kterm=" << _kterm << " with " << nb << " bins" << endl;
     return *this;
   }
 

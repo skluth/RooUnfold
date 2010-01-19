@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.5 2010-01-19 15:33:45 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.6 2010-01-19 23:30:57 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using 2D toy MC generated
@@ -59,9 +59,9 @@ Int_t RooUnfoldTestHarness2D::Train ()
 {
   TVectorD xtrue(ntrain), ytrue(ntrain);
 
-  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi);
+  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi, bkgtx);
   if (!hPDFx) return 0;
-  hPDFy= Generate (ytrue, "trainpdfy", "Training PDF Y", nty, ftrainy, ntrain, ylo, yhi);
+  hPDFy= Generate (ytrue, "trainpdfy", "Training PDF Y", nty, ftrainy, ntrain, ylo, yhi, bkgty);
   if (!hPDFy) return 0;
 
   hTrainTrue= new TH2D ("traintrue", "Training Truth", ntx, xlo, xhi, nty, ylo, yhi);
@@ -84,10 +84,10 @@ Int_t RooUnfoldTestHarness2D::Train ()
     }
   }
 
-  hTrainTrueX= ProjectionX (hTrainTrue, "Training Truth X");
-  hTrainTrueY= ProjectionY (hTrainTrue, "Training Truth Y");
-  hTrainX=     ProjectionX (hTrain,     "Training Measured X");
-  hTrainY=     ProjectionY (hTrain,     "Training Measured Y");
+  hTrainTrueX= ProjectionX (hTrainTrue, "hTrainTrueX", "Training X");
+  hTrainTrueY= ProjectionY (hTrainTrue, "hTrainTrueY", "Training Y");
+  hTrainX=     ProjectionX (hTrain,     "hTrainX",     "Training Measured X");
+  hTrainY=     ProjectionY (hTrain,     "hTrainY",     "Training Measured Y");
 
   setmax (hTrainTrueX, hPDFx, hTrainX);
   setmax (hTrainTrueY, hPDFy, hTrainY);
@@ -115,9 +115,9 @@ Int_t RooUnfoldTestHarness2D::Test ()
 {
   TVectorD xtest(ntest), ytest(ntest);
 
-  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, 1.0, 2.5);
+  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, bkgex, 1.0, 2.5);
   if (!hTestPDFx) return 0;
-  hTestPDFy= Generate (ytest, "pdfy", "PDF Y", nty, ftesty, ntest, ylo, yhi, -0.5, 2.5);
+  hTestPDFy= Generate (ytest, "pdfy", "PDF Y", nty, ftesty, ntest, ylo, yhi, bkgey, -0.5, 2.5);
   if (!hTestPDFy) return 0;
 
   hTrue= new TH2D ("true", "Test Truth", ntx, xlo, xhi, nty, ylo, yhi);
@@ -133,10 +133,10 @@ Int_t RooUnfoldTestHarness2D::Test ()
       hMeas->Fill (x, y);
   }
 
-  hTrueX= ProjectionX (hTrue, "Test Truth X");
-  hTrueY= ProjectionY (hTrue, "Test Truth Y");
-  hMeasX= ProjectionX (hMeas, "Test Measured X");
-  hMeasY= ProjectionY (hMeas, "Test Measured Y");
+  hTrueX= ProjectionX (hTrue, "hTrueX", "Test X");
+  hTrueY= ProjectionY (hTrue, "hTrueY", "Test Y");
+  hMeasX= ProjectionX (hMeas, "hMeasX", "Test Measured X");
+  hMeasY= ProjectionY (hMeas, "hMeasY", "Test Measured Y");
 
   return 1;
 }
@@ -147,8 +147,8 @@ Int_t RooUnfoldTestHarness2D::Test ()
 
 void RooUnfoldTestHarness2D::Results()
 {
-  hRecoX= ProjectionX (hReco, "Reconstructed X", "E");
-  hRecoY= ProjectionY (hReco, "Reconstructed Y", "E");
+  hRecoX= ProjectionX (hReco, "hRecoX", "Reconstructed X", "E");
+  hRecoY= ProjectionY (hReco, "hRecoY", "Reconstructed Y", "E");
   hRecoX->SetMarkerStyle(8);
   hRecoY->SetMarkerStyle(8);
 
@@ -212,6 +212,8 @@ void RooUnfoldTestHarness2D::Init()
   RooUnfoldTestHarness::Init();
   if (nty==-1) nty= ntx;
   if (nmy==-1) nmy= nty;
+  if (bkgty==-1.0) bkgty= bkgtx;
+  if (bkgey==-1.0) bkgey= bkgex;
   ntbins= ntx*nty;
   nmbins= nmx*nmy;
 }
@@ -224,6 +226,7 @@ RooUnfoldTestHarness2D::RooUnfoldTestHarness2D (const char* name)
   : RooUnfoldTestHarness(name)
 {
   Reset();
+  SetDefaults();
 }
 
 RooUnfoldTestHarness2D::RooUnfoldTestHarness2D (const char* name, int argc, const char* const* argv)
@@ -246,32 +249,22 @@ void RooUnfoldTestHarness2D::Reset()
   hTrainX= hTrainTrueX= hTrueX= hMeasX= hRecoX=
   hTrainY= hTrainTrueY= hTrueY= hMeasY= hRecoY= hPDFy= hTestPDFy= 0;
   dim= 2;
-  Defaults();
 }
 
 void RooUnfoldTestHarness2D::Parms (ArgVars& args)
 {
   RooUnfoldTestHarness::Parms (args);
-  args.Add ("ftrainy", &ftrainy); // selected Y training function
-  args.Add ("ftesty",  &ftesty ); // selected Y test function
-  args.Add ("nty",     &nty);     // #truth Y bins
-  args.Add ("nmy",     &nmy);     // #measured Y bins
-  args.Add ("ylo",     &ylo);     // range minimum
-  args.Add ("yhi",     &yhi);     // range maximum
-}
-
-void RooUnfoldTestHarness2D::Defaults()
-{
-  RooUnfoldTestHarness::Defaults();
-  ftrainx=     1;
-  ftrainy=     1;
-  ftestx=      3;
-  ftesty=      5;
-  ylo=     -12.5;
-  yhi=      10.0;
-  onepage=     8;
-  nty=        -1;
-  nmy=        -1;
+  args.SetDefault ("ftrainx", 1);
+  args.SetDefault ("ftestx",  3);
+  args.SetDefault ("onepage", 8);
+  args.Add ("ftrainy", &ftrainy,     1, "training Y PDF");
+  args.Add ("ftesty",  &ftesty ,     5, "test Y PDF");
+  args.Add ("nty",     &nty,        -1, "#truth Y bins", "ntx");
+  args.Add ("nmy",     &nmy,        -1, "#measured Y bins", "nty");
+  args.Add ("ylo",     &ylo,     -12.5, "Y range minimum");
+  args.Add ("yhi",     &yhi,      10.0, "Y range maximum");
+  args.Add ("bkgty",   &bkgty,    -1.0, "background fraction for training Y PDF", "bkgtx");
+  args.Add ("bkgey",   &bkgey,    -1.0, "background fraction for test Y PDF", "bkgex");
 }
 
 #endif

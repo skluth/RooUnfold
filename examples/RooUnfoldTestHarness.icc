@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.5 2010-01-19 15:33:45 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.6 2010-01-19 23:30:57 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using toy MC generated
@@ -118,12 +118,12 @@ Double_t RooUnfoldTestHarness::smear (Double_t xt, Int_t nt, Double_t xlo, Doubl
 
 TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char* title,
                                       Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi,
-                                      Double_t mean, Double_t width)
+                                      Double_t bkg, Double_t mean, Double_t width)
 {
   TH1D* hPDF= new TH1D (name, title, nbPDF, xlo, xhi);
   hPDF->SetLineColor(kGreen);
   hPDF->SetLineWidth(2);
-  if (!RooUnfoldTestPdf (fpdf, nx, xlo, xhi, x, hPDF, mean, width)) return 0;
+  if (!RooUnfoldTestPdf (fpdf, nx, xlo, xhi, x, hPDF, mean, width, bkg)) return 0;
   hPDF->Scale (nbPDF/Double_t(nt));
   return hPDF;
 }
@@ -135,10 +135,10 @@ TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char*
 Int_t RooUnfoldTestHarness::Train()
 {
   TVectorD xtrue(ntrain);
-  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi);
+  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi, bkgtx);
   if (!hPDFx) return 0;
 
-  hTrainTrue= new TH1D ("traintrue", "Training Truth", ntx, xlo, xhi);
+  hTrainTrue= new TH1D ("traintrue", "Training", ntx, xlo, xhi);
   hTrainTrue->SetLineColor(kBlue);
   hTrain= new TH1D ("train", "Training Measured", nmx, xlo, xhi);
   hTrain->SetLineColor(kRed);
@@ -181,10 +181,10 @@ Int_t RooUnfoldTestHarness::Train()
 Int_t RooUnfoldTestHarness::Test()
 {
   TVectorD xtest(ntest);
-  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, 1.0, 2.0);
+  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, bkgex, 1.0, 2.0);
   if (!hTestPDFx) return 0;
 
-  hTrue= new TH1D ("true", "Test Truth", ntx, xlo, xhi);
+  hTrue= new TH1D ("true", "Test", ntx, xlo, xhi);
   hTrue->SetLineColor(kBlue);
   hMeas= new TH1D ("meas", "Test Measured", nmx, xlo, xhi);
   hMeas->SetLineColor(kRed);
@@ -336,8 +336,8 @@ void RooUnfoldTestHarness::Init2()
   if (doerror==-1) {
     doerror= !(method==1 && ntbins*nmbins > 160000);
     if (!doerror) {
-      cerr << "Don't calculate errors - this would take too long ("
-           << ntbins*nmbins << " bins - skip if more than 160000 for Bayes algorithm)" << endl;
+      cerr << "Don't calculate errors for Bayes algorithm - there are " << ntbins*nmbins
+           << " bins in response matrix and the error calculation would take too long (set doerror=1 to override this)" << endl;
     }
   }
 }
@@ -353,9 +353,9 @@ Int_t RooUnfoldTestHarness::Run()
 
   gROOT->SetStyle("Plain");
   gStyle->SetOptStat(0);
+  if (onepage) gStyle->SetCanvasDefH(900);
   TPostScript ps (TString(GetName())+".ps", 111);
   canvas= new TCanvas(GetName(),GetName(),1);
-  //canvas= new TCanvas(GetName(),GetName(),10,10,900,500);
   canvas->Clear();
 
   if (onepage==2) {
@@ -424,6 +424,7 @@ RooUnfoldTestHarness::RooUnfoldTestHarness (const char* name)
   : TNamed(name,name)
 {
   Reset();
+  SetDefaults();
 }
 
 RooUnfoldTestHarness::RooUnfoldTestHarness (const char* name, int argc, const char* const* argv)
@@ -459,7 +460,6 @@ void RooUnfoldTestHarness::Reset()
   nosmear= false;
   error= ipad= 0;
   dim= 1;
-  Defaults();
 }
 
 int RooUnfoldTestHarness::SetArgs (int argc, const char* const* argv, bool split)
@@ -469,39 +469,31 @@ int RooUnfoldTestHarness::SetArgs (int argc, const char* const* argv, bool split
   return args.SetArgs (argc, argv, split);
 }
 
-void RooUnfoldTestHarness::Parms (ArgVars& args)
+void RooUnfoldTestHarness::SetDefaults()
 {
-  args.Add ("method",  &method);  // RooUnfold method: 1=Bayes, 2=SVD, 3=bin-by-bin
-  args.Add ("stage",   &stage);   // 1=train (writes RooUnfoldTest.root), 2=test (reads), 0=both (default)
-  args.Add ("ftrainx", &ftrainx); // selected training function
-  args.Add ("ftestx",  &ftestx);  // selected test function
-  args.Add ("ntx",     &ntx);     // #truth bins
-  args.Add ("nmx",     &nmx);     // #measured bins
-  args.Add ("ntest",   &ntest);   // #events to use for unsmearing
-  args.Add ("ntrain",  &ntrain);  // #events to use for training
-  args.Add ("xlo",     &xlo);     // range minimum
-  args.Add ("xhi",     &xhi);     // range maximum
-  args.Add ("regparm", &regparm); // regularisation parameter (eg. number of iterations)
-  args.Add ("ntoys",   &ntoys);   // number of toys used to obtain SVD covariances
-  args.Add ("onepage", &onepage); // number of pads per page
+  ArgVars args;
+  Parms (args);
+  args.SetDefaults();
 }
 
-void RooUnfoldTestHarness::Defaults()
+void RooUnfoldTestHarness::Parms (ArgVars& args)
 {
-  method=      1;
-  stage=       0;
-  ftrainx=     2;
-  ftestx=      5;
-  ntx=        40;
-  ntest=   10000;
-  ntrain= 100000;
-  xlo=     -12.5;
-  xhi=      10.0;
-  regparm=  -999;   // Bayes niter=4, SVD kterm=20
-  ntoys=    1000;   // SVD only
-  onepage=     4;
-  nmx=        -1;
-  doerror=    -1;
+  args.Add ("method",  &method,       1, "RooUnfold method: 1=Bayes, 2=SVD, 3=bin-by-bin");
+  args.Add ("stage",   &stage,        0, "1=train (writes RooUnfoldTest.root), 2=test (reads), 0=both (default)");
+  args.Add ("ftrainx", &ftrainx,      2, "training X PDF");
+  args.Add ("ftestx",  &ftestx,       5, "test X PDF");
+  args.Add ("ntx",     &ntx,         40, "#truth X bins");
+  args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
+  args.Add ("ntest",   &ntest,    10000, "#events to use for unsmearing");
+  args.Add ("ntrain",  &ntrain,  100000, "#events to use for training");
+  args.Add ("xlo",     &xlo,      -12.5, "X range minimum");
+  args.Add ("xhi",     &xhi,       10.0, "X range maximum");
+  args.Add ("regparm", &regparm,   -999, "regularisation parameter (default: Bayes niter=4, SVD kterm=20)", "");
+  args.Add ("ntoys",   &ntoys,     1000, "number of toys used to obtain SVD covariances");
+  args.Add ("onepage", &onepage,      4, "number of pads per page");
+  args.Add ("doerror", &doerror,     -1, "calculate errors (default=1 unless this will take a very long time)", "1");
+  args.Add ("bkgtx",   &bkgtx,      0.2, "background fraction for training X PDF");
+  args.Add ("bkgex",   &bkgex,      0.3, "background fraction for test X PDF");
 }
 
 #endif

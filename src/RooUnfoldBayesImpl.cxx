@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayesImpl.cxx,v 1.13 2010-01-19 15:33:47 adye Exp $
+//      $Id: RooUnfoldBayesImpl.cxx,v 1.14 2010-01-19 23:30:59 adye Exp $
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the
@@ -507,6 +507,7 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
           //cout << "l " << l << " " << PEjCl << " " << P0C[l] << endl;
           denom += (PEjCl * P0C[l]) ;
         }
+        if (denom <= 0.0) {continue;}
         _Sij->Set(i,j,numer / denom) ;
         //cout << "Sij " << _Sij->Get(i,j) << endl;
       }
@@ -527,16 +528,16 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
         if (_efficiencyCi[i] <= 0.0) {continue;}
         Double_t x = _Sij->Get(i,j) / _efficiencyCi[i];
         _Mij->Set(i,j,x);
-        nbarCi[i] += (_nEstj[j] * _Mij->Get(i,j));
+        nbarCi[i] += (_nEstj[j] * x);
         //      if (_Mij[i][j]>0) {cout << "Mij " << i << " " << j << " " << _Mij[i][j] << endl;}
       }
-      //      _nbartrue += nbarCi[i];
+      cout << "nbarCi " << i << "\t" << nbarCi[i] << endl;
+      _nbartrue += nbarCi[i];
     }
 
     // new estimate of true distribution
-    _nbartrue = sum(nbarCi);
     vector<Double_t> PbarCi(nbarCi);
-    //cout << "nbartrue " << _nbartrue << endl;
+    cout << "nbartrue " << _nbartrue << endl;
     for (UInt_t i = 0 ; i < nbarCi.size(); i++) {
       PbarCi[i] /= _nbartrue;
       cout << "i PbarCi P0C " << i

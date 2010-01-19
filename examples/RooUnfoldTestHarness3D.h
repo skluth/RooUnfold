@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness3D.h,v 1.2 2010-01-19 15:33:45 adye Exp $
+//      $Id: RooUnfoldTestHarness3D.h,v 1.3 2010-01-19 23:30:57 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using 3D toy MC generated
@@ -18,13 +18,14 @@
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include "TH1.h"
 #include "TH3.h"
+#include "TString.h"
 #endif
 
 class RooUnfoldTestHarness3D : public RooUnfoldTestHarness2D {
 public:
   // Parameters
   Int_t    ftrainz, ftestz, ntz, nmz;
-  Double_t zlo, zhi;
+  Double_t zlo, zhi, bkgtz, bkgez;
 
   TH1D *hTrainZ, *hTrainTrueZ, *hTrueZ, *hMeasZ, *hRecoZ, *hPDFz, *hTestPDFz;
 
@@ -35,7 +36,6 @@ public:
   virtual ~RooUnfoldTestHarness3D() {}
 
   virtual void  Reset();
-  virtual void  Defaults();
   virtual void  Init();
   virtual Int_t Train();
   virtual Int_t Test();
@@ -49,13 +49,11 @@ public:
                 Int_t ny, Double_t ylo, Double_t yhi,
                 Int_t nz, Double_t zlo, Double_t zhi);
 
-  Int_t Fill (TH1* h, Double_t x, Double_t y, Double_t z) {return dynamic_cast<TH3*>(h)->Fill (x, y, z);}
-  static TH1D* ProjectionX (const TH1* h, const char* name=0, Option_t* opt="")
-    {TH1D* g= dynamic_cast<TH1D*>(dynamic_cast<const TH3*>(h)->Project3D(TString("x")+opt)); if (g&&name) g->SetName(name); return g;}
-  static TH1D* ProjectionY (const TH1* h, const char* name=0, Option_t* opt="")
-    {TH1D* g= dynamic_cast<TH1D*>(dynamic_cast<const TH3*>(h)->Project3D(TString("y")+opt)); if (g&&name) g->SetName(name); return g;}
-  static TH1D* ProjectionZ (const TH1* h, const char* name=0, Option_t* opt="")
-    {TH1D* g= dynamic_cast<TH1D*>(dynamic_cast<const TH3*>(h)->Project3D(TString("z")+opt)); if (g&&name) g->SetName(name); return g;}
+  Int_t Fill (TH1* h, Double_t x, Double_t y, Double_t z) {TH3* h3= dynamic_cast<TH3*>(h); return h3->Fill (x, y, z);}
+  static TH1D* Projection3D (const TH1* h, TString xyz, const char* name, const char* title, Option_t* opt);
+  static TH1D* ProjectionX (const TH1* h, const char* name=0, const char* title=0, Option_t* opt="") {return Projection3D(h,"x",name,title,opt);}
+  static TH1D* ProjectionY (const TH1* h, const char* name=0, const char* title=0, Option_t* opt="") {return Projection3D(h,"y",name,title,opt);}
+  static TH1D* ProjectionZ (const TH1* h, const char* name=0, const char* title=0, Option_t* opt="") {return Projection3D(h,"z",name,title,opt);}
 };
 
 #endif

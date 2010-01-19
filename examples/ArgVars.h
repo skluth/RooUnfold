@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: ArgVars.h,v 1.2 2010-01-19 15:33:45 adye Exp $
+//      $Id: ArgVars.h,v 1.3 2010-01-19 23:30:57 adye Exp $
 //
 // Description:
 //      Parse argument list for parameter settings
@@ -19,29 +19,44 @@
 #include "TList.h"
 #endif
 
-class TIter;
-
 class ArgVar : public TObject {
 public:
-  const char *name;
-  Int_t      *ivar;
-  Double_t   *fvar;
-  ArgVar (const char *n,    Int_t *i) : name(n), ivar(i), fvar(0) {}
-  ArgVar (const char *n, Double_t *f) : name(n), ivar(0), fvar(f) {}
+  const char *name, *help, *defhelp;
+  Int_t      *ivar, idef;
+  Double_t   *fvar, fdef;
+  bool       setdef;
+  ArgVar (const char *n,    Int_t *v) : name(n), help(0), ivar(v), idef(0), fvar(0), fdef(0), setdef(false) {}
+  ArgVar (const char *n, Double_t *v) : name(n), help(0), ivar(0), idef(0), fvar(v), fdef(0), setdef(false) {}
+  ArgVar (const char *n,    Int_t *v, Int_t    d, const char* h=0, const char* dh=0)
+    : name(n), help(h), defhelp(dh), ivar(v), idef(d), fvar(0), fdef(0), setdef(true) {}
+  ArgVar (const char *n, Double_t *v, Double_t d, const char* h=0, const char* dh=0)
+    : name(n), help(h), defhelp(dh), ivar(0), idef(0), fvar(v), fdef(d), setdef(true) {}
 };
 
 class ArgVars {
+private:
   TList lst;
+  static bool CmpOpt (const char*& p, const char*  opt, bool split);
+  static bool SetVal (const char*  p, const char*& q, ArgVar* arg, bool split);
+  ArgVar* Find (const char* name) const;
+  ArgVars& Add (ArgVar* arg);
 public:
   ArgVars() {}
   ~ArgVars();
-  void  Add (const char* name,    Int_t* ivar) { lst.Add (new ArgVar (name, ivar)); }
-  void  Add (const char* name, Double_t* fvar) { lst.Add (new ArgVar (name, fvar)); }
-  void  Add (const ArgVar&  arg)               { lst.Add (arg.Clone());             }
-  void  Add (const ArgVars& args);
-  Int_t SetArgs (int argc, const char* const* argv, bool split= false);
+  ArgVars& Add (const char* name,    Int_t* var) { return Add (new ArgVar (name, var)); }
+  ArgVars& Add (const char* name, Double_t* var) { return Add (new ArgVar (name, var)); }
+  ArgVars& Add (const char* name,    Int_t* var, Int_t    def, const char* help=0, const char* defhelp=0)
+    { return Add (new ArgVar (name, var, def, help, defhelp)); }
+  ArgVars& Add (const char* name, Double_t* var, Double_t def, const char* help=0, const char* defhelp=0)
+    { return Add (new ArgVar (name, var, def, help, defhelp)); }
+  ArgVars& Add (const ArgVars& args);
+  ArgVars& SetDefault (const char* name, Int_t    def);
+  ArgVars& SetDefault (const char* name, Double_t def);
+  Int_t SetArgs (int argc, const char* const* argv, bool split= false) const;
+  void  SetDefaults() const;
   void  Print (std::ostream& o, const char* sep= " ") const;
-  void  Usage (const char* prog);
+  void  Usage (const char* prog) const;
+  void  ArgHelp (std::ostream& o) const;
 };
 
 #endif

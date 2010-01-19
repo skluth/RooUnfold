@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTest2D.cxx,v 1.12 2010-01-19 15:33:45 adye Exp $
+//      $Id: RooUnfoldTest2D.cxx,v 1.13 2010-01-19 23:30:57 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -31,18 +31,9 @@ void RooUnfoldTestReset2D()
   gDirectory->Clear();
 }
 
-RooUnfoldTestError2D()
-{
-  Int_t error= test2d->error;
-  if (error) {
-    delete test2d; test2d= 0;
-  }
-  return error;
-}
-
 //==============================================================================
 // Routine to run with specified arguments.
-// These defaults should probably match those in RooUnfoldTestHarness::Defaults.
+// These defaults should probably match those in RooUnfoldTestHarness::Parms.
 //==============================================================================
 
 void RooUnfoldTest2D (
@@ -61,8 +52,7 @@ void RooUnfoldTest2D (
                    )
 {
   RooUnfoldTestReset2D();
-  test= new RooUnfoldTestHarness2D ("RooUnfoldTest2D");
-  if (RooUnfoldTestError2D()) return;
+  test2d= new RooUnfoldTestHarness2D ("RooUnfoldTest2D");
 
   test2d->method=  method;
   test2d->stage=   stage;
@@ -84,11 +74,10 @@ void RooUnfoldTest2D (
 // Routine to run with parameters specified as a string
 //==============================================================================
 
-RooUnfoldTest2D (const char* args)
+void RooUnfoldTest2D (const char* args)
 {
   RooUnfoldTestReset2D();
   test2d= new RooUnfoldTestHarness2D ("RooUnfoldTest2D", args);
-  if (RooUnfoldTestError2D()) return;
   test2d->Run();
 }
 

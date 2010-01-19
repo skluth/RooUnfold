@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.7 2010-01-19 15:33:45 adye Exp $
+//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.8 2010-01-19 23:30:57 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented with RooFit.
@@ -44,13 +44,14 @@ using std::endl;
 #include "RooDecay.h"
 #include "RooBreitWigner.h"
 #include "RooParametricStepFunction.h"
+#include "RooChebychev.h"
 
-Int_t mcgenpdf (const RooAbsPdf& pdf, RooRealVar& xvar, Int_t nx,
-                TVectorD& x, TH1* h= 0, Double_t offset= 0.0)
+Int_t mcgenpdf2 (const RooAbsPdf& pdf, RooRealVar& xvar, Int_t nx,
+                 TVectorD& x, TH1* h= 0, Double_t offset= 0.0)
 {
   using namespace RooFit;
 
-  pdf.Print();
+  pdf.Print("t");
   const RooDataSet* ds= pdf.generate (xvar, nx);
 
   Int_t ngen= ds->numEntries();
@@ -75,16 +76,36 @@ Int_t mcgenpdf (const RooAbsPdf& pdf, RooRealVar& xvar, Int_t nx,
   return ngen;
 }
 
+Int_t mcgenpdf (const RooAbsPdf& sigpdf, RooRealVar& xvar, Int_t nx,
+                TVectorD& x, TH1* h= 0, Double_t bkg= 0.0, Double_t offset= 0.0)
+{
+  if (bkg<=0.0) {
+    return mcgenpdf2 (sigpdf,xvar,nx,x,h,offset);
+  } else {
+    using namespace RooFit;
+    RooChebychev bkgpdf("bkgpdf","background PDF",xvar,RooArgList());
+    if (bkg>=1.0) return mcgenpdf2 (bkgpdf,xvar,nx,x,h,offset);
+    RooRealVar fbkg("fbkg","background fraction",bkg,0.0,1.0);
+    return mcgenpdf2 (RooAddPdf (TString(sigpdf.GetName())+"+bkg",sigpdf.GetName(),RooArgList(bkgpdf,sigpdf),fbkg),
+                      xvar,nx,x,h,offset);
+  }
+}
+
 // Generate truth distribution.
 // RooFit only used inside here and helper routine, mcgenpdf.
 Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVectorD& x,
-                        TH1* h= 0, Double_t mean= 0.0, Double_t width= 2.5)
+                        TH1* h= 0, Double_t mean= 0.0, Double_t width= 2.5, Double_t bkg= 0.0)
 {
   using namespace RooFit;
 
   Double_t offset= (fpdf==3 ? mean : 0.0);
   RooRealVar xvar("xvar","xvar",xlo-offset,xhi-offset);
   switch (fpdf) {
+
+    case 0: {
+      return mcgenpdf2 (RooChebychev("pdf","constant",xvar,RooArgList()),
+                        xvar,nx,x,h,offset);
+    }
 
     case 1: {
       const Int_t stepbins= 3;
@@ -95,28 +116,28 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
       RooRealVar step2("binHeight2","bin 2 Value",0.0);
       RooArgList steplist(step0, step1, step2, "steplist");
       return mcgenpdf (RooParametricStepFunction("pdf","top hat",xvar,steplist,steps,stepbins),
-                       xvar, nx, x, h);
+                       xvar, nx, x, h, bkg);
     }
 
     case 2: {
       RooRealVar p51("p51","mean",mean);
       RooRealVar p52("p52","width",width);
       return mcgenpdf (RooGaussian("pdf","Gaussian",xvar,p51,p52),
-                       xvar, nx, x, h);
+                       xvar, nx, x, h, bkg);
     }
 
     case 3: {   // NB. xvar limits offset by mean above
       RooRealVar p21("p21","tau",width);
       RooTruthModel dectm("dectm","decay truth model",xvar);
       return mcgenpdf (RooDecay("pdf","decay",xvar,p21,dectm,RooDecay::DoubleSided),
-                       xvar, nx, x, h, mean);
+                       xvar, nx, x, h, bkg, mean);
     }
 
     case 4: {
       RooRealVar p11("p11","mean",mean);
       RooRealVar p12("p12","width",width);
       return mcgenpdf (RooBreitWigner("pdf","Breit Wigner",xvar,p11,p12),
-                       xvar, nx, x, h);
+                       xvar, nx, x, h, bkg);
     }
 
     case 5: {
@@ -128,7 +149,7 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
       RooBreitWigner bw1("pdf1","Breit Wigner 1",xvar,p31,p32);
       RooBreitWigner bw2("pdf2","Breit Wigner 2",xvar,p33,p34);
       return mcgenpdf (RooAddPdf("pdf","Two Breit Wigners",RooArgList(bw1,bw2),RooArgList(fbw1)),
-                       xvar, nx, x, h);
+                       xvar, nx, x, h, bkg);
     }
 
     case 6: {
@@ -146,8 +167,8 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
       RooRealVar p32("p32","width", mywidth);
       RooGaussian gaus("pdf2","Gaussian",xvar,p31,p32);
 
-      return mcgenpdf (RooAddPdf("pdf","Resonace+background",
-                                 RooArgList(expon,gaus),RooArgList(fexp)), xvar, nx, x, h);
+      return mcgenpdf (RooAddPdf("pdf","Resonace+background",RooArgList(expon,gaus),RooArgList(fexp)),
+                       xvar, nx, x, h, bkg);
 
    }
 

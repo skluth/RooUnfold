@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: ArgVars.icc,v 1.2 2010-01-19 15:33:45 adye Exp $
+//      $Id: ArgVars.icc,v 1.3 2010-01-19 23:30:57 adye Exp $
 //
 // Description:
 //      Parse argument list for parameter settings
@@ -30,11 +30,33 @@ ArgVars::~ArgVars()
   while (arg= next()) delete arg;
 }
 
-void ArgVars::Add(const ArgVars& args)
+ArgVars& ArgVars::Add(const ArgVars& args)
 {
   TIter next(&args.lst);
   const TObject* arg;
   while (arg= next()) lst.Add (arg->Clone());
+  return *this;
+}
+
+ArgVars& ArgVars::Add (ArgVar* arg)
+{
+  const void* pvar;
+  if (arg->ivar) pvar= arg->ivar;
+  else           pvar= arg->fvar;
+  TIter next(&lst);
+  const ArgVar* argx;
+  while (argx= dynamic_cast<const ArgVar*>(next())) {
+    if (strcmp (argx->name, arg->name) == 0) {
+      std::cerr << "ArgVars::Add("<<arg->name<<") duplicate name in argument list" << std::endl;
+      break;
+    }
+    if (pvar == argx->ivar || pvar == argx->fvar) {
+      std::cerr << "ArgVars::Add("<<arg->name<<") refers to the same variable as '" << argx->name << "'" << std::endl;
+      break;
+    }
+  }
+  lst.Add (arg);
+  return *this;
 }
 
 void ArgVars::Print (std::ostream& o, const char* sep) const
@@ -50,15 +72,99 @@ void ArgVars::Print (std::ostream& o, const char* sep) const
   }
 }
 
-void ArgVars::Usage (const char* prog)
+void ArgVars::Usage (const char* prog) const
 {
-  std::cout << "Defaults: " << prog << ' ';
-  Print (std::cout);
-  std::cout << std::endl;
+  std::cout << "Usage: " << prog << " [PARAMETER=VALUE [PARAMETER=VALUE ...]]" << std::endl << std::endl
+            << "PARAMETER  DEFAULT DESCRIPTION" << std::endl;
+  ArgHelp (std::cout);
 }
 
-Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split)
+void ArgVars::ArgHelp (std::ostream& o) const
 {
+  TIter next(&lst);
+  const ArgVar* arg;
+  while (arg= dynamic_cast<const ArgVar*>(next())) {
+    std::ios_base::fmtflags f= o.flags();
+    o.width(10); o.setf (std::ios_base::left, std::ios_base::adjustfield);
+    o << arg->name << ' ';
+    o.flags (f); o.width(7);
+    if (!arg->setdef)   o << " ";
+    else if (arg->defhelp) o << arg->defhelp;
+    else if (arg->ivar) o << *(arg->ivar);
+    else                o << *(arg->fvar);
+    if (arg->help) o << ' ' << arg->help;
+    o << std::endl;
+  }
+}
+
+bool ArgVars::CmpOpt (const char*& p, const char* opt, bool split)
+{
+  if (split) {
+    const char* s= strchr (p, ' ');
+    if (s) {
+      bool found= (strncmp (p, opt, s-p) == 0);
+      if (found) p= s+1;
+      return found;
+    }
+  }
+  bool found= (strcmp (p, opt) == 0);
+  if (found) p= 0;
+  return found;
+}
+
+bool ArgVars::SetVal (const char* p, const char*& q, ArgVar* arg, bool split)
+{
+  char* nxt= 0;
+  if (arg->ivar) *(arg->ivar)= strtol (p, &nxt, 10);
+  else           *(arg->fvar)= strtod (p, &nxt);
+  q= (split && nxt && *nxt==' ') ? nxt+1 : 0;
+  return (nxt && nxt>p && (*nxt=='\0' || (split && *nxt==' ')));
+}
+
+ArgVar* ArgVars::Find (const char* name) const
+{
+  TIter next(&lst);
+  ArgVar* arg;
+  while (arg= dynamic_cast<ArgVar*>(next())) {
+    if (strcmp (name, arg->name) == 0) return arg;
+  }
+  return 0;
+}
+
+ArgVars& ArgVars::SetDefault (const char* name, Double_t def)
+{
+  ArgVar* arg= Find (name);
+  if (arg && arg->fvar)
+    arg->fdef= def;
+  else
+    std::cerr << "ArgVars::SetDefault("<<name<<','<<def<<") Double_t argument does not exist" << std::endl;
+  return *this;
+}
+
+ArgVars& ArgVars::SetDefault (const char* name, Int_t def)
+{
+  ArgVar* arg= Find (name);
+  if (arg && arg->ivar)
+    arg->idef= def;
+  else
+    std::cerr << "ArgVars::SetDefault("<<name<<','<<def<<") Int_t argument does not exist" << std::endl;
+  return *this;
+}
+
+void ArgVars::SetDefaults() const
+{
+  TIter next(&lst);
+  const ArgVar* arg;
+  while (arg= dynamic_cast<const ArgVar*>(next())) {
+    if (!arg->setdef) continue;
+    if (arg->ivar) *(arg->ivar)= arg->idef;
+    else           *(arg->fvar)= arg->fdef;
+  }
+}
+
+Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split) const
+{
+  SetDefaults();
   const char* prog= strrchr (argv[0], '/');
   if (prog) prog++; else prog= argv[0];
   int err= 0, iarg= 0, help= 0;
@@ -70,19 +176,13 @@ Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split)
         if (*p=='\0') break;
       }
       bool found= false;
-      if (strcmp(p,"-h")==0 && p[2]=='\0' || (split && p[2]==' ')) {
+      if (CmpOpt (p, "-h",     split) ||
+          CmpOpt (p, "--help", split)) {
         help= 1;
-        p= (p[2]==' ') ? p += 3 : 0;
         continue;
       }
-      if (strcmp(p,"--help")==0 && p[6]=='\0' || (split && p[6]==' ')) {
-        help= 1;
-        p= (p[6]==' ') ? p += 7 : 0;
-        continue;
-      }
-      const char* d= strchr (p, '=');
-      const char* q= 0;
       ArgVar* arg;
+      const char* q= 0, *d= strchr (p, '=');
       if (d) {
         size_t nv= d-p;
         if (split) {
@@ -91,20 +191,12 @@ Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split)
         TIter next(&lst);
         while (arg= dynamic_cast<ArgVar*>(next())) {
           if (strncmp (p, arg->name, nv) == 0) {
-            char* nxt= 0;
-            if (arg->ivar) *(arg->ivar)= strtol (d+1, &nxt, 10);
-            else           *(arg->fvar)= strtod (d+1, &nxt);
-            found= (nxt && nxt>d+1 && (*nxt=='\0' || (split && *nxt==' ')));
-            if (split && nxt && *nxt==' ') q= nxt+1;
+            found= SetVal (d+1, q, arg, split);
             break;
           }
         }
       } else if (arg= dynamic_cast<ArgVar*>(lst.At(iarg))) {  // positional argument?
-        char* nxt= 0;
-        if (arg->ivar) *(arg->ivar)= strtol (p, &nxt, 10);
-        else           *(arg->fvar)= strtod (p, &nxt);
-        found= (nxt && nxt>p && (*nxt=='\0' || (split && *nxt==' ')));
-        if (split && nxt && *nxt==' ') q= nxt+1;
+        found= SetVal (p, q, arg, split);
         iarg++;
       }
       if (!found) {

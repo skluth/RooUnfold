@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.9 2010-01-19 15:33:47 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.10 2010-01-19 23:30:59 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -28,7 +28,6 @@
 #include "RooUnfoldBayesImpl.h"
 
 using std::vector;
-using std::cout;
 using std::cerr;
 using std::endl;
 

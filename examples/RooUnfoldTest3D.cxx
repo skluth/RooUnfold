@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTest3D.cxx,v 1.4 2010-01-19 15:33:45 adye Exp $
+//      $Id: RooUnfoldTest3D.cxx,v 1.5 2010-01-19 23:30:57 adye Exp $
 //
 // Description:
 //      3D test of RooUnfold package using toy MC generated according to PDFs
@@ -31,18 +31,9 @@ void RooUnfoldTestReset3D()
   gDirectory->Clear();
 }
 
-RooUnfoldTestError3D()
-{
-  Int_t error= test3d->error;
-  if (error) {
-    delete test3d; test3d= 0;
-  }
-  return error;
-}
-
 //==============================================================================
 // Routine to run with specified arguments.
-// These defaults should probably match those in RooUnfoldTestHarness::Defaults.
+// These defaults should probably match those in RooUnfoldTestHarness::Parms.
 //==============================================================================
 
 void RooUnfoldTest3D (
@@ -65,8 +56,7 @@ void RooUnfoldTest3D (
                    )
 {
   RooUnfoldTestReset3D();
-  test= new RooUnfoldTestHarness3D ("RooUnfoldTest3D");
-  if (RooUnfoldTestError3D()) return;
+  test3d= new RooUnfoldTestHarness3D ("RooUnfoldTest3D");
 
   test3d->method=  method;
   test3d->stage=   stage;
@@ -88,11 +78,10 @@ void RooUnfoldTest3D (
 // Routine to run with parameters specified as a string
 //==============================================================================
 
-RooUnfoldTest3D (const char* args)
+void RooUnfoldTest3D (const char* args)
 {
   RooUnfoldTestReset3D();
   test3d= new RooUnfoldTestHarness3D ("RooUnfoldTest3D", args);
-  if (RooUnfoldTestError3D()) return;
   test3d->Run();
 }
 

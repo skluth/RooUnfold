@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.6 2010-01-19 15:33:45 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.7 2010-01-19 23:30:57 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using toy MC generated
@@ -39,7 +39,7 @@ class RooUnfoldTestHarness : public TNamed {
 public:
   // Parameters
   Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain;
-  Double_t xlo, xhi;
+  Double_t xlo, xhi, bkgtx, bkgex;
   Int_t    regparm, ntoys, nmx, onepage, doerror, dim;
 
   Bool_t             nosmear;
@@ -62,9 +62,8 @@ public:
   virtual ~RooUnfoldTestHarness();
 
   TH1D* Generate (TVectorD& x, const char* name, const char* title, Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi,
-                  Double_t mean= 0.0, Double_t width= 2.5);
+                  Double_t bkg= 0.0, Double_t mean= 0.0, Double_t width= 2.5);
   virtual void  Reset();
-  virtual void  Defaults();
   virtual void  Init();
   virtual void  Init2();
   virtual Int_t Train();
@@ -77,7 +76,8 @@ public:
   virtual void  PrintParms (std::ostream& o, const char* sep= " ") const;
   virtual Int_t Check();
   virtual void  Parms (ArgVars& args);
-  virtual int SetArgs (int argc, const char* const* argv, bool split= false);
+  virtual int   SetArgs (int argc, const char* const* argv, bool split= false);
+  virtual void  SetDefaults();
 
   void setmax (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
                        const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0);

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.12 2010-01-19 15:33:45 adye Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.13 2010-01-19 23:30:57 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -31,18 +31,9 @@ void RooUnfoldTestReset()
   gDirectory->Clear();
 }
 
-RooUnfoldTestError()
-{
-  Int_t error= test->error;
-  if (error) {
-    delete test; test= 0;
-  }
-  return error;
-}
-
 //==============================================================================
 // Routine to run with specified arguments.
-// These defaults should probably match those in RooUnfoldTestHarness::Defaults.
+// These defaults should probably match those in RooUnfoldTestHarness::Parms.
 //==============================================================================
 
 void RooUnfoldTest (
@@ -62,7 +53,6 @@ void RooUnfoldTest (
 {
   RooUnfoldTestReset();
   test= new RooUnfoldTestHarness ("RooUnfoldTest");
-  if (RooUnfoldTestError()) return;
 
   test->method=  method;
   test->stage=   stage;
@@ -84,11 +74,10 @@ void RooUnfoldTest (
 // Routine to run with parameters specified as a string
 //==============================================================================
 
-RooUnfoldTest (const char* args)
+void RooUnfoldTest (const char* args)
 {
   RooUnfoldTestReset();
   test= new RooUnfoldTestHarness ("RooUnfoldTest", args);
-  if (RooUnfoldTestError()) return;
   test->Run();
 }
 
