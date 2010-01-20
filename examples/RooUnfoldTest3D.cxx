@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTest3D.cxx,v 1.6 2010-01-20 20:36:25 adye Exp $
+//      $Id: RooUnfoldTest3D.cxx,v 1.7 2010-01-20 23:07:03 adye Exp $
 //
 // Description:
 //      3D test of RooUnfold package using toy MC generated according to PDFs
@@ -39,7 +39,7 @@ void RooUnfoldTestReset3D()
 void RooUnfoldTest3D (
                       Int_t    method=      1,
                       Int_t    stage=       0,
-                      Int_t    ftrainx=     1,
+                      Int_t    ftrainx=     0,
                       Int_t    ftestx=      3,
                       Int_t    ntx=         6,
                       Int_t    nmx=        -1,

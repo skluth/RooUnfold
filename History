@@ -1,5 +1,11 @@
-History of RooUnfold     $Id: History,v 1.40 2010-01-20 20:36:22 adye Exp $
+History of RooUnfold     $Id: History,v 1.41 2010-01-20 23:07:01 adye Exp $
 ====================
+
+Tim Adye         20-Jan-2010 tja100120c
+  RooUnfoldTest changes:
+  o Use flat training PDF by default.
+  o No-RooFit PDFs now handle flat PDFs and background. exp+resonance PDF fixed.
+  o Show test input histograms even if unfolding fails.
 
 Tim Adye         20-Jan-2010 tja100120b
   o RooUnfold::PrintTable() doesn't show residuals and pulls for "empty" bins

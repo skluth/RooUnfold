@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.9 2010-01-20 20:36:25 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.10 2010-01-20 23:07:03 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using toy MC generated
@@ -69,6 +69,7 @@ public:
   virtual Int_t Train();
   virtual Int_t Test();
   virtual Int_t Unfold();
+  virtual void  ShowTest();
   virtual void  Results();
   virtual Int_t Run();
   virtual Int_t RunStuff();

@@ -1,16 +1,16 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdf.icc,v 1.4 2010-01-19 23:30:57 adye Exp $
+//      $Id: RooUnfoldTestPdf.icc,v 1.5 2010-01-20 23:07:03 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented without RooFit.
-//      NB. This version does not take into account the portion of the PDF
+//      NB. This version does not take into account the portion of the signal PDF
 //      outside [xlo:xhi] when normalising the PDF histogram, h, so
 //      it won't be displayed properly if the |mean +/- width| is too large.
-//      NB. the background is currently not added.
 //
 //      The PDFs are defined by fpdf as follows:-
 //
+//        0: flat distribution
 //        1: top-hat distribution over mean +/- 3*width.
 //        2: Gaussian
 //        3: Double-sided exponential decay
@@ -27,38 +27,59 @@
 
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <iostream>
-#include <math.h>
-using std::cout;
-using std::cerr;
-using std::endl;
+#include <cmath>
 
 #include "TH1D.h"
 #include "TVectorD.h"
 #include "TRandom.h"
+
+using std::fabs;
+using std::cerr;
+using std::endl;
 #endif
 
 Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVectorD& x,
                         TH1* h= 0, Double_t mean= 0.0, Double_t width= 2.5, Double_t bkg= 0.0)
 {
-  static Double_t pi= atan2 (0.0, -1.0);
+  static const Double_t pi= atan2 (0.0, -1.0);
+  if (bkg<0.0) bkg= 0.0;
+  if (bkg>=1.0) fpdf= 0;
+  if (fpdf==0) bkg= 0.0;
 
   Int_t nb= h->GetNbinsX();
-  Double_t norm= h ? nx * ((h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin()) / nb) : 0;
+  const Double_t unorm= h ? nx * ((h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin()) / nb) : 0;
+  const Double_t xwidth= xhi-xlo, norm= unorm*(1.0-bkg), bnorm= unorm*bkg/xwidth;
 
   switch (fpdf) {
 
-    case 1: {
+    case 0: {
       for (Int_t i= 0; i < nx; i++) {
-        x[i]= mean + 3.0*width * (2.0*gRandom->Rndm() - 1.0);
+        x[i]= xlo + xwidth*gRandom->Rndm();
       }
       if (h) {
-        norm /= 6.0*width;
+        const Double_t fnorm= norm / xwidth;
+        for (Int_t i= 1; i<=nb; i++) {
+          h->SetBinContent(i, fnorm);
+        }
+      }
+      return nx;
+    }
+
+    case 1: {
+      for (Int_t i= 0; i < nx; i++) {
+        if (gRandom->Rndm() < bkg)
+          x[i]= xlo + xwidth*gRandom->Rndm();
+        else
+          x[i]= mean + 3.0*width * (2.0*gRandom->Rndm() - 1.0);
+      }
+      if (h) {
+        const Double_t fnorm= bnorm + norm / (6.0*width);
         for (Int_t i= 1; i<=nb; i++) {
           Double_t z= h->GetBinCenter(i);
           if (fabs (z-mean) < 3.0*width) {
-            h->SetBinContent(i, norm);
+            h->SetBinContent(i, fnorm);
           } else {
-            h->SetBinContent(i, 0.0);
+            h->SetBinContent(i, bnorm);
           }
         }
       }
@@ -67,16 +88,19 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
 
     case 2: {
       for (Int_t i= 0; i < nx; i++) {
-        x[i]= gRandom->Gaus (mean, width);
+        if (gRandom->Rndm() < bkg)
+          x[i]= xlo + xwidth*gRandom->Rndm();
+        else
+          x[i]= gRandom->Gaus (mean, width);
       }
       if (h) {
-        norm /= sqrt(2*pi) * width;
+        const Double_t fnorm= norm / (sqrt(2*pi) * width);
         for (Int_t i= 1; i<=nb; i++) {
           Double_t z= h->GetBinCenter(i);
           if (fabs ((z-mean)/width) < 10.0) {
-            h->SetBinContent(i, norm * exp (-0.5*(pow((z-mean)/width,2))));
+            h->SetBinContent(i, fnorm * exp (-0.5*(pow((z-mean)/width,2))) + bnorm);
           } else {
-            h->SetBinContent(i, 0.0);
+            h->SetBinContent(i, bnorm);
           }
         }
       }
@@ -85,14 +109,18 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
 
     case 3: {
       for (Int_t i= 0; i < nx; i++) {
-        Double_t z= gRandom->Exp (width);
-        x[i]= gRandom->Rndm() < 0.5 ? mean - z : mean + z;
+        if (gRandom->Rndm() < bkg)
+          x[i]= xlo + xwidth*gRandom->Rndm();
+        else {
+          Double_t z= gRandom->Exp (width);
+          x[i]= gRandom->Rndm() < 0.5 ? mean - z : mean + z;
+        }
       }
       if (h) {
-        norm /= (2*width);
+        const Double_t fnorm= norm / (2.0*width);
         for (Int_t i= 1; i<=nb; i++) {
           Double_t z= h->GetBinCenter(i);
-          h->SetBinContent (i, norm * exp (-fabs(z-mean)/width));
+          h->SetBinContent (i, fnorm * exp (-fabs(z-mean)/width) + bnorm);
         }
       }
       return nx;
@@ -100,13 +128,16 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
 
     case 4: {
       for (Int_t i= 0; i < nx; i++) {
-        x[i]= gRandom->BreitWigner (mean, width);
+        if (gRandom->Rndm() < bkg)
+          x[i]= xlo + xwidth*gRandom->Rndm();
+        else
+          x[i]= gRandom->BreitWigner (mean, width);
       }
       if (h) {
-        norm *= width / (2*pi);
+        const Double_t fnorm= norm * width / (2*pi);
         for (Int_t i= 1; i<=nb; i++) {
           Double_t z= h->GetBinCenter(i);
-          h->SetBinContent (i, norm / (pow(z-mean,2) + 0.25*pow(width,2)));
+          h->SetBinContent (i, fnorm / (pow(z-mean,2) + 0.25*pow(width,2)) + bnorm);
         }
       }
       return nx;
@@ -114,46 +145,51 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
 
     case 5: {
       for (Int_t i= 0; i < nx; i++) {
-        Double_t m= gRandom->Rndm() < 0.5 ? mean - width : mean + width;
-        x[i]= gRandom->BreitWigner (m, width);
+        if (gRandom->Rndm() < bkg)
+          x[i]= xlo + xwidth*gRandom->Rndm();
+        else {
+          Double_t m= gRandom->Rndm() < 0.5 ? mean - width : mean + width;
+          x[i]= gRandom->BreitWigner (m, width);
+        }
       }
       if (h) {
-        norm *= width / (4*pi);
+        const Double_t fnorm= norm * width / (4*pi);
         for (Int_t i= 1; i<=nb; i++) {
           Double_t z= h->GetBinCenter(i);
-          h->SetBinContent (i, norm * (1 / (pow(z-mean+width,2) + 0.25*pow(width,2)) +
-                                       1 / (pow(z-mean-width,2) + 0.25*pow(width,2))));
+          h->SetBinContent (i, fnorm * (1 / (pow(z-mean+width,2) + 0.25*pow(width,2)) +
+                                        1 / (pow(z-mean-width,2) + 0.25*pow(width,2))) + bnorm);
         }
       }
       return nx;
     }
 
     case 6: {
-      Double_t tau     = (xhi-xlo)/3.0;
-      Double_t mymean  = xlo + (xhi-xlo)*0.4;
-      Double_t mywidth = (xhi-xlo)/10.0;
+      const Double_t tau     = (xhi-xlo)/3.0;
+      const Double_t mywidth = width/4.0;
+      const Double_t fexp    = 0.9;
 
-      Double_t resonance(0),background(0);
       for (Int_t i= 0; i < nx; i++) {
-        resonance  = gRandom->Gaus (mymean, mywidth);
-        background = gRandom->Exp(tau);
-        x[i]= 10*resonance + background;
-      }
-      if (h) {
-        norm /= sqrt(2*pi) * mywidth;
-        for (Int_t i= 1; i<=nb; i++) {
-          Double_t z= h->GetBinCenter(i);
-          resonance = background = 0;
-          if (fabs ((z-mymean)/mywidth) < 10.0) {
-            resonance  = norm * exp (-0.5*(pow((z-mymean)/mywidth,2)));
-            background = exp(z/tau);
-            h->SetBinContent(i, norm*(10*resonance + background));
-          } else {
-            h->SetBinContent(i, 0.0);
-          }
+        if (gRandom->Rndm() < bkg)
+          x[i]= xlo + xwidth*gRandom->Rndm();
+        else {
+          x[i]= gRandom->Rndm() < fexp ? xlo+gRandom->Exp(tau) : gRandom->Gaus (mean, mywidth);
         }
       }
-       return nx;
+      if (h) {
+        const Double_t rnorm= norm / (sqrt(2*pi) * mywidth);
+        const Double_t enorm= norm / (tau * (exp(-xlo/tau) - exp(-xhi/tau)));
+        for (Int_t i= 1; i<=nb; i++) {
+          Double_t z= h->GetBinCenter(i);
+          Double_t resonance;
+          if (fabs ((z-mean)/mywidth) < 10.0)
+            resonance= rnorm * exp (-0.5*(pow((z-mean)/mywidth,2)));
+          else
+            resonance= 0.0;
+          Double_t background = enorm * exp(-z/tau);
+          h->SetBinContent (i, ((1.0-fexp)*resonance + fexp*background) + bnorm);
+        }
+      }
+      return nx;
     }
 
     default: {

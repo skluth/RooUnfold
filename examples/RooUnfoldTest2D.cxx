@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTest2D.cxx,v 1.14 2010-01-20 20:36:25 adye Exp $
+//      $Id: RooUnfoldTest2D.cxx,v 1.15 2010-01-20 23:07:03 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -39,7 +39,7 @@ void RooUnfoldTestReset2D()
 void RooUnfoldTest2D (
                       Int_t    method=      1,
                       Int_t    stage=       0,
-                      Int_t    ftrainx=     1,
+                      Int_t    ftrainx=     0,
                       Int_t    ftestx=      3,
                       Int_t    ntx=        40,
                       Int_t    nmx=        -1,

@@ -1,12 +1,13 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.10 2010-01-20 20:36:25 adye Exp $
+//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.11 2010-01-20 23:07:03 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented with RooFit.
 //
 //      The PDFs are defined by fpdf as follows:-
 //
+//        0: flat distribution
 //        1: top-hat distribution over mean +/- 3*width.
 //        2: Gaussian
 //        3: Double-sided exponential decay
@@ -155,21 +156,21 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
     }
 
     case 6: {
-      Double_t mymean  = xlo + (xhi-xlo)*0.6;
-      Double_t mywidth = (xhi-xlo)/40.0;
-      Double_t invtau  = -3.0/(xhi-xlo);
+      const Double_t invtau  = -3.0/(xhi-xlo);
+      const Double_t mywidth = width/4.0;
+      const Double_t fexp    = 0.9;
 
       // Background
       RooRealVar ptau("ptau","inverse tau", invtau);
       RooExponential expon("pdf1","Exponential",xvar,ptau);
-      RooRealVar fexp("fexp1","Background fraction",0.9);
+      RooRealVar fexpvar("fexp","Background fraction",fexp);
 
       // Resonance
-      RooRealVar p31("p31","mean",mymean-mywidth);
+      RooRealVar p31("p31","mean",mean);
       RooRealVar p32("p32","width", mywidth);
       RooGaussian gaus("pdf2","Gaussian",xvar,p31,p32);
 
-      return mcgenpdf (RooAddPdf("pdf","Resonace+background",RooArgList(expon,gaus),RooArgList(fexp)),
+      return mcgenpdf (RooAddPdf("pdf","Resonace+background",RooArgList(expon,gaus),RooArgList(fexpvar)),
                        xvar, nx, x, h, bkg);
 
    }
