@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.7 2010-01-20 15:41:36 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.8 2010-01-20 20:36:25 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using 2D toy MC generated
@@ -15,39 +15,55 @@
 
 #include "RooUnfoldTestHarness2D.h"
 
-#include "RooUnfoldTestHarness.icc"
+#if !defined(__CINT__) || defined(__MAKECINT__)
+#include <cmath>
+#include <iostream>
+
+#include "TROOT.h"
+#include "TCanvas.h"
+#include "TRandom.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TVectorD.h"
+
+#include "RooUnfoldResponse.h"
+#endif
+
+#include "ArgVars.h"
 
 #if !defined(__CINT__) || defined(__MAKECINT__)
-#include "TH2D.h"
+using std::cerr;
+using std::endl;
+using std::sin;
+using std::cos;
 #endif
 
 //==============================================================================
 // Gaussian smearing, systematic translation, and variable inefficiency
 //==============================================================================
 
-void RooUnfoldTestHarness2D::rot (Double_t& x, Double_t& y)
+void RooUnfoldTestHarness2D::Rot (Double_t& x, Double_t& y, Double_t angle)
 {
-  Double_t a= gRandom->Gaus (0.25, 0.05);
-  if      (a<0.0) a= 0.0;
-  else if (a>1.0) a= 1.0;
-  Double_t b= 1.0-a;
-  Double_t xr= a*x + b*y;
-  Double_t yr= b*x + a*y;
+  if (angle==0.0) return;
+  Double_t a= gRandom->Gaus (angle, 0.2*angle);
+  Double_t s= sin(a), c= cos(a);
+  Double_t xr= c*x - s*y;
+  Double_t yr= s*x + c*y;
   x= xr;
   y= yr;
 }
 
-Bool_t RooUnfoldTestHarness2D::smear (Double_t& x, Double_t& y,
+Bool_t RooUnfoldTestHarness2D::Smear (Double_t& x, Double_t& y,
                                       Int_t nx, Double_t xlo, Double_t xhi,
                                       Int_t ny, Double_t ylo, Double_t yhi)
 {
-  Double_t xs= smear (x, nx, xlo, xhi);
+  Double_t xs= Smear (x, nx, xlo, xhi);
   if (xs==cutdummy) return false;
-  Double_t ys= smear (y, ny, ylo, yhi);
+  Double_t ys= Smear (y, ny, ylo, yhi);
   if (ys==cutdummy) return false;
   x= xs;
   y= ys;
-  if (!nosmear) rot (x, y);
+  if (!nosmear) Rot (x, y, rotxy);
   return true;
 }
 
@@ -76,7 +92,7 @@ Int_t RooUnfoldTestHarness2D::Train ()
     hTrainTrue->Fill (xt, yt);
 
     Double_t x= xt, y= yt;
-    if (smear (x, y, ntx, xlo, xhi, nty, ylo, yhi)) {
+    if (Smear (x, y, ntx, xlo, xhi, nty, ylo, yhi)) {
       hTrain ->Fill (x, y);
       response->Fill (x, y, xt, yt);
     } else {
@@ -129,7 +145,7 @@ Int_t RooUnfoldTestHarness2D::Test ()
     Double_t xt= xtest[i], yt= ytest[i];
     hTrue->Fill (xt, yt);
     Double_t x= xt, y= yt;
-    if (smear (x, y, ntx, xlo, xhi, nty, ylo, yhi))
+    if (Smear (x, y, ntx, xlo, xhi, nty, ylo, yhi))
       hMeas->Fill (x, y);
   }
 
@@ -176,34 +192,19 @@ void RooUnfoldTestHarness2D::Results()
   canvas->cd(7);
   hReco->Draw();
 
-  // I think hReco already includes the statistical error on hTrue, so
-  // don't include that twice when calculating residuals.
-  hRes= new TH2D ("res", "Pull (reco-true)/error", ntx, xlo, xhi, nty, ylo, yhi);
-  for (Int_t i= 0; i <= ntx+1; i++) {
-    for (Int_t j= 0; j <= nty+1; j++) {
-      Double_t rec= hReco->GetBinContent (i, j);
-      Double_t tru= hTrue->GetBinContent (i, j);
-      Double_t err= hReco->GetBinError   (i, j);
-      if      (err > 0)
-        hRes->SetBinContent (i, j, (rec-tru)/err);
-      else if (rec > 0)
-        hRes->SetBinContent (i, j, (rec-tru)/sqrt(rec));
-    }
-  }
-
   canvas->cd(8);
-  hRes->Draw("COLZ");
+  hPulls->Draw("COLZ");
   canvas->Update();
 }
 
 Int_t RooUnfoldTestHarness2D::CheckParms()
 {
   RooUnfoldTestHarness::CheckParms();
-  if (nmy<=0)     {cout << "Error: nmy ("    << nmy    << ") <= 0"                  << endl; error = 2;}
-  if (nty<=0)     {cout << "Error: nty ("    << nty    << ") <= 0"                  << endl; error = 2;}
-  if (ylo >= yhi) {cout << "Error: ylo ("    << ylo    << ") >= yhi(" << yhi << ")" << endl; error = 2;}
-  if (ftrainy<1)  {cout << "Error: ftrainy ("<< ftrainy<< ") < 1"                   << endl; error = 2;}
-  if (ftesty<1)   {cout << "Error: ftesty (" << ftesty << ") < 1"                   << endl; error = 2;}
+  if (nmy<=0)     {cerr << "Error: nmy ("    << nmy    << ") <= 0"                  << endl; error = 2;}
+  if (nty<=0)     {cerr << "Error: nty ("    << nty    << ") <= 0"                  << endl; error = 2;}
+  if (ylo >= yhi) {cerr << "Error: ylo ("    << ylo    << ") >= yhi(" << yhi << ")" << endl; error = 2;}
+  if (ftrainy<0)  {cerr << "Error: ftrainy ("<< ftrainy<< ") < 0"                   << endl; error = 2;}
+  if (ftesty<0)   {cerr << "Error: ftesty (" << ftesty << ") < 0"                   << endl; error = 2;}
   return error;
 }
 
@@ -265,6 +266,7 @@ void RooUnfoldTestHarness2D::Parms (ArgVars& args)
   args.Add ("yhi",     &yhi,      10.0, "Y range maximum");
   args.Add ("bkgty",   &bkgty,    -1.0, "background fraction for training Y PDF", "bkgtx");
   args.Add ("bkgey",   &bkgey,    -1.0, "background fraction for test Y PDF", "bkgex");
+  args.Add ("rotxy",   &rotxy,     0.4, "rotation angle in XY plane");
 }
 
 #endif

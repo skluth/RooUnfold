@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.h,v 1.7 2010-01-20 15:41:36 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.h,v 1.8 2010-01-20 20:36:25 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using 2D toy MC generated
@@ -15,15 +15,16 @@
 
 #include "RooUnfoldTestHarness.h"
 #if !defined(__CINT__) || defined(__MAKECINT__)
-#include "TH1D.h"
 #include "TH2.h"
 #endif
+
+class TH1D;
 
 class RooUnfoldTestHarness2D : public RooUnfoldTestHarness {
 public:
   // Parameters
   Int_t    ftrainy, ftesty, nty, nmy;
-  Double_t ylo, yhi, bkgty, bkgey;
+  Double_t ylo, yhi, bkgty, bkgey, rotxy;
 
   TH1D *hTrainX, *hTrainTrueX, *hTrueX, *hMeasX, *hRecoX;
   TH1D *hTrainY, *hTrainTrueY, *hTrueY, *hMeasY, *hRecoY, *hPDFy, *hTestPDFy;
@@ -42,14 +43,18 @@ public:
   virtual Int_t CheckParms();
   virtual void  Parms (ArgVars& args);
 
-  void rot (Double_t& x, Double_t& y);
-  Double_t smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi) { return RooUnfoldTestHarness::smear(xt,nt,xlo,xhi); }
-  Bool_t smear (Double_t& x, Double_t& y, Int_t nx, Double_t xlo, Double_t xhi, Int_t ny, Double_t ylo, Double_t yhi);
+  void Rot (Double_t& x, Double_t& y, Double_t angle);
+  Double_t Smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi) { return RooUnfoldTestHarness::Smear(xt,nt,xlo,xhi); }
+  Bool_t   Smear (Double_t& x, Double_t& y, Int_t nx, Double_t xlo, Double_t xhi, Int_t ny, Double_t ylo, Double_t yhi);
 
   static TH1D* ProjectionX (const TH1* h, const char* name="_px", const char* title=0, Option_t* opt="")
     {const TH2* h2=dynamic_cast<const TH2*>(h); TH1D* h1= h2->ProjectionX(name,0,-1,opt); if (title) h1->SetTitle(title); return h1;}
   static TH1D* ProjectionY (const TH1* h, const char* name="_py", const char* title=0, Option_t* opt="")
     {const TH2* h2=dynamic_cast<const TH2*>(h); TH1D* h1= h2->ProjectionY(name,0,-1,opt); if (title) h1->SetTitle(title); return h1;}
 };
+
+#ifndef NOINLINE
+#include "RooUnfoldTestHarness2D.icc"
+#endif
 
 #endif

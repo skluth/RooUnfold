@@ -1,5 +1,16 @@
-History of RooUnfold     $Id: History,v 1.39 2010-01-20 15:41:34 adye Exp $
+History of RooUnfold     $Id: History,v 1.40 2010-01-20 20:36:22 adye Exp $
 ====================
+
+Tim Adye         20-Jan-2010 tja100120b
+  o RooUnfold::PrintTable() doesn't show residuals and pulls for "empty" bins
+    (both content=0 and error=0) and doesn't include in chi^2.
+  RooUnfoldTest changes:
+  o Reorganise including of examples/*.icc. Disabled with NOINLINE.
+  o Smearing function parameters can now be specified as efflo, effhi, bias,
+    smear, rotxy, rotxz, and rotyz.
+  o Rot() now does a proper rotation rather than mixing.
+  o Residuals and pulls histograms now calculated the same for 1D,2D,3D and
+    ignore "empty" bins.
 
 Tim Adye         20-Jan-2010 tja100120a
   o Fixes for older versions of ROOT (eg. 5.12).

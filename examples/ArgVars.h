@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: ArgVars.h,v 1.3 2010-01-19 23:30:57 adye Exp $
+//      $Id: ArgVars.h,v 1.4 2010-01-20 20:36:25 adye Exp $
 //
 // Description:
 //      Parse argument list for parameter settings
@@ -58,5 +58,9 @@ public:
   void  Usage (const char* prog) const;
   void  ArgHelp (std::ostream& o) const;
 };
+
+#ifndef NOINLINE
+#include "ArgVars.icc"
+#endif
 
 #endif

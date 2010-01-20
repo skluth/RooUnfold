@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.13 2010-01-19 23:30:57 adye Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.14 2010-01-20 20:36:25 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -12,7 +12,7 @@
 //
 //==============================================================================
 
-#include "RooUnfoldTestHarness.icc"
+#include "RooUnfoldTestHarness.h"
 
 #ifdef __CINT__
 

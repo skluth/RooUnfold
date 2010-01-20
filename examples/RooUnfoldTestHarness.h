@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.8 2010-01-20 15:41:36 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.9 2010-01-20 20:36:25 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using toy MC generated
@@ -39,13 +39,13 @@ class RooUnfoldTestHarness : public TNamed {
 public:
   // Parameters
   Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain;
-  Double_t xlo, xhi, bkgtx, bkgex;
+  Double_t xlo, xhi, bkgtx, bkgex, efflo, effhi, bias, smear;
   Int_t    regparm, ntoys, nmx, onepage, doerror, dim;
 
   Bool_t             nosmear;
   Int_t              error, ipad, ntbins, nmbins;
   TCanvas*           canvas;
-  TH1                *hTrain, *hTrainTrue, *hTrue, *hMeas, *hReco, *hTrue0, *hRes, *hPulls;
+  TH1                *hTrain, *hTrainTrue, *hTrue, *hMeas, *hReco, *hRes, *hPulls;
   TH2D*              hResmat;
   RooUnfoldResponse* response;
   RooUnfold*         unfold;
@@ -81,7 +81,11 @@ public:
 
   void setmax (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
                        const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0);
-  Double_t smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi);
+  Double_t Smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi);
 };
+
+#ifndef NOINLINE
+#include "RooUnfoldTestHarness.icc"
+#endif
 
 #endif
