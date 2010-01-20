@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.6 2010-01-19 23:30:57 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.7 2010-01-20 15:41:36 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using 2D toy MC generated
@@ -196,9 +196,9 @@ void RooUnfoldTestHarness2D::Results()
   canvas->Update();
 }
 
-Int_t RooUnfoldTestHarness2D::Check()
+Int_t RooUnfoldTestHarness2D::CheckParms()
 {
-  RooUnfoldTestHarness::Check();
+  RooUnfoldTestHarness::CheckParms();
   if (nmy<=0)     {cout << "Error: nmy ("    << nmy    << ") <= 0"                  << endl; error = 2;}
   if (nty<=0)     {cout << "Error: nty ("    << nty    << ") <= 0"                  << endl; error = 2;}
   if (ylo >= yhi) {cout << "Error: ylo ("    << ylo    << ") >= yhi(" << yhi << ")" << endl; error = 2;}

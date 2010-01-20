@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.6 2010-01-19 23:30:57 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.7 2010-01-20 15:41:36 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using toy MC generated
@@ -309,7 +309,7 @@ void RooUnfoldTestHarness::PrintParms (std::ostream& o, const char* sep) const
   args.Print (o, sep);
 }
 
-Int_t RooUnfoldTestHarness::Check()
+Int_t RooUnfoldTestHarness::CheckParms()
 {
   // some stupid tests
   if (xlo >= xhi) {cout << "Error: xlo ("    << xlo    << ") >= xhi(" << xhi << ")" << endl; error = 2;}
@@ -348,13 +348,15 @@ Int_t RooUnfoldTestHarness::Run()
   if (error) return error;
   Init2();
   Print (cout);
-  Check();
+  CheckParms();
   if (error) return error;
 
   gROOT->SetStyle("Plain");
   gStyle->SetOptStat(0);
   if (onepage) gStyle->SetCanvasDefH(900);
-  TPostScript ps (TString(GetName())+".ps", 111);
+  TString psfile(GetName());
+  psfile += ".ps";
+  TPostScript ps (psfile, 111);
   canvas= new TCanvas(GetName(),GetName(),1);
   canvas->Clear();
 
@@ -388,18 +390,24 @@ Int_t RooUnfoldTestHarness::Run()
 Int_t RooUnfoldTestHarness::RunStuff()
 {
   if (stage != 2) {
-    response= new RooUnfoldResponse (TString("response"), TString::Format("test %dD Unfolding", dim));
+    TString name("response"), title;
+    title.Form ("test %dD Unfolding", dim);
+    response= new RooUnfoldResponse (name, title);
     if (!response) return 3;
     cout   << "==================================== TRAIN ====================================" << endl;
     if (!Train()) return 4;
-    TFile f (TString(GetName())+".root", "recreate");
+    TString file (GetName());
+    file += ".root";
+    TFile f (file, "recreate");
     f.WriteTObject (response, "response");
     f.Close();
   }
 
   if (stage != 1) {
     if (!response) {
-      TFile f (TString(GetName())+".root");
+      TString file (GetName());
+      file += ".root";
+      TFile f (file);
       f.GetObject ("response", response);
       f.Close();
       if (!response) {
@@ -484,7 +492,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("ftestx",  &ftestx,       5, "test X PDF");
   args.Add ("ntx",     &ntx,         40, "#truth X bins");
   args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
-  args.Add ("ntest",   &ntest,    10000, "#events to use for unsmearing");
+  args.Add ("ntest",   &ntest,    10000, "#events to use for testing");
   args.Add ("ntrain",  &ntrain,  100000, "#events to use for training");
   args.Add ("xlo",     &xlo,      -12.5, "X range minimum");
   args.Add ("xhi",     &xhi,       10.0, "X range maximum");

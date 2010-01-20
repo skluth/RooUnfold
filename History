@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.38 2010-01-19 23:30:55 adye Exp $
+History of RooUnfold     $Id: History,v 1.39 2010-01-20 15:41:34 adye Exp $
 ====================
+
+Tim Adye         20-Jan-2010 tja100120a
+  o Fixes for older versions of ROOT (eg. 5.12).
 
 Tim Adye         19-Jan-2010 tja100119c
   o RooUnfoldSvd may not work very well for multi-dimensional distributions,

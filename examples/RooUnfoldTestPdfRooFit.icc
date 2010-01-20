@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.8 2010-01-19 23:30:57 adye Exp $
+//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.9 2010-01-20 15:41:36 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented with RooFit.
@@ -86,7 +86,9 @@ Int_t mcgenpdf (const RooAbsPdf& sigpdf, RooRealVar& xvar, Int_t nx,
     RooChebychev bkgpdf("bkgpdf","background PDF",xvar,RooArgList());
     if (bkg>=1.0) return mcgenpdf2 (bkgpdf,xvar,nx,x,h,offset);
     RooRealVar fbkg("fbkg","background fraction",bkg,0.0,1.0);
-    return mcgenpdf2 (RooAddPdf (TString(sigpdf.GetName())+"+bkg",sigpdf.GetName(),RooArgList(bkgpdf,sigpdf),fbkg),
+    TString pdfname (sigpdf.GetName());
+    pdfname += "+bkg";
+    return mcgenpdf2 (RooAddPdf (pdfname,sigpdf.GetName(),RooArgList(bkgpdf,sigpdf),fbkg),
                       xvar,nx,x,h,offset);
   }
 }
