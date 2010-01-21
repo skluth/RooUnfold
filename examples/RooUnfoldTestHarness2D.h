@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.h,v 1.9 2010-01-21 01:23:57 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.h,v 1.10 2010-01-21 20:05:14 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using 2D toy MC generated
@@ -24,7 +24,7 @@ class RooUnfoldTestHarness2D : public RooUnfoldTestHarness {
 public:
   // Parameters
   Int_t    ftrainy, ftesty, nty, nmy;
-  Double_t ylo, yhi, bkgty, bkgey, rotxy;
+  Double_t ylo, yhi, mtrainy, wtrainy, btrainy, mtesty, wtesty, btesty, effylo, effyhi, rotxy, ybias, ysmear;
 
   TH1D *hTrainX, *hTrainTrueX, *hTrueX, *hMeasX, *hRecoX;
   TH1D *hTrainY, *hTrainTrueY, *hTrueY, *hMeasY, *hRecoY, *hPDFy, *hTestPDFy;
@@ -44,9 +44,9 @@ public:
   virtual Int_t CheckParms();
   virtual void  Parms (ArgVars& args);
 
-  void Rot (Double_t& x, Double_t& y, Double_t angle);
-  Double_t Smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi) { return RooUnfoldTestHarness::Smear(xt,nt,xlo,xhi); }
-  Bool_t   Smear (Double_t& x, Double_t& y, Int_t nx, Double_t xlo, Double_t xhi, Int_t ny, Double_t ylo, Double_t yhi);
+  static void Rot (Double_t& x, Double_t& y, Double_t angle, Double_t x0, Double_t y0);
+  void Smear2D (Double_t& xt, Double_t& yt) const;
+  bool Eff2D   (Double_t  xt, Double_t  yt) const;
 
   static TH1D* ProjectionX (const TH1* h, const char* name="_px", const char* title=0, Option_t* opt="")
     {const TH2* h2=dynamic_cast<const TH2*>(h); TH1D* h1= h2->ProjectionX(name,0,-1,opt); if (title) h1->SetTitle(title); return h1;}

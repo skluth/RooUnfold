@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness3D.icc,v 1.7 2010-01-21 01:23:57 adye Exp $
+//      $Id: RooUnfoldTestHarness3D.icc,v 1.8 2010-01-21 20:05:14 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using 3D toy MC generated
@@ -38,25 +38,22 @@ using std::endl;
 // Gaussian smearing, systematic translation, and variable inefficiency
 //==============================================================================
 
-Bool_t RooUnfoldTestHarness3D::Smear (Double_t& x, Double_t& y, Double_t& z,
-                                      Int_t nx, Double_t xlo, Double_t xhi,
-                                      Int_t ny, Double_t ylo, Double_t yhi,
-                                      Int_t nz, Double_t zlo, Double_t zhi)
+bool RooUnfoldTestHarness3D::Eff3D (Double_t x, Double_t y, Double_t z) const
 {
-  Double_t xs= Smear (x, nx, xlo, xhi);
-  if (xs==cutdummy) return false;
-  Double_t ys= Smear (y, ny, ylo, yhi);
-  if (ys==cutdummy) return false;
-  Double_t zs= Smear (z, nz, zlo, zhi);
-  if (ys==cutdummy) return false;
-  x= xs;
-  y= ys;
-  z= zs;
-  if (nosmear) return true;
-  Rot (x, y, rotxy);
-  Rot (x, z, rotxz);
-  Rot (y, z, rotyz);
-  return true;
+  return Eff (x, xlo, xhi, effxlo, effxhi) &&
+         Eff (y, ylo, yhi, effylo, effyhi) &&
+         Eff (z, zlo, zhi, effzlo, effzhi);
+}
+
+void RooUnfoldTestHarness3D::Smear3D (Double_t& x, Double_t& y, Double_t& z) const
+{
+  if (!dosmear) return;
+  x= Smear (x, ntx, xlo, xhi, xbias, xsmear);
+  y= Smear (y, nty, ylo, yhi, ybias, ysmear);
+  z= Smear (z, ntz, zlo, zhi, zbias, zsmear);
+  Rot (x, y, rotxy, 0.5*(xlo+xhi), 0.5*(ylo+yhi));
+  Rot (x, z, rotxz, 0.5*(xlo+xhi), 0.5*(zlo+zhi));
+  Rot (y, z, rotyz, 0.5*(ylo+yhi), 0.5*(zlo+zhi));
 }
 
 TH1D* RooUnfoldTestHarness3D::Projection3D (const TH1* h, Option_t* xyz, const char* name, const char* title, Option_t* opt)
@@ -78,11 +75,11 @@ Int_t RooUnfoldTestHarness3D::Train()
 {
   TVectorD xtrue(ntrain), ytrue(ntrain), ztrue(ntrain);
 
-  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi, bkgtx);
+  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi, mtrainx, wtrainx, btrainx);
   if (!hPDFx) return 0;
-  hPDFy= Generate (ytrue, "trainpdfy", "Training PDF Y", nty, ftrainy, ntrain, ylo, yhi, bkgty);
+  hPDFy= Generate (ytrue, "trainpdfy", "Training PDF Y", nty, ftrainy, ntrain, ylo, yhi, mtrainy, wtrainy, btrainy);
   if (!hPDFy) return 0;
-  hPDFz= Generate (ztrue, "trainpdfz", "Training PDF Z", ntz, ftrainz, ntrain, zlo, zhi, bkgtz);
+  hPDFz= Generate (ztrue, "trainpdfz", "Training PDF Z", ntz, ftrainz, ntrain, zlo, zhi, mtrainz, wtrainz, btrainz);
   if (!hPDFz) return 0;
 
   hTrainTrue= new TH3D ("traintrue", "Training Truth", ntx, xlo, xhi, nty, ylo, yhi, ntz, zlo, zhi);
@@ -96,8 +93,9 @@ Int_t RooUnfoldTestHarness3D::Train()
     Double_t xt= xtrue[i], yt= ytrue[i], zt= ztrue[i];
     Fill (hTrainTrue, xt, yt, zt);
 
-    Double_t x= xt, y= yt, z= zt;
-    if (Smear (x, y, z, ntx, xlo, xhi, nty, ylo, yhi, ntz, zlo, zhi)) {
+    if (Eff3D (xt, yt, zt)) {
+      Double_t x= xt, y= yt, z= zt;
+      Smear3D (x, y, z);
       Fill (hTrain, x, y, z);
       response->Fill (x, y, z, xt, yt, zt);
     } else {
@@ -145,11 +143,11 @@ Int_t RooUnfoldTestHarness3D::Test()
 {
   TVectorD xtest(ntest), ytest(ntest), ztest(ntest);
 
-  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, bkgex, 1.0, 2.5);
+  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, mtestx, wtestx, btestx);
   if (!hTestPDFx) return 0;
-  hTestPDFy= Generate (ytest, "pdfy", "PDF Y", nty, ftesty, ntest, ylo, yhi, bkgey, -0.5, 2.5);
+  hTestPDFy= Generate (ytest, "pdfy", "PDF Y", nty, ftesty, ntest, ylo, yhi, mtesty, wtesty, btesty);
   if (!hTestPDFy) return 0;
-  hTestPDFz= Generate (ztest, "pdfz", "PDF Z", ntz, ftestz, ntest, zlo, zhi, bkgez, -0.5, 2.5);
+  hTestPDFz= Generate (ztest, "pdfz", "PDF Z", ntz, ftestz, ntest, zlo, zhi, mtestz, wtestz, btestz);
   if (!hTestPDFz) return 0;
 
   hTrue= new TH3D ("true", "Test Truth", ntx, xlo, xhi, nty, ylo, yhi, ntz, zlo, zhi);
@@ -160,9 +158,11 @@ Int_t RooUnfoldTestHarness3D::Test()
   for (Int_t i=0; i<ntest ; i++) {
     Double_t xt= xtest[i], yt= ytest[i], zt= ztest[i];
     Fill (hTrue, xt, yt, zt);
-    Double_t x= xt, y= yt, z= zt;
-    if (Smear (x, y, z, ntx, xlo, xhi, nty, ylo, yhi, ntz, zlo, zhi))
+    if (Eff3D (xt, yt, zt)) {
+      Double_t x= xt, y= yt, z= zt;
+      Smear3D (x, y, z);
       Fill (hMeas, x, y, z);
+    }
   }
 
   hTrueX= ProjectionX (hTrue, "hTrueX", "Test X");
@@ -251,8 +251,6 @@ void RooUnfoldTestHarness3D::Init()
   RooUnfoldTestHarness2D::Init();
   if (ntz==-1) ntz= nty;
   if (nmz==-1) nmz= ntz;
-  if (bkgtz==-1.0) bkgtz= bkgty;
-  if (bkgez==-1.0) bkgez= bkgey;
   ntbins= ntx*nty*ntz;
   nmbins= nmx*nmy*nmz;
 }
@@ -294,17 +292,27 @@ void RooUnfoldTestHarness3D::Parms (ArgVars& args)
 {
   RooUnfoldTestHarness2D::Parms (args);
   args.SetDefault ("onepage", 10);
-  args.SetDefault ("ntx",      8);
-  args.Add ("ftrainz", &ftrainz,     0, "training Z PDF");
-  args.Add ("ftestz",  &ftestz,      5, "test Z PDF");
-  args.Add ("ntz",     &ntz,        -1, "#truth Z bins", "nty");
-  args.Add ("nmz",     &nmz,        -1, "#measured Z bins", "ntz");
-  args.Add ("zlo",     &zlo,     -12.5, "Z range minimum");
-  args.Add ("zhi",     &zhi,      10.0, "Z range maximum");
-  args.Add ("bkgtz",   &bkgtz,    -1.0, "background fraction for training Z PDF", "bkgty");
-  args.Add ("bkgez",   &bkgez,    -1.0, "background fraction for test Z PDF", "bkgey");
-  args.Add ("rotxz",   &rotxz,     0.4, "rotation angle in XZ plane");
-  args.Add ("rotyz",   &rotyz,     0.4, "rotation angle in YZ plane");
+  args.SetDefault ("ntx",     10);
+  args.SetDefault ("nty",      5);
+  args.SetDefault ("ftestx",   2);
+  args.Add ("ftrainz", &ftrainz,      0, "training Z PDF");
+  args.Add ("ftestz",  &ftestz,       6, "test Z PDF");
+  args.Add ("ntz",     &ntz,          5, "#truth Z bins");
+  args.Add ("nmz",     &nmz,         -1, "#measured Z bins", "ntz");
+  args.Add ("zlo",     &zlo,        0.0, "Z range minimum");
+  args.Add ("zhi",     &zhi,       10.0, "Z range maximum");
+  args.Add ("mtrainz", &mtrainz,    5.0, "training signal PDF Z mean");
+  args.Add ("wtrainz", &wtrainz,    1.0, "training signal PDF Z width");
+  args.Add ("btrainz", &btrainz,    0.2, "training Z PDF background fraction");
+  args.Add ("mtestz",  &mtestz,     4.0, "test signal PDF Z mean");
+  args.Add ("wtestz",  &wtestz,     1.5, "test signal PDF Z width");
+  args.Add ("btestz",  &btestz,     0.3, "test Z PDF background fraction");
+  args.Add ("effzlo",  &effzlo,     0.9, "efficiencz at zlo");
+  args.Add ("effzhi",  &effzhi,     1.0, "efficiencz at zhi");
+  args.Add ("rotxz",   &rotxz,      0.4, "rotation angle in XZ plane");
+  args.Add ("rotyz",   &rotyz,      0.4, "rotation angle in YZ plane");
+  args.Add ("zbias",   &zbias,     -1.0, "shift in Z");
+  args.Add ("zsmear",  &zsmear,     0.5, "Z smearing width in bins");
 }
 
 #endif

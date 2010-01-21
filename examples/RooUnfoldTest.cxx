@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.15 2010-01-20 23:07:03 adye Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.16 2010-01-21 20:05:14 adye Exp $
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs defined
@@ -42,10 +42,9 @@ void RooUnfoldTest (
                     Int_t    ftrainx=     0,
                     Int_t    ftestx=      5,
                     Int_t    ntx=        40,
-                    Int_t    nmx=        -1,
                     Int_t    ntest=   10000,
                     Int_t    ntrain= 100000,
-                    Double_t xlo=     -12.5,
+                    Double_t xlo=       0.0,
                     Double_t xhi=      10.0,
                     Int_t    regparm=  -999,  // Bayes niter=4, SVD kterm=20
                     Int_t    ntoys=    1000   // SVD only
@@ -59,7 +58,6 @@ void RooUnfoldTest (
   test->ftrainx= ftrainx;
   test->ftestx=  ftestx;
   test->ntx=     ntx;
-  test->nmx=     nmx;
   test->ntest=   ntest;
   test->ntrain=  ntrain;
   test->xlo=     xlo;

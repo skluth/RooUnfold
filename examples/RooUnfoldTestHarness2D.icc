@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.10 2010-01-21 01:23:57 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.11 2010-01-21 20:05:14 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using 2D toy MC generated
@@ -42,29 +42,30 @@ using std::cos;
 // Gaussian smearing, systematic translation, and variable inefficiency
 //==============================================================================
 
-void RooUnfoldTestHarness2D::Rot (Double_t& x, Double_t& y, Double_t angle)
+void RooUnfoldTestHarness2D::Rot (Double_t& x, Double_t& y, Double_t angle, Double_t x0, Double_t y0)
 {
   if (angle==0.0) return;
   Double_t a= gRandom->Gaus (angle, 0.2*angle);
   Double_t s= sin(a), c= cos(a);
-  Double_t xr= c*x - s*y;
-  Double_t yr= s*x + c*y;
-  x= xr;
-  y= yr;
+  Double_t xr= c*(x-x0) - s*(y-y0);
+  Double_t yr= s*(x-x0) + c*(y-y0);
+  x= x0+xr;
+  y= y0+yr;
 }
 
-Bool_t RooUnfoldTestHarness2D::Smear (Double_t& x, Double_t& y,
-                                      Int_t nx, Double_t xlo, Double_t xhi,
-                                      Int_t ny, Double_t ylo, Double_t yhi)
+bool RooUnfoldTestHarness2D::Eff2D (Double_t x, Double_t y) const
 {
-  Double_t xs= Smear (x, nx, xlo, xhi);
-  if (xs==cutdummy) return false;
-  Double_t ys= Smear (y, ny, ylo, yhi);
-  if (ys==cutdummy) return false;
-  x= xs;
-  y= ys;
-  if (!nosmear) Rot (x, y, rotxy);
-  return true;
+  return Eff (x, xlo, xhi, effxlo, effxhi) &&
+         Eff (y, ylo, yhi, effylo, effyhi);
+}
+
+void RooUnfoldTestHarness2D::Smear2D (Double_t& x, Double_t& y) const
+{
+  if (!dosmear) return;
+  x= Smear (x, ntx, xlo, xhi, xbias, xsmear);
+  y= Smear (y, nty, ylo, yhi, ybias, ysmear);
+  Rot (x, y, rotxy, 0.5*(xlo+xhi), 0.5*(ylo+yhi));
+  return;
 }
 
 //==============================================================================
@@ -75,9 +76,9 @@ Int_t RooUnfoldTestHarness2D::Train ()
 {
   TVectorD xtrue(ntrain), ytrue(ntrain);
 
-  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi, bkgtx);
+  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi, mtrainx, wtrainx, btrainx);
   if (!hPDFx) return 0;
-  hPDFy= Generate (ytrue, "trainpdfy", "Training PDF Y", nty, ftrainy, ntrain, ylo, yhi, bkgty);
+  hPDFy= Generate (ytrue, "trainpdfy", "Training PDF Y", nty, ftrainy, ntrain, ylo, yhi, mtrainy, wtrainy, btrainy);
   if (!hPDFy) return 0;
 
   hTrainTrue= new TH2D ("traintrue", "Training Truth", ntx, xlo, xhi, nty, ylo, yhi);
@@ -90,9 +91,9 @@ Int_t RooUnfoldTestHarness2D::Train ()
   for (Int_t i= 0; i<ntrain; i++) {
     Double_t xt= xtrue[i], yt= ytrue[i];
     hTrainTrue->Fill (xt, yt);
-
-    Double_t x= xt, y= yt;
-    if (Smear (x, y, ntx, xlo, xhi, nty, ylo, yhi)) {
+    if (Eff2D (xt, yt)) {
+      Double_t x= xt, y= yt;
+      Smear2D (x, y);
       hTrain  ->Fill (x, y);
       response->Fill (x, y, xt, yt);
     } else {
@@ -131,9 +132,9 @@ Int_t RooUnfoldTestHarness2D::Test ()
 {
   TVectorD xtest(ntest), ytest(ntest);
 
-  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, bkgex, 1.0, 2.5);
+  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, mtestx, wtestx, btestx);
   if (!hTestPDFx) return 0;
-  hTestPDFy= Generate (ytest, "pdfy", "PDF Y", nty, ftesty, ntest, ylo, yhi, bkgey, -0.5, 2.5);
+  hTestPDFy= Generate (ytest, "pdfy", "PDF Y", nty, ftesty, ntest, ylo, yhi, mtesty, wtesty, btesty);
   if (!hTestPDFy) return 0;
 
   hTrue= new TH2D ("true", "Test Truth", ntx, xlo, xhi, nty, ylo, yhi);
@@ -144,9 +145,11 @@ Int_t RooUnfoldTestHarness2D::Test ()
   for (Int_t i=0; i<ntest ; i++) {
     Double_t xt= xtest[i], yt= ytest[i];
     hTrue->Fill (xt, yt);
-    Double_t x= xt, y= yt;
-    if (Smear (x, y, ntx, xlo, xhi, nty, ylo, yhi))
+    if (Eff2D (xt, yt)) {
+      Double_t x= xt, y= yt;
+      Smear2D (x, y);
       hMeas->Fill (x, y);
+    }
   }
 
   hTrueX= ProjectionX (hTrue, "hTrueX", "Test X");
@@ -224,8 +227,6 @@ void RooUnfoldTestHarness2D::Init()
   RooUnfoldTestHarness::Init();
   if (nty==-1) nty= ntx;
   if (nmy==-1) nmy= nty;
-  if (bkgty==-1.0) bkgty= bkgtx;
-  if (bkgey==-1.0) bkgey= bkgex;
   ntbins= ntx*nty;
   nmbins= nmx*nmy;
 }
@@ -267,17 +268,25 @@ void RooUnfoldTestHarness2D::Reset()
 void RooUnfoldTestHarness2D::Parms (ArgVars& args)
 {
   RooUnfoldTestHarness::Parms (args);
-  args.SetDefault ("ftestx",  3);
+  args.SetDefault ("ntx",    30);
   args.SetDefault ("onepage", 8);
-  args.Add ("ftrainy", &ftrainy,     0, "training Y PDF");
-  args.Add ("ftesty",  &ftesty ,     5, "test Y PDF");
-  args.Add ("nty",     &nty,        -1, "#truth Y bins", "ntx");
-  args.Add ("nmy",     &nmy,        -1, "#measured Y bins", "nty");
-  args.Add ("ylo",     &ylo,     -12.5, "Y range minimum");
-  args.Add ("yhi",     &yhi,      10.0, "Y range maximum");
-  args.Add ("bkgty",   &bkgty,    -1.0, "background fraction for training Y PDF", "bkgtx");
-  args.Add ("bkgey",   &bkgey,    -1.0, "background fraction for test Y PDF", "bkgex");
-  args.Add ("rotxy",   &rotxy,     0.4, "rotation angle in XY plane");
+  args.Add ("ftrainy", &ftrainy,      0, "training Y PDF");
+  args.Add ("ftesty",  &ftesty ,      4, "test Y PDF");
+  args.Add ("nty",     &nty,         10, "#truth Y bins");
+  args.Add ("nmy",     &nmy,         -1, "#measured Y bins", "nty");
+  args.Add ("ylo",     &ylo,        0.0, "Y range minimum");
+  args.Add ("yhi",     &yhi,       10.0, "Y range maximum");
+  args.Add ("mtrainy", &mtrainy,    5.0, "training signal PDF Y mean");
+  args.Add ("wtrainy", &wtrainy,    1.2, "training signal PDF Y width");
+  args.Add ("btrainy", &btrainy,    0.1, "training Y PDF background fraction");
+  args.Add ("mtesty",  &mtesty,     4.5, "test signal PDF Y mean");
+  args.Add ("wtesty",  &wtesty,     2.5, "test signal PDF Y width");
+  args.Add ("btesty",  &btesty,     0.2, "test Y PDF background fraction");
+  args.Add ("effylo",  &effylo,     0.8, "efficiency at ylo");
+  args.Add ("effyhi",  &effyhi,     1.0, "efficiency at yhi");
+  args.Add ("rotxy",   &rotxy,      0.6, "rotation angle in XY plane");
+  args.Add ("ybias",   &ybias,      1.0, "shift in Y");
+  args.Add ("ysmear",  &ysmear,     0.5, "Y smearing width in bins");
 }
 
 #endif

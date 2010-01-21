@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.11 2010-01-20 23:07:03 adye Exp $
+//      $Id: RooUnfoldTestPdfRooFit.icc,v 1.12 2010-01-21 20:05:14 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented with RooFit.
@@ -13,7 +13,8 @@
 //        3: Double-sided exponential decay
 //        4: Breit-Wigner
 //        5: Double Breit-Wigner, peaking at mean-width and mean+width.
-//        6: Gaussian resonance on an exponential background
+//        6: exponential
+//        7: Gaussian resonance on an exponential background
 //
 // Author: Tim Adye <T.J.Adye@rl.ac.uk>
 //
@@ -144,9 +145,9 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
     }
 
     case 5: {
-      RooRealVar p31("p31","mean 1",mean-width);
+      RooRealVar p31("p31","mean 1",mean-1.5*width);
       RooRealVar p32("p32","width 1",width);
-      RooRealVar p33("p33","mean 2",mean+width);
+      RooRealVar p33("p33","mean 2",mean+1.5*width);
       RooRealVar p34("p34","width 2",width);
       RooRealVar fbw1("fbw1","Breit Wigner 1 fraction",0.5);
       RooBreitWigner bw1("pdf1","Breit Wigner 1",xvar,p31,p32);
@@ -156,7 +157,14 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
     }
 
     case 6: {
-      const Double_t invtau  = -3.0/(xhi-xlo);
+      const Double_t invtau  = -1.0/(mean-xlo);
+      RooRealVar ptau("ptau","inverse tau", invtau);
+      return mcgenpdf (RooExponential("pdf1","Exponential",xvar,ptau),
+                       xvar, nx, x, h, bkg);
+   }
+
+    case 7: {
+      const Double_t invtau  = -1.0/(mean-xlo);
       const Double_t mywidth = width/4.0;
       const Double_t fexp    = 0.9;
 

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness3D.h,v 1.6 2010-01-21 01:23:57 adye Exp $
+//      $Id: RooUnfoldTestHarness3D.h,v 1.7 2010-01-21 20:05:14 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using 3D toy MC generated
@@ -26,7 +26,7 @@ class RooUnfoldTestHarness3D : public RooUnfoldTestHarness2D {
 public:
   // Parameters
   Int_t    ftrainz, ftestz, ntz, nmz;
-  Double_t zlo, zhi, bkgtz, bkgez, rotxz, rotyz;
+  Double_t zlo, zhi, mtrainz, wtrainz, btrainz, mtestz, wtestz, btestz, effzlo, effzhi, rotxz, rotyz, zbias, zsmear;
 
   TH1D *hTrainZ, *hTrainTrueZ, *hTrueZ, *hMeasZ, *hRecoZ, *hPDFz, *hTestPDFz;
 
@@ -45,11 +45,8 @@ public:
   virtual Int_t CheckParms();
   virtual void  Parms (ArgVars& args);
 
-  Double_t Smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi) { return RooUnfoldTestHarness::Smear(xt,nt,xlo,xhi); }
-  Bool_t   Smear (Double_t& x, Double_t& y, Double_t& z,
-                  Int_t nx, Double_t xlo, Double_t xhi,
-                  Int_t ny, Double_t ylo, Double_t yhi,
-                  Int_t nz, Double_t zlo, Double_t zhi);
+  void Smear3D (Double_t& xt, Double_t& yt, Double_t& zt) const;
+  bool Eff3D   (Double_t  xt, Double_t  yt, Double_t  zt) const;
 
   Int_t Fill (TH1* h, Double_t x, Double_t y, Double_t z) {TH3* h3= dynamic_cast<TH3*>(h); return h3->Fill (x, y, z);}
   static TH1D* Projection3D (const TH1* h, Option_t* xyz, const char* name, const char* title, Option_t* opt);
