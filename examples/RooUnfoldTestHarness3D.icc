@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness3D.icc,v 1.6 2010-01-20 23:07:03 adye Exp $
+//      $Id: RooUnfoldTestHarness3D.icc,v 1.7 2010-01-21 01:23:57 adye Exp $
 //
 // Description:
 //      Harness class to test the RooUnfold package using 3D toy MC generated
@@ -106,24 +106,27 @@ Int_t RooUnfoldTestHarness3D::Train()
   }
 
   hTrainTrueX= ProjectionX (hTrainTrue, "hTrainTrueX", "Training X");
+  hTrainTrueY= ProjectionY (hTrainTrue, "hTrainTrueY", "Training Y");
+  hTrainTrueZ= ProjectionZ (hTrainTrue, "hTrainTrueZ", "Training Z");
+
   hTrainX=     ProjectionX (hTrain,     "hTrainX",     "Training Measured X");
+  hTrainY=     ProjectionY (hTrain,     "hTrainY",     "Training Measured Y");
+  hTrainZ=     ProjectionZ (hTrain,     "hTrainZ",     "Training Measured Z");
+
   setmax (hTrainTrueX, hPDFx, hTrainX);
+  setmax (hTrainTrueY, hPDFy, hTrainY);
+  setmax (hTrainTrueZ, hPDFz, hTrainZ);
+
   canvas->cd(1);
   hTrainTrueX->Draw();
   hPDFx      ->Draw("LSAME");
   hTrainX    ->Draw("SAME");
 
-  hTrainTrueY= ProjectionY (hTrainTrue, "hTrainTrueY", "Training Y");
-  hTrainY=     ProjectionY (hTrain,     "hTrainY",     "Training Measured Y");
-  setmax (hTrainTrueY, hPDFy, hTrainY);
   canvas->cd(2);
   hTrainTrueY->Draw();
   hPDFy      ->Draw("LSAME");
   hTrainY    ->Draw("SAME");
 
-  hTrainTrueZ= ProjectionZ (hTrainTrue, "hTrainTrueZ", "Training Z");
-  hTrainZ=     ProjectionZ (hTrain,     "hTrainZ",     "Training Measured Z");
-  setmax (hTrainTrueZ, hPDFz, hTrainZ);
   canvas->cd(3);
   hTrainTrueZ->Draw();
   hPDFz      ->Draw("LSAME");
@@ -176,40 +179,55 @@ Int_t RooUnfoldTestHarness3D::Test()
 // Show results
 //==============================================================================
 
-void RooUnfoldTestHarness3D::Results()
+void RooUnfoldTestHarness3D::ShowTest()
 {
-  hRecoX= ProjectionX (hReco, "hRecoX", "Reconstructed X", "E");
-  hRecoX->SetMarkerStyle(8);
-  setmax (hTrueX, hTestPDFx, hMeasX, hRecoX);
+  setmax (hTrueX, hTestPDFx, hMeasX);
+  setmax (hTrueY, hTestPDFy, hMeasY);
+  setmax (hTrueZ, hTestPDFz, hMeasZ);
+
   canvas->cd(4);
   hTrueX   ->Draw();
   hTestPDFx->Draw("LSAME");
   hMeasX   ->Draw("SAME");
-  hRecoX   ->Draw("SAME");
 
-  hRecoY= ProjectionY (hReco, "hRecoY", "Reconstructed Y", "E");
-  hRecoY->SetMarkerStyle(8);
-  setmax (hTrueY, hTestPDFy, hMeasY, hRecoY);
   canvas->cd(5);
   hTrueY   ->Draw();
   hTestPDFy->Draw("LSAME");
   hMeasY   ->Draw("SAME");
-  hRecoY   ->Draw("SAME");
 
-  hRecoZ= ProjectionZ (hReco, "hRecoZ", "Reconstructed Z", "E");
-  hRecoZ->SetMarkerStyle(8);
-  setmax (hTrueZ, hTestPDFz, hMeasZ, hRecoZ);
   canvas->cd(6);
   hTrueZ   ->Draw();
   hTestPDFz->Draw("LSAME");
   hMeasZ   ->Draw("SAME");
-  hRecoZ   ->Draw("SAME");
 
   canvas->cd(7);
   hTrue->Draw();
 
   canvas->cd(8);
   hMeas->Draw();
+}
+
+void RooUnfoldTestHarness3D::Results()
+{
+  hRecoX= ProjectionX (hReco, "hRecoX", "Reconstructed X", "E");
+  hRecoY= ProjectionY (hReco, "hRecoY", "Reconstructed Y", "E");
+  hRecoZ= ProjectionZ (hReco, "hRecoZ", "Reconstructed Z", "E");
+  hRecoX->SetMarkerStyle(8);
+  hRecoY->SetMarkerStyle(8);
+  hRecoZ->SetMarkerStyle(8);
+  setmax (hTrueX, hRecoX);
+  setmax (hTrueY, hRecoY);
+  setmax (hTrueZ, hRecoZ);
+  ShowTest();
+
+  canvas->cd(4);
+  hRecoX   ->Draw("SAME");
+
+  canvas->cd(5);
+  hRecoY   ->Draw("SAME");
+
+  canvas->cd(6);
+  hRecoZ   ->Draw("SAME");
 
   canvas->cd(9);
   hReco->Draw();
@@ -258,6 +276,7 @@ RooUnfoldTestHarness3D::RooUnfoldTestHarness3D (const char* name, int argc, cons
 }
 
 RooUnfoldTestHarness3D::RooUnfoldTestHarness3D (const char* name, const char* args)
+  : RooUnfoldTestHarness2D(name)
 {
   Reset();
   const char* const argv[]= { name, args };

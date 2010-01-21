@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.8 2010-01-19 15:33:47 adye Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.9 2010-01-21 01:23:59 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -110,14 +110,14 @@ RooUnfoldResponse::Setup (Int_t nm, Double_t mlo, Double_t mhi, Int_t nt, Double
   Clear();
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
-  _mes= new TH1D (GetName(), GetTitle(), nm, mlo, mhi);
-  _tru= new TH1D (GetName(), GetTitle(), nt, tlo, thi);
+  _mes= new TH1D ("measured", "Measured", nm, mlo, mhi);
+  _tru= new TH1D ("truth",    "Truth",    nt, tlo, thi);
   _mdim= _tdim= 1;
   _nm= nm;
   _nt= nt;
   _res= new TH2D (GetName(), GetTitle(), nm, mlo, mhi, nt, tlo, thi);
   TH1::AddDirectory (oldstat);
-  SetNameTitleDefault();
+  SetNameTitleDefault ("response", "Response");
   return *this;
 }
 
@@ -413,16 +413,18 @@ RooUnfoldResponse::ApplyToTruth (const TH1* truth, const char* name) const
 
 
 void
-RooUnfoldResponse::SetNameTitleDefault()
+RooUnfoldResponse::SetNameTitleDefault (const char* defname, const char* deftitle)
 {
   const char* s= GetName();
   if (s[0] == '\0') {
     if (_res) s= _res->GetName();
     if (s[0] == '\0') {
-      if (_mes && _tru) {
+      if (defname) SetName (defname);
+      else if (_mes && _tru) {
         TString n= _mes->GetName();
-        n.Append ("_");
+        if (n.Length()) n.Append ("_");
         n.Append (_tru->GetName());
+        if (!n.Length()) n= "response";
         SetName (n);
       }
     } else
@@ -432,11 +434,15 @@ RooUnfoldResponse::SetNameTitleDefault()
   if (s[0] == '\0') {
     if (_res) s= _res->GetTitle();
     if (s[0] == '\0') {
-      if (_mes && _tru) {
-        TString n= "Response ";
-        n.Append (_tru->GetTitle());
-        n.Append (" -> ");
+      if (deftitle) SetTitle (deftitle);
+      else if (_mes && _tru) {
+        TString n= _tru->GetTitle();
+        if (n.Length()) n.Append (" #rightarrow ");
         n.Append (_mes->GetTitle());
+        if (n.Length())
+          n.Prepend ("Response ");
+        else
+          n= "Response";
         SetTitle (n);
       }
     } else

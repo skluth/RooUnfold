@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.7 2010-01-19 15:33:47 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.8 2010-01-21 01:23:59 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -103,7 +103,7 @@ private:
 
   virtual RooUnfoldResponse& Setup();
   virtual void ClearCache();
-  virtual void SetNameTitleDefault();
+  virtual void SetNameTitleDefault (const char* defname= 0, const char* deftitle= 0);
   virtual Int_t Miss1D (Double_t xt, Double_t w= 1.0);  // Fill missed event into 1D Response Matrix (with weight)
   virtual Int_t Miss2D (Double_t xt, Double_t yt, Double_t w= 1.0);  // Fill missed event into 2D Response Matrix (with weight)
 

@@ -1,5 +1,9 @@
-History of RooUnfold     $Id: History,v 1.41 2010-01-20 23:07:01 adye Exp $
+History of RooUnfold     $Id: History,v 1.42 2010-01-21 01:23:54 adye Exp $
 ====================
+
+Tim Adye         20-Jan-2010 tja100120d
+  o Fix RooUnfold::PrintTable() for multi-dimensional case.
+  o Tidy some default object names.
 
 Tim Adye         20-Jan-2010 tja100120c
   RooUnfoldTest changes:

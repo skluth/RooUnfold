@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldExample.cxx,v 1.3 2010-01-19 15:33:45 adye Exp $
+//      $Id: RooUnfoldExample.cxx,v 1.4 2010-01-21 01:23:57 adye Exp $
 //
 // Description:
 //      Simple example usage of the RooUnfold package using toy MC.
@@ -48,6 +48,10 @@ Double_t smear (Double_t xt)
 
 void RooUnfoldExample()
 {
+#ifdef __CINT__
+  gSystem->Load("libRooUnfold");
+#endif
+
   cout << "==================================== TRAIN ====================================" << endl;
   RooUnfoldResponse response (40, -10.0, 10.0);
 

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.8 2010-01-20 20:36:27 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.9 2010-01-21 01:23:59 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -112,6 +112,8 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError) cons
   Int_t ndf= 0;
   Int_t maxbin= _nt < _nm ? _nm : _nt;
   for (Int_t i = 0 ; i <= maxbin+1; i++) {
+    Int_t it= RooUnfoldResponse::GetBin(hReco, i);
+    Int_t im= RooUnfoldResponse::GetBin(hMeas, i);
 
     o << setw(5);
     if      (i<=0)     o << "under";
@@ -119,29 +121,29 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError) cons
     else               o        << setw(5) << i;
     o << std::fixed << setprecision(0);
     if (i<=_nt+1)
-      o << ' ' << setw(8) << hTrainTrue->GetBinContent(i);
+      o << ' ' << setw(8) << hTrainTrue->GetBinContent(it);
     else
       o << setw(9) << " ";
     if (i<=_nm+1)
-      o << ' ' << setw(8) << hTrain->GetBinContent(i);
+      o << ' ' << setw(8) << hTrain->GetBinContent(im);
     else
       o << setw(9) << " ";
     if (hTrue && i<=_nt+1)
-      o << ' ' << setw(8) << hTrue->GetBinContent(i);
+      o << ' ' << setw(8) << hTrue->GetBinContent(it);
     else
       o << setw(9) << " ";
     if (i<=_nm+1)
-      o << ' ' << setw(8) << hMeas->GetBinContent(i);
+      o << ' ' << setw(8) << hMeas->GetBinContent(im);
     else
       o << setw(9) << " ";
     o << setprecision(1);
     if (i<=_nt+1) {
-      o << ' ' << setw(8) << hReco->GetBinContent(i);
+      o << ' ' << setw(8) << hReco->GetBinContent(it);
       if (hTrue &&
-          ((hReco->GetBinContent(i)!=0.0 || (withError && hReco->GetBinError(i)>0.0)) &&
-           (hTrue->GetBinContent(i)!=0.0 || (withError && hTrue->GetBinError(i)>0.0)))) {
-        Double_t ydiff    = hReco->GetBinContent(i) - hTrue->GetBinContent(i);
-        Double_t ydiffErr = hReco->GetBinError(i);
+          ((hReco->GetBinContent(it)!=0.0 || (withError && hReco->GetBinError(it)>0.0)) &&
+           (hTrue->GetBinContent(it)!=0.0 || (withError && hTrue->GetBinError(it)>0.0)))) {
+        Double_t ydiff    = hReco->GetBinContent(it) - hTrue->GetBinContent(it);
+        Double_t ydiffErr = hReco->GetBinError(it);
         o << ' ' << setw(8) << ydiff;
         if (ydiffErr>0.0) {
           Double_t ypull = ydiff/ydiffErr;
@@ -175,9 +177,13 @@ RooUnfold::SetNameTitleDefault()
 {
   if (!_res) return;
   const char* s= GetName();
-  if (s[0] == '\0') SetName (_res->GetName());
+  if (s[0] == '\0') SetName  (_res->GetName());
   s= GetTitle();
-  if (s[0] == '\0') SetTitle (_res->GetTitle());
+  if (s[0] == '\0') {
+    TString title= "Unfold ";
+    title += _res->GetTitle();
+    SetTitle (title);
+  }
 }
 
 TH1*
