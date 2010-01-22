@@ -1,8 +1,9 @@
-History of RooUnfold     $Id: History,v 1.46 2010-01-22 16:04:55 adye Exp $
+History of RooUnfold     $Id: History,v 1.47 2010-01-22 21:58:54 adye Exp $
 ====================
 
 Tim Adye         22-Jan-2010 V00-02-00
   o Add missing include for TProfile.
+  o Add make html target.
 
 Tim Adye         22-Jan-2010 tja100122a
   o RooUnfold::PrintTable: fix bin numbering (no under/overlow) and show 2D/3D

@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.14 2010-01-22 15:46:01 adye Exp $
+#      $Id: GNUmakefile,v 1.15 2010-01-22 21:58:54 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -84,6 +84,7 @@ SHLIBDIR      = $(CURDIR)/
 EXEDIR        = $(CURDIR)/
 EXESRC        = $(CURDIR)/examples/
 INCLUDES      = -I$(SRCDIR)
+HTMLDOC       = htmldoc
 
 # === Internal configuration ===================================================
 
@@ -239,8 +240,17 @@ cleanbin :
 	rm -f $(addprefix $(OBJDIR),$(patsubst %.cxx,%.o,$(MAIN)))
 	rm -f $(MAINEXE)
 
+$(HTMLDOC)/index.html : $(SHLIBFILE)
+	@echo "Making HTML documentation in $(HTMLDOC)"
+	@( echo 'gSystem->Load("libRooUnfold");'; \
+	   echo 'THtml h; h.SetOutputDir("$(HTMLDOC)");'; \
+	   echo 'h.MakeAll();';\
+	   echo '.q') \
+	 | root -l -b
 
-.PHONY : include shlib lib bin default clean
+html : $(HTMLDOC)/index.html
+
+.PHONY : include shlib lib bin default clean cleanbin html
 
 ifneq ($(DLIST),)
 -include $(DLIST)
