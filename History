@@ -1,5 +1,13 @@
-History of RooUnfold     $Id: History,v 1.43 2010-01-21 20:05:12 adye Exp $
+History of RooUnfold     $Id: History,v 1.44 2010-01-22 15:46:01 adye Exp $
 ====================
+
+Tim Adye         22-Jan-2010 tja100122a
+  o RooUnfold::PrintTable: fix bin numbering (no under/overlow) and show 2D/3D
+    bin numbers.
+  o RooUnfoldBayes: fix if there are fewer measured than truth bins.
+  o RooUnfoldTest3D: show X, Y, and Z profile plots for pulls.
+  o Remove RooUnfoldTest() routines with numeric parameters.
+  o Reorder RooUnfoldTestHarness routines.
 
 Tim Adye         21-Jan-2010 tja100121a
   RooUnfoldTest changes:

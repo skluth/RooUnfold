@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.13 2010-01-19 15:33:42 adye Exp $
+#      $Id: GNUmakefile,v 1.14 2010-01-22 15:46:01 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -217,7 +217,7 @@ $(MAINEXE) : $(EXEDIR)%$(ExeSuf) : $(OBJDIR)%.o $(LINKLIB)
 include: $(DLIST)
 lib: $(LIBFILE)
 shlib: $(SHLIBFILE)
-bin: $(MAINEXE)
+bin: shlib $(MAINEXE)
 
 commands :
 	@echo "Make $(DEPDIR)%.d:	$(CC) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $(SRCDIR)%.cxx | sed 's,\(%\.o\) *:,$(OBJDIR)\1 $(DEPDIR)%.d :,g' > $(DEPDIR)%.d"

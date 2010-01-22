@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.9 2010-01-21 01:23:59 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.10 2010-01-22 15:46:07 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -103,41 +103,50 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError) cons
 
   std::ostringstream fmt;
   fmt.copyfmt (o);   // save original ostream format
-  o << "====================================================================" << endl
-    << setw(5) << ""      << setw(9) << "Train" << setw(9) << "Train"    << setw(9) << "Test"  << setw(9) << "Test"  << setw(9) << "Unfolded" << setw(9) << "Diff" << setw(9) << "Pull" << endl
-    << setw(5) << "Bin"   << setw(9) << "Truth" << setw(9) << "Measured" << setw(9) << "Truth" << setw(9) << "Input" << setw(9) << "Output"   << endl
-    << "====================================================================" << endl;
+  Int_t dim= hReco->GetDimension(), ntxb= hReco->GetNbinsX()+2, ntyb= hReco->GetNbinsY()+2;
+  if (hMeas->GetDimension() != dim || hMeas->GetNbinsX()+2 != ntxb || hMeas->GetNbinsY()+2 != ntyb) dim= 1;
+  Int_t iwid= (dim==3) ? 8 : (dim==2) ? 7 : 5;
+  const char* xwid= (dim==3) ? "===" : (dim==2) ? "==" : "";
+  o << "====================================================================" << xwid << endl
+    << setw(iwid) << ""      << setw(9) << "Train" << setw(9) << "Train"    << setw(9) << "Test"  << setw(9) << "Test"  << setw(9) << "Unfolded" << setw(9) << "Diff" << setw(9) << "Pull" << endl
+    << setw(iwid) << "Bin"   << setw(9) << "Truth" << setw(9) << "Measured" << setw(9) << "Truth" << setw(9) << "Input" << setw(9) << "Output"   << endl
+    << "====================================================================" << xwid << endl;
 
   Double_t chi2= 0.0;
   Int_t ndf= 0;
   Int_t maxbin= _nt < _nm ? _nm : _nt;
-  for (Int_t i = 0 ; i <= maxbin+1; i++) {
-    Int_t it= RooUnfoldResponse::GetBin(hReco, i);
-    Int_t im= RooUnfoldResponse::GetBin(hMeas, i);
+  for (Int_t i = 0 ; i < maxbin; i++) {
+    Int_t it= RooUnfoldResponse::GetBin (hReco, i);
+    Int_t im= RooUnfoldResponse::GetBin (hMeas, i);
 
-    o << setw(5);
-    if      (i<=0)     o << "under";
-    else if (i>maxbin) o << "over";
-    else               o        << setw(5) << i;
+    if (dim==2 || dim==3) {
+      // ROOT 5.26 has GetBinXYZ to do this.
+      Int_t iw= (dim==2) ? 3 : 2;
+      Int_t ix= it%ntxb;
+      Int_t iy= ((it-ix)/ntxb)%ntyb;
+      o << setw(iw) << ix << ',' << setw(iw) << iy;
+      if (dim==3) o << ',' << setw(iw) << ((it-ix)/ntxb - iy)/ntyb;
+    } else
+      o << setw(iwid) << i+1;
     o << std::fixed << setprecision(0);
-    if (i<=_nt+1)
+    if (i<_nt)
       o << ' ' << setw(8) << hTrainTrue->GetBinContent(it);
     else
       o << setw(9) << " ";
-    if (i<=_nm+1)
+    if (i<_nm)
       o << ' ' << setw(8) << hTrain->GetBinContent(im);
     else
       o << setw(9) << " ";
-    if (hTrue && i<=_nt+1)
+    if (hTrue && i<_nt)
       o << ' ' << setw(8) << hTrue->GetBinContent(it);
     else
       o << setw(9) << " ";
-    if (i<=_nm+1)
+    if (i<_nm)
       o << ' ' << setw(8) << hMeas->GetBinContent(im);
     else
       o << setw(9) << " ";
     o << setprecision(1);
-    if (i<=_nt+1) {
+    if (i<_nt) {
       o << ' ' << setw(8) << hReco->GetBinContent(it);
       if (hTrue &&
           ((hReco->GetBinContent(it)!=0.0 || (withError && hReco->GetBinError(it)>0.0)) &&
@@ -156,8 +165,8 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError) cons
     o << endl;
   }
 
-  o << "====================================================================" << endl
-    << setw(5) << "" << std::fixed << setprecision(0)
+  o << "====================================================================" << xwid << endl
+    << setw(iwid) << "" << std::fixed << setprecision(0)
     << ' ' << setw(8) << hTrainTrue->Integral()
     << ' ' << setw(8) << hTrain->Integral();
   if (hTrue)
@@ -167,7 +176,7 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError) cons
   o << ' ' << setw(8) << hMeas->Integral() << setprecision(1)
     << ' ' << setw(8) << hReco->Integral()
     << endl
-    << "====================================================================" << endl;
+    << "====================================================================" << xwid << endl;
   o.copyfmt (fmt);  // restore original ostream format
   o << "Chi^2/NDF=" << chi2 << "/" << ndf << endl;
 }
@@ -194,7 +203,7 @@ RooUnfold::Hreco (Bool_t withError) const
   reco->SetTitle (GetTitle());
   if (withError && !_haveCov) GetCov();
   for (size_t i= 0; i < _nt; i++) {
-    Int_t j= RooUnfoldResponse::GetBin(reco, i);
+    Int_t j= RooUnfoldResponse::GetBin (reco, i);
     reco->SetBinContent (j,             _rec(i));
     if (withError)
       reco->SetBinError (j, sqrt (fabs (_cov(i,i))));

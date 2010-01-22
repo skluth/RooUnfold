@@ -1,9 +1,9 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.11 2010-01-21 20:05:14 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.12 2010-01-22 15:46:04 adye Exp $
 //
 // Description:
-//      Harness class to test the RooUnfold package using toy MC generated
+//      Test Harness class for the RooUnfold package using toy MC generated
 //      according to PDFs defined in RooUnfoldTestPdf.icc or RooUnfoldTestPdfRooFit.icc.
 //
 // Authors: Tim Adye <T.J.Adye@rl.ac.uk> and Fergus Wilson <fwilson@slac.stanford.edu>
@@ -21,7 +21,6 @@
 
 #include <cfloat>
 #if !defined(__CINT__) || defined(__MAKECINT__)
-#include <cmath>
 #include <iostream>
 
 #include "TROOT.h"
@@ -46,8 +45,6 @@
 
 //==============================================================================
 // MC generation routine: RooUnfoldTestPdf()
-// This routine is included inline so it does not have to be part of the library
-// and does not need to be loaded explicitly from the ROOT prompt.
 //==============================================================================
 
 #ifdef USE_ROOFIT
@@ -57,84 +54,138 @@
 #endif
 
 #if !defined(__CINT__) || defined(__MAKECINT__)
-using std::fabs;
 using std::cout;
 using std::cerr;
 using std::endl;
 #endif
 
 //==============================================================================
-// Utility routines
+// Test parameters
 //==============================================================================
 
-//==============================================================================
-// Set histogram Y-axis display range
-//==============================================================================
-
-void RooUnfoldTestHarness::setmax (TH1* h,
-                                   const TH1* h1, const TH1* h2, const TH1* h3,
-                                   const TH1* h4, const TH1* h5, const TH1* h6)
+void RooUnfoldTestHarness::Parms (ArgVars& args)
 {
-  // Get the maximum y value of up to 7 histograms
-  // Add 10% to match behaviour of ROOT's automatic scaling
-  Double_t maxval= h1 ? h1->GetMaximum() : -DBL_MAX;
-  if (h2 && h2->GetMaximum() > maxval) maxval= h2->GetMaximum();
-  if (h3 && h3->GetMaximum() > maxval) maxval= h3->GetMaximum();
-  if (h4 && h4->GetMaximum() > maxval) maxval= h4->GetMaximum();
-  if (h5 && h5->GetMaximum() > maxval) maxval= h5->GetMaximum();
-  if (h6 && h6->GetMaximum() > maxval) maxval= h6->GetMaximum();
-  h->SetMinimum (0.0);
-  if (maxval > h->GetMaximum()) {
-    h->SetMaximum (1.1*maxval);
+  args.Add ("method",  &method,       1, "RooUnfold method: 1=Bayes, 2=SVD, 3=bin-by-bin");
+  args.Add ("stage",   &stage,        0, "1=train (writes RooUnfoldTest.root), 2=test (reads), 0=both (default)");
+  args.Add ("ftrainx", &ftrainx,      0, "training X PDF: 0=flat, 1=top-hat, 2=Gaussian, 3=double exp, 4=B-W, 5=double B-W, 6=exp, 7=Gaussian+exp");
+  args.Add ("ftestx",  &ftestx,       5, "test X PDF");
+  args.Add ("ntx",     &ntx,         40, "#truth X bins");
+  args.Add ("ntest",   &ntest,    10000, "#events to use for testing");
+  args.Add ("ntrain",  &ntrain,  100000, "#events to use for training");
+  args.Add ("xlo",     &xlo,        0.0, "X range minimum");
+  args.Add ("xhi",     &xhi,       10.0, "X range maximum");
+  args.Add ("regparm", &regparm,   -999, "regularisation parameter (default: Bayes niter=3, SVD kterm=ntx/2)", "");
+  args.Add ("ntoys",   &ntoys,     1000, "number of toys used to obtain SVD covariances");
+  args.Add ("onepage", &onepage,      4, "number of pads per page");
+  args.Add ("doerror", &doerror,     -1, "calculate errors (default=1 unless this will take a very long time)", "1");
+  args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
+  args.Add ("mtrainx", &mtrainx,    5.0, "training signal PDF X mean");
+  args.Add ("wtrainx", &wtrainx,    1.2, "training signal PDF X width");
+  args.Add ("btrainx", &btrainx,    0.2, "training X PDF background fraction");
+  args.Add ("mtestx",  &mtestx,     5.5, "test signal PDF X mean");
+  args.Add ("wtestx",  &wtestx,     1.0, "test signal PDF X width");
+  args.Add ("btestx",  &btestx,     0.3, "test X PDF background fraction");
+  args.Add ("effxlo",  &effxlo,     0.5, "efficiency at xlo");
+  args.Add ("effxhi",  &effxhi,     0.9, "efficiency at xhi");
+  args.Add ("xbias",   &xbias,     -1.0, "shift in X");
+  args.Add ("xsmear",  &xsmear,     0.5, "X smearing width in bins");
+  args.Add ("dosmear", &dosmear,     -1, "do shift, smear, and rotation (disabled by default for bin-by-bin method)", "1");
+}
+
+//==============================================================================
+// Run tests
+//==============================================================================
+
+Int_t RooUnfoldTestHarness::Run()
+{
+  Init();
+  if (error) return error;
+  CheckParms();
+  if (error) return error;
+  SetupCanvas();
+  error= RunTests();
+  ps->Close(); delete ps; ps= 0;
+  return error;
+}
+
+
+void RooUnfoldTestHarness::SetupCanvas()
+{
+  gROOT->SetStyle("Plain");
+  gStyle->SetOptStat(0);
+  if (onepage) gStyle->SetCanvasDefH(900);
+  TString psfile(GetName());
+  psfile += ".ps";
+  ps= new TPostScript (psfile, 111);
+  canvas= new TCanvas(GetName(),GetName(),1);
+  canvas->Clear();
+
+  if (onepage==2) {
+    gStyle->SetPadTopMargin(0.05);
+    gStyle->SetPadRightMargin(0.02);
+    gStyle->SetPadBottomMargin(0.08);
+    gStyle->SetPadLeftMargin(0.06);
+    canvas->Divide(1,2);
+    TPad* pad1= (TPad*) canvas->GetPad(1);
+    TPad* pad2= (TPad*) canvas->GetPad(2);
+    pad1->SetPad (pad1->GetXlowNDC(), .3, pad1->GetXlowNDC()+pad1->GetWNDC(), pad1->GetYlowNDC()+pad1->GetHNDC());
+    pad2->SetPad (pad2->GetXlowNDC(), pad2->GetYlowNDC(), pad2->GetXlowNDC()+pad2->GetWNDC(), .3);
+    pad1->SetGrid(1);
+    pad2->SetGrid(1);
+  } else if (onepage>=6) {
+    canvas->SetGrid();
+    canvas->Divide(2,(onepage+1)/2);
+  } else if (onepage>=3)
+    canvas->Divide(1,onepage);
+  else
+    canvas->SetGrid(1);
+  ipad= 0;
+}
+
+
+Int_t RooUnfoldTestHarness::RunTests()
+{
+  if (stage != 2) {
+    TString name("response"), title;
+    title.Form ("Test %dD", dim);
+    response= new RooUnfoldResponse (name, title);
+    if (!response) return 3;
+    cout << "==================================== TRAIN ====================================" << endl;
+    if (!Train()) return 4;
+    TString file (GetName());
+    file += ".root";
+    TFile f (file, "recreate");
+    f.WriteTObject (response, "response");
+    f.Close();
   }
+
+  if (stage != 1) {
+    if (!response) {
+      TString file (GetName());
+      file += ".root";
+      TFile f (file);
+      f.GetObject ("response", response);
+      f.Close();
+      if (!response) {
+        cerr << "could not read 'response' object from file RooUnfoldTest.root" << endl;
+        return 5;
+      }
+    }
+    cout << "==================================== TEST =====================================" << endl;
+    if (!Test())   return 6;
+    cout << "==================================== UNFOLD ===================================" << endl;
+    if (!Unfold()) {
+      ShowTest();
+      canvas->Update();
+      return 7;
+    }
+    Results();
+  }
+  return 0;
 }
 
 //==============================================================================
-// Gaussian smearing, systematic translation, and variable inefficiency
-//==============================================================================
-
-bool RooUnfoldTestHarness::Eff (Double_t xt, Double_t xlo, Double_t xhi, Double_t efflo, Double_t effhi) const
-{
-  // Apply an efficiency function to the truth.
-  // Efficiency: 30% at x=xlo, 100% at x=xhi.
-
-  Double_t xwidth =  (xhi-xlo);
-
-  Double_t slope = (effhi-efflo) / xwidth;
-  Double_t yeff= (efflo + slope * (xt-xlo));  // efficiency
-
-  // MC test: if random number < eff then accept
-  return (gRandom->Rndm() < yeff);
-}
-
-Double_t RooUnfoldTestHarness::Smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi, Double_t bias, Double_t smear) const
-{
-  // Apply a gaussian smearing and systematic translation to the truth.
-
-  if (!dosmear) return xt;   // bin-by-bin correction can't handle bias and smearing
-
-  Double_t xwidth = (xhi-xlo);
-  Double_t xsigma = xwidth*smear / Double_t(nt);     // smear sigma
-
-  Double_t delta= xsigma <= 0.0 ? bias : gRandom->Gaus(bias, xsigma);     // bias and smear
-  //cout << "SMEAR " << xt << " " << xsmear << " " << xwidth << " " << xsigma << endl;
-  return xt+delta;
-}
-
-TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char* title,
-                                      Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi,
-                                      Double_t mean, Double_t width, Double_t bkg)
-{
-  TH1D* hPDF= new TH1D (name, title, nbPDF, xlo, xhi);
-  hPDF->SetLineColor(kGreen);
-  hPDF->SetLineWidth(2);
-  if (!RooUnfoldTestPdf (fpdf, nx, xlo, xhi, x, hPDF, mean, width, bkg)) return 0;
-  hPDF->Scale (nbPDF/Double_t(nt));
-  return hPDF;
-}
-
-//==============================================================================
-// Train unfolding algorithm
+// Train: create response matrix
 //==============================================================================
 
 Int_t RooUnfoldTestHarness::Train()
@@ -150,7 +201,7 @@ Int_t RooUnfoldTestHarness::Train()
   hResmat= new TH2D ("resmat", "Response Matrix", nmx, xlo, xhi, ntx, xlo, xhi);
 
   response->Setup (nmx, xlo, xhi, ntx, xlo, xhi);
-  //  response->Setup (hTrain, hTrainTrue);
+  // or:  response->Setup (hTrain, hTrainTrue);
 
   for (Int_t i= 0; i<ntrain; i++) {
     Double_t xt= xtrue[i];
@@ -164,7 +215,7 @@ Int_t RooUnfoldTestHarness::Train()
       response->Miss (xt);
   }
 
-  //  response->Setup (hTrain, hTrainTrue, hResmat);
+  // or:  response->Setup (hTrain, hTrainTrue, hResmat);
 
   setmax (hTrainTrue, hPDFx, hTrain);
 
@@ -201,7 +252,6 @@ Int_t RooUnfoldTestHarness::Test()
       hMeas->Fill(x);
     }
   }
-
   return 1;
 }
 
@@ -233,15 +283,8 @@ Int_t RooUnfoldTestHarness::Unfold ()
   hPulls->SetMarkerStyle(kFullDotLarge);
 
   for (Int_t i= 1; i<=ntbins; i++) {
-    if ((hReco->GetBinContent(i)==0.0 && (!doerror || hReco->GetBinError(i)<=0.0)) ||
-        (hTrue->GetBinContent(i)==0.0 && (!doerror || hTrue->GetBinError(i)<=0.0))) {
-      hRes  ->SetBinContent (i, 0.0);
-      hPulls->SetBinContent (i, 0.0);
-      if (doerror) {
-        hRes  ->SetBinError (i, 0.0);
-        hPulls->SetBinError (i, 0.0);
-      }
-    } else {
+    if ((hReco->GetBinContent(i)!=0.0 || (doerror && hReco->GetBinError(i)>0.0)) &&
+        (hTrue->GetBinContent(i)!=0.0 || (doerror && hTrue->GetBinError(i)>0.0))) {
       // hReco already includes the statistical error on hTrue, so
       // don't include that twice when calculating residuals.
       Double_t res= hReco->GetBinContent(i) - hTrue->GetBinContent(i);
@@ -251,9 +294,6 @@ Int_t RooUnfoldTestHarness::Unfold ()
       if (err>0.0) {
         hPulls->SetBinContent (i, res/err);
         hPulls->SetBinError   (i, 1.0);
-      } else {
-        hPulls->SetBinContent (i, 0.0);
-        hPulls->SetBinError   (i, 0.0);
       }
     }
   }
@@ -281,157 +321,72 @@ void RooUnfoldTestHarness::Results()
   setmax (hTrue, hReco);
   ShowTest();
   hReco    ->Draw("SAME");
-  // canvas->Update();
 
   if (onepage>=2) canvas->cd(++ipad);
   if (!onepage || onepage >= 2) {
     hRes->Draw();
     TLine l; // draw a line at y=0;
     l.DrawLine(hRes->GetBinLowEdge(1), 0.0, hRes->GetBinLowEdge(ntx+1), 0.0);
-    //   canvas->Update();
   }
 
   if (onepage>=2) canvas->cd(++ipad);
   if (!onepage || onepage >= 2) {
     hPulls->SetMarkerStyle(kFullDotLarge);
     hPulls->Draw("P");
-    TLine l; // draw a line at y=0;
-    l.DrawLine(hPulls->GetBinLowEdge(1), 0.0, hPulls->GetBinLowEdge(ntx+1), 0.0);
-    //    canvas->Update();
+    TLine().DrawLine(hPulls->GetBinLowEdge(1), 0.0, hPulls->GetBinLowEdge(ntx+1), 0.0);  // draw a line at pull=0;
   }
  canvas->Update();
-
-}
-
-void RooUnfoldTestHarness::Print (std::ostream& o) const
-{
-  ArgVars args;
-  const_cast<RooUnfoldTestHarness*>(this)->Parms (args);
-  o << GetName() << " ";
-  args.Print (o);
-  o << endl;
-}
-
-Int_t RooUnfoldTestHarness::CheckParms()
-{
-  // some stupid tests
-  if (xlo >= xhi) {cout << "Error: xlo ("    << xlo    << ") >= xhi(" << xhi << ")" << endl; error = 2;}
-  if (ntest<=0)   {cout << "Error: ntest ("  << ntest  << ") <= 0"                  << endl; error = 2;}
-  if (ntrain<=0)  {cout << "Error: ntrain (" << ntrain << ") <= 0"                  << endl; error = 2;}
-  if (nmx<=0)     {cout << "Error: nmx ("    << nmx    << ") <= 0"                  << endl; error = 2;}
-  if (ntx<=0)     {cout << "Error: ntx ("    << ntx    << ") <= 0"                  << endl; error = 2;}
-  if (ftestx<0)   {cout << "Error: ftestx (" << ftestx << ") < 0"                   << endl; error = 2;}
-  if (ftrainx<0)  {cout << "Error: ftrainx ("<< ftrainx<< ") < 0"                   << endl; error = 2;}
-  return error;
-}
-
-void RooUnfoldTestHarness::Init()
-{
-  if (nmx==-1) nmx= ntx;
-  ntbins= ntx;
-  nmbins= nmx;
-}
-
-void RooUnfoldTestHarness::Init2()
-{
-  if (dosmear==-1) dosmear= (method == 3) ? 0 : 1;  // bin-by-bin can't handle smearing or bias
-  if (regparm==-999) regparm= (method==1 ? 3 : method==2 ? (ntbins>5 ? ntbins/2 : 2) : 0);
-  if (doerror==-1) {
-    doerror= !(method==1 && ntbins*nmbins > 160000);
-    if (!doerror) {
-      cerr << "Don't calculate errors for Bayes algorithm - there are " << ntbins*nmbins
-           << " bins in the response matrix and the error calculation would take too long (set doerror=1 to override this)" << endl;
-    }
-  }
-}
-
-Int_t RooUnfoldTestHarness::Run()
-{
-  Init();
-  if (error) return error;
-  Init2();
-  Print (cout);
-  CheckParms();
-  if (error) return error;
-
-  gROOT->SetStyle("Plain");
-  gStyle->SetOptStat(0);
-  if (onepage) gStyle->SetCanvasDefH(900);
-  TString psfile(GetName());
-  psfile += ".ps";
-  TPostScript ps (psfile, 111);
-  canvas= new TCanvas(GetName(),GetName(),1);
-  canvas->Clear();
-
-  if (onepage==2) {
-    gStyle->SetPadTopMargin(0.05);
-    gStyle->SetPadRightMargin(0.02);
-    gStyle->SetPadBottomMargin(0.08);
-    gStyle->SetPadLeftMargin(0.06);
-    canvas->Divide(1,2);
-    TPad* pad1= (TPad*) canvas->GetPad(1);
-    TPad* pad2= (TPad*) canvas->GetPad(2);
-    pad1->SetPad (pad1->GetXlowNDC(), .3, pad1->GetXlowNDC()+pad1->GetWNDC(), pad1->GetYlowNDC()+pad1->GetHNDC());
-    pad2->SetPad (pad2->GetXlowNDC(), pad2->GetYlowNDC(), pad2->GetXlowNDC()+pad2->GetWNDC(), .3);
-    pad1->SetGrid(1);
-    pad2->SetGrid(1);
-  } else if (onepage>=6) {
-    canvas->SetGrid();
-    canvas->Divide(2,(onepage+1)/2);
-  } else if (onepage>=3)
-    canvas->Divide(1,onepage);
-  else
-    canvas->SetGrid(1);
-  ipad= 0;
-
-  Int_t err= RunStuff();
-
-  ps.Close();
-  return err;
-}
-
-Int_t RooUnfoldTestHarness::RunStuff()
-{
-  if (stage != 2) {
-    TString name("response"), title;
-    title.Form ("Test %dD", dim);
-    response= new RooUnfoldResponse (name, title);
-    if (!response) return 3;
-    cout   << "==================================== TRAIN ====================================" << endl;
-    if (!Train()) return 4;
-    TString file (GetName());
-    file += ".root";
-    TFile f (file, "recreate");
-    f.WriteTObject (response, "response");
-    f.Close();
-  }
-
-  if (stage != 1) {
-    if (!response) {
-      TString file (GetName());
-      file += ".root";
-      TFile f (file);
-      f.GetObject ("response", response);
-      f.Close();
-      if (!response) {
-        cerr << "could not read 'response' object from file RooUnfoldTest.root" << endl;
-        return 5;
-      }
-    }
-    cout   << "==================================== TEST =====================================" << endl;
-    if (!Test())   return 6;
-    cout << "==================================== UNFOLD ===================================" << endl;
-    if (!Unfold()) {
-      ShowTest();
-      return 7;
-    }
-    Results();
-  }
-  return 0;
 }
 
 //==============================================================================
-// Constructor
+// Generate PDF using RooUnfoldTestPdf
+//==============================================================================
+
+TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char* title,
+                                      Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi,
+                                      Double_t mean, Double_t width, Double_t bkg)
+{
+  TH1D* hPDF= new TH1D (name, title, nbPDF, xlo, xhi);
+  hPDF->SetLineColor(kGreen);
+  hPDF->SetLineWidth(2);
+  if (!RooUnfoldTestPdf (fpdf, nx, xlo, xhi, x, hPDF, mean, width, bkg)) return 0;
+  hPDF->Scale (nbPDF/Double_t(nt));
+  return hPDF;
+}
+
+//==============================================================================
+// Gaussian smearing, systematic translation, and variable inefficiency
+//==============================================================================
+
+bool RooUnfoldTestHarness::Eff (Double_t x, Double_t xlo, Double_t xhi, Double_t efflo, Double_t effhi) const
+{
+  // Apply an efficiency function to the truth.
+  // Efficiency: 30% at x=xlo, 100% at x=xhi.
+
+  Double_t xwidth =  (xhi-xlo);
+
+  Double_t slope = (effhi-efflo) / xwidth;
+  Double_t yeff= (efflo + slope * (x-xlo));  // efficiency
+
+  // MC test: if random number < eff then accept
+  return (gRandom->Rndm() < yeff);
+}
+
+Double_t RooUnfoldTestHarness::Smear (Double_t x, Int_t nt, Double_t xlo, Double_t xhi, Double_t bias, Double_t smear) const
+{
+  // Apply a gaussian smearing and systematic translation to the truth.
+
+  if (!dosmear) return x;   // bin-by-bin correction can't handle bias and smearing
+
+  Double_t xsigma = (xhi-xlo) * smear / Double_t(nt);     // smear sigma
+
+  Double_t delta= xsigma <= 0.0 ? bias : gRandom->Gaus(bias, xsigma);     // bias and smear
+  //cout << "SMEAR " << x << " " << xsmear << " " << << xsigma << endl;
+  return x+delta;
+}
+
+//==============================================================================
+// Constructors and destructor
 //==============================================================================
 
 RooUnfoldTestHarness::RooUnfoldTestHarness (const char* name)
@@ -461,25 +416,24 @@ RooUnfoldTestHarness::~RooUnfoldTestHarness()
   delete response; response= 0;
   delete unfold;   unfold=   0;
   delete canvas;   canvas=   0;
+  delete ps;       ps=       0;
 }
+
+//==============================================================================
+// Utility routines
+//==============================================================================
 
 void RooUnfoldTestHarness::Reset()
 {
   response= 0;
   unfold= 0;
   canvas= 0;
+  ps= 0;
   hPDFx= hTestPDFx= 0;
   hTrain= hTrainTrue= hTrue= hMeas= hReco= hRes= hPulls= 0;
   hResmat= 0;
   error= ipad= 0;
   dim= 1;
-}
-
-int RooUnfoldTestHarness::SetArgs (int argc, const char* const* argv, bool split)
-{
-  ArgVars args;
-  Parms (args);
-  return args.SetArgs (argc, argv, split);
 }
 
 void RooUnfoldTestHarness::SetDefaults()
@@ -489,33 +443,71 @@ void RooUnfoldTestHarness::SetDefaults()
   args.SetDefaults();
 }
 
-void RooUnfoldTestHarness::Parms (ArgVars& args)
+int RooUnfoldTestHarness::SetArgs (int argc, const char* const* argv, bool split)
 {
-  args.Add ("method",  &method,       1, "RooUnfold method: 1=Bayes, 2=SVD, 3=bin-by-bin");
-  args.Add ("stage",   &stage,        0, "1=train (writes RooUnfoldTest.root), 2=test (reads), 0=both (default)");
-  args.Add ("ftrainx", &ftrainx,      0, "training X PDF: 0=flat, 1=top-hat, 2=Gaussian, 3=double exp, 4=B-W, 5=double B-W, 6=exp, 7=Gaussian+exp");
-  args.Add ("ftestx",  &ftestx,       5, "test X PDF");
-  args.Add ("ntx",     &ntx,         40, "#truth X bins");
-  args.Add ("ntest",   &ntest,    10000, "#events to use for testing");
-  args.Add ("ntrain",  &ntrain,  100000, "#events to use for training");
-  args.Add ("xlo",     &xlo,        0.0, "X range minimum");
-  args.Add ("xhi",     &xhi,       10.0, "X range maximum");
-  args.Add ("regparm", &regparm,   -999, "regularisation parameter (default: Bayes niter=3, SVD kterm=ntx/2)", "");
-  args.Add ("ntoys",   &ntoys,     1000, "number of toys used to obtain SVD covariances");
-  args.Add ("onepage", &onepage,      4, "number of pads per page");
-  args.Add ("doerror", &doerror,     -1, "calculate errors (default=1 unless this will take a very long time)", "1");
-  args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
-  args.Add ("mtrainx", &mtrainx,    5.0, "training signal PDF X mean");
-  args.Add ("wtrainx", &wtrainx,    1.2, "training signal PDF X width");
-  args.Add ("btrainx", &btrainx,    0.2, "training X PDF background fraction");
-  args.Add ("mtestx",  &mtestx,     5.5, "test signal PDF X mean");
-  args.Add ("wtestx",  &wtestx,     1.0, "test signal PDF X width");
-  args.Add ("btestx",  &btestx,     0.3, "test X PDF background fraction");
-  args.Add ("effxlo",  &effxlo,     0.5, "efficiency at xlo");
-  args.Add ("effxhi",  &effxhi,     0.9, "efficiency at xhi");
-  args.Add ("xbias",   &xbias,     -1.0, "shift in X");
-  args.Add ("xsmear",  &xsmear,     0.5, "X smearing width in bins");
-  args.Add ("dosmear", &dosmear,     -1, "do shift, smear, and rotation (disabled by default for bin-by-bin method)", "1");
+  ArgVars args;
+  Parms (args);
+  return args.SetArgs (argc, argv, split);
+}
+
+void RooUnfoldTestHarness::Init()
+{
+  if (nmx==-1) nmx= ntx;
+  ntbins= ntx;
+  nmbins= nmx;
+}
+
+Int_t RooUnfoldTestHarness::CheckParms()
+{
+  if (dosmear==-1) dosmear= (method == 3) ? 0 : 1;  // bin-by-bin can't handle smearing or bias
+  if (regparm==-999) regparm= (method==1 ? 3 : method==2 ? (ntbins>5 ? ntbins/2 : 2) : 0);
+  if (doerror==-1) {
+    doerror= !(method==1 && ntbins*nmbins > 160000);
+    if (!doerror) {
+      cerr << "Don't calculate errors for Bayes algorithm - there are " << ntbins*nmbins
+           << " bins in the response matrix and the error calculation would take too long (set doerror=1 to override this)" << endl;
+    }
+  }
+
+  Print (cout);
+
+  if (xlo >= xhi) {cout << "Error: xlo ("    << xlo    << ") >= xhi(" << xhi << ")" << endl; error = 2;}
+  if (ntest<=0)   {cout << "Error: ntest ("  << ntest  << ") <= 0"                  << endl; error = 2;}
+  if (ntrain<=0)  {cout << "Error: ntrain (" << ntrain << ") <= 0"                  << endl; error = 2;}
+  if (nmx<=0)     {cout << "Error: nmx ("    << nmx    << ") <= 0"                  << endl; error = 2;}
+  if (ntx<=0)     {cout << "Error: ntx ("    << ntx    << ") <= 0"                  << endl; error = 2;}
+  if (ftestx<0)   {cout << "Error: ftestx (" << ftestx << ") < 0"                   << endl; error = 2;}
+  if (ftrainx<0)  {cout << "Error: ftrainx ("<< ftrainx<< ") < 0"                   << endl; error = 2;}
+  return error;
+}
+
+void RooUnfoldTestHarness::Print (std::ostream& o) const
+{
+  ArgVars args;
+  const_cast<RooUnfoldTestHarness*>(this)->Parms (args);
+  o << GetName() << " ";
+  args.Print (o);
+  o << endl;
+}
+
+//==============================================================================
+// Set histogram Y-axis display range
+//==============================================================================
+
+void RooUnfoldTestHarness::setmax (TH1* h,
+                                   const TH1* h1, const TH1* h2, const TH1* h3,
+                                   const TH1* h4, const TH1* h5, const TH1* h6)
+{
+  // Get the maximum y value of up to 7 histograms
+  // Add 10% to match behaviour of ROOT's automatic scaling
+  Double_t maxval= h1 ? h1->GetMaximum() : -DBL_MAX;
+  if (h2 && h2->GetMaximum() > maxval) maxval= h2->GetMaximum();
+  if (h3 && h3->GetMaximum() > maxval) maxval= h3->GetMaximum();
+  if (h4 && h4->GetMaximum() > maxval) maxval= h4->GetMaximum();
+  if (h5 && h5->GetMaximum() > maxval) maxval= h5->GetMaximum();
+  if (h6 && h6->GetMaximum() > maxval) maxval= h6->GetMaximum();
+  h->SetMinimum (0.0);
+  if (maxval > h->GetMaximum()) h->SetMaximum (1.1*maxval);
 }
 
 #endif

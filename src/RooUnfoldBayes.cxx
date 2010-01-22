@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.10 2010-01-19 23:30:59 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.11 2010-01-22 15:46:07 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -105,7 +105,7 @@ RooUnfoldBayes::Setup (Int_t niter, Bool_t smoothit)
 
   if (verbose() >= 2) Print();
 
-  _rec.ResizeTo (_nm);
+  _rec.ResizeTo (_nt);
   VD2V (causes, _rec);
   _haveCov= false;
 
@@ -115,13 +115,13 @@ RooUnfoldBayes::Setup (Int_t niter, Bool_t smoothit)
 void
 RooUnfoldBayes::GetCov() const
 {
-  _cov.ResizeTo (_nm, _nm);
+  _cov.ResizeTo (_nt, _nt);
   getCovariance();
   if (_bayes->error() != 0.0) {
     AD2M (_bayes->covariance(), _cov);
   } else {
     cerr << "Covariance matrix not calculated - fill errors with sqrt(N)" << endl;
-    for (Int_t i= 0; i < _nm; i++)
+    for (Int_t i= 0; i < _nt; i++)
       _cov(i,i)= sqrt (fabs (_rec(i)));
   }
   _haveCov= true;

@@ -1,9 +1,9 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.11 2010-01-21 20:05:14 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.12 2010-01-22 15:46:04 adye Exp $
 //
 // Description:
-//      Harness class to test the RooUnfold package using toy MC generated
+//      Test Harness class for the RooUnfold package using toy MC generated
 //      according to PDFs defined in RooUnfoldTestPdf.icc or RooUnfoldTestPdfRooFit.icc.
 //
 // Authors: Tim Adye <T.J.Adye@rl.ac.uk> and Fergus Wilson <fwilson@slac.stanford.edu>
@@ -29,6 +29,7 @@ class ArgVars;
 #endif
 
 class TCanvas;
+class TPostScript;
 class TH1;
 class TH1D;
 class TH2D;
@@ -38,20 +39,21 @@ class RooUnfold;
 class RooUnfoldTestHarness : public TNamed {
 public:
   // Parameters
+  static const Int_t nbPDF= 500;
   Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain;
   Int_t    regparm, ntoys, nmx, onepage, doerror, dim, dosmear;
-  Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx, effxlo, effxhi, xbias, xsmear;
+  Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx;
+  Double_t effxlo, effxhi, xbias, xsmear;
 
+  // Data
   Int_t              error, ipad, ntbins, nmbins;
   TCanvas*           canvas;
+  TPostScript*       ps;
   TH1                *hTrain, *hTrainTrue, *hTrue, *hMeas, *hReco, *hRes, *hPulls;
-  TH2D*              hResmat;
+  TH1D               *hPDFx, *hTestPDFx;
+  TH2D               *hResmat;
   RooUnfoldResponse* response;
   RooUnfold*         unfold;
-
-  static const Int_t    nbPDF=         500;
-
-  TH1D               *hPDFx, *hTestPDFx;
 
   // Constructors
   RooUnfoldTestHarness (const char* name= "RooUnfoldTest");
@@ -59,28 +61,28 @@ public:
   RooUnfoldTestHarness (const char* name, int argc, const char* const* argv);
   virtual ~RooUnfoldTestHarness();
 
-  virtual void  Reset();
-  virtual void  Init();
-  virtual void  Init2();
-  virtual Int_t Train();
-  virtual Int_t Test();
-  virtual Int_t Unfold();
-  virtual void  ShowTest();
-  virtual void  Results();
-  virtual Int_t Run();
-  virtual Int_t RunStuff();
-  virtual void  Print      (std::ostream& o)                       const;
-  virtual Int_t CheckParms();
-  virtual void  Parms (ArgVars& args);
-  virtual int   SetArgs (int argc, const char* const* argv, bool split= false);
-  virtual void  SetDefaults();
-
-  TH1D* Generate (TVectorD& x, const char* name, const char* title, Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi,
-                  Double_t bkg, Double_t mean, Double_t width);
-  static void setmax (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
-                      const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0);
-  Double_t Smear (Double_t xt, Int_t nt, Double_t xlo, Double_t xhi, Double_t bias, Double_t smear) const;
-  bool     Eff   (Double_t xt,           Double_t xlo, Double_t xhi, Double_t efflo, Double_t effhi) const;
+  // Methods and functions
+  virtual void     Parms (ArgVars& args);
+  virtual Int_t    Run();
+  virtual void     SetupCanvas();
+  virtual Int_t    RunTests();
+  virtual Int_t    Train();
+  virtual Int_t    Test();
+  virtual Int_t    Unfold();
+  virtual void     ShowTest();
+  virtual void     Results();
+  virtual TH1D*    Generate (TVectorD& x, const char* name, const char* title, Int_t nt, Int_t fpdf,
+                             Int_t nx, Double_t xlo, Double_t xhi, Double_t bkg, Double_t mean, Double_t width);
+  virtual bool     Eff      (Double_t x,           Double_t xlo, Double_t xhi, Double_t efflo, Double_t effhi) const;
+  virtual Double_t Smear    (Double_t x, Int_t nt, Double_t xlo, Double_t xhi, Double_t bias,  Double_t smear) const;
+  virtual void     Reset();
+  virtual void     SetDefaults();
+  virtual int      SetArgs  (int argc, const char* const* argv, bool split= false);
+  virtual void     Init();
+  virtual Int_t    CheckParms();
+  virtual void     Print    (std::ostream& o) const;
+  static  void     setmax   (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
+                             const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0);
 };
 
 #ifndef NOINLINE
