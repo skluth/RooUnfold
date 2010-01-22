@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness3D.icc,v 1.9 2010-01-22 15:46:04 adye Exp $
+//      $Id: RooUnfoldTestHarness3D.icc,v 1.10 2010-01-22 16:04:58 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 3D toy MC.
@@ -22,6 +22,7 @@
 #include "TCanvas.h"
 #include "TH1D.h"
 #include "TH3D.h"
+#include "TProfile.h"
 #include "TVectorD.h"
 
 #include "RooUnfoldResponse.h"
