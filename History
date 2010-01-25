@@ -1,5 +1,14 @@
-History of RooUnfold     $Id: History,v 1.47 2010-01-22 21:58:54 adye Exp $
+History of RooUnfold     $Id: History,v 1.48 2010-01-25 15:35:53 adye Exp $
 ====================
+
+Tim Adye         25-Jan-2010 tja100125a
+  RooUnfoldTest changes:
+  o Don't allow positional parameters any more.
+  o Work round CINT bug in ROOT 5.18+ which required ".include examples" to
+    run RooUnfoldTest.cxx.
+  o Work round CINT bug in ROOT 5.18 (just that) which doesn't parse
+    RooUnfoldTest parameters correctly. Unfortunately there still are problems
+    with this version (eg. only the first argument is accepted).
 
 Tim Adye         22-Jan-2010 V00-02-00
   o Add missing include for TProfile.

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: ArgVars.icc,v 1.4 2010-01-20 20:36:25 adye Exp $
+//      $Id: ArgVars.icc,v 1.5 2010-01-25 15:35:55 adye Exp $
 //
 // Description:
 //      Parse argument list for parameter settings
@@ -97,28 +97,10 @@ void ArgVars::ArgHelp (std::ostream& o) const
   }
 }
 
-bool ArgVars::CmpOpt (const char*& p, const char* opt, bool split)
+bool ArgVars::CmpOpt (const char* p, const char* opt, const char* s)
 {
-  if (split) {
-    const char* s= strchr (p, ' ');
-    if (s) {
-      bool found= (strncmp (p, opt, s-p) == 0);
-      if (found) p= s+1;
-      return found;
-    }
-  }
-  bool found= (strcmp (p, opt) == 0);
-  if (found) p= 0;
-  return found;
-}
-
-bool ArgVars::SetVal (const char* p, const char*& q, ArgVar* arg, bool split)
-{
-  char* nxt= 0;
-  if (arg->ivar) *(arg->ivar)= strtol (p, &nxt, 10);
-  else           *(arg->fvar)= strtod (p, &nxt);
-  q= (split && nxt && *nxt==' ') ? nxt+1 : 0;
-  return (nxt && nxt>p && (*nxt=='\0' || (split && *nxt==' ')));
+  if (s) return (strncmp (p, opt, s-p) == 0);
+  else   return (strcmp  (p, opt)      == 0);
 }
 
 ArgVar* ArgVars::Find (const char* name) const
@@ -167,7 +149,8 @@ Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split) const
   SetDefaults();
   const char* prog= strrchr (argv[0], '/');
   if (prog) prog++; else prog= argv[0];
-  int err= 0, iarg= 0, help= 0;
+  int  err=  0;
+  bool help= false;
   for (int i= 1; i<argc; i++) {
     const char* p= argv[i];
     while (p) {
@@ -176,10 +159,15 @@ Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split) const
         if (*p=='\0') break;
       }
       bool found= false;
-      if (CmpOpt (p, "-h",     split) ||
-          CmpOpt (p, "--help", split)) {
-        help= 1;
-        continue;
+      const char* s= split ? strchr (p, ' ') : 0;
+      if (CmpOpt (p, "-h",     s) ||
+          CmpOpt (p, "--help", s)) {
+        help= true;
+        if (s) {
+          p= s+1;
+          continue;
+        }
+        break;
       }
       ArgVar* arg;
       const char* q= 0, *d= strchr (p, '=');
@@ -188,16 +176,18 @@ Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split) const
         if (split) {
           while (nv>0 && p[nv-1]==' ') nv--;
         }
+        d++;
         TIter next(&lst);
         while (arg= dynamic_cast<ArgVar*>(next())) {
           if (strncmp (p, arg->name, nv) == 0) {
-            found= SetVal (d+1, q, arg, split);
+            char* nxt= 0;
+            if (arg->ivar) *(arg->ivar)= strtol (d, &nxt, 10);
+            else           *(arg->fvar)= strtod (d, &nxt);
+            if (split && nxt && *nxt==' ') q= nxt+1;
+            found= (nxt && nxt>d && (*nxt=='\0' || (split && *nxt==' ')));
             break;
           }
         }
-      } else if (arg= dynamic_cast<ArgVar*>(lst.At(iarg))) {  // positional argument?
-        found= SetVal (p, q, arg, split);
-        iarg++;
       }
       if (!found) {
         std::cerr << prog << ": unrecognised parameter: " << p << std::endl;
@@ -205,7 +195,7 @@ Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split) const
       }
       p= q;
     }
-  }
+  };
   if (help) {
     Usage (prog);
     return 1;

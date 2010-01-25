@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.12 2010-01-22 15:46:04 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.13 2010-01-25 15:35:55 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -23,6 +23,7 @@ class TVectorD;
 #endif
 
 #ifdef __CINT__
+#include "TPad.h"    // Why is this necessary (at least in ROOT 5.18+)?
 #include "ArgVars.h"
 #else
 class ArgVars;

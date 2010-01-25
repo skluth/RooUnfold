@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: ArgVars.h,v 1.4 2010-01-20 20:36:25 adye Exp $
+//      $Id: ArgVars.h,v 1.5 2010-01-25 15:35:55 adye Exp $
 //
 // Description:
 //      Parse argument list for parameter settings
@@ -36,8 +36,7 @@ public:
 class ArgVars {
 private:
   TList lst;
-  static bool CmpOpt (const char*& p, const char*  opt, bool split);
-  static bool SetVal (const char*  p, const char*& q, ArgVar* arg, bool split);
+  static bool CmpOpt (const char* p, const char*  opt, const char* s);
   ArgVar* Find (const char* name) const;
   ArgVars& Add (ArgVar* arg);
 public:
