@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.11 2010-01-22 15:46:07 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.12 2010-01-26 00:53:17 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -34,56 +34,56 @@ using std::endl;
 ClassImp (RooUnfoldBayes);
 
 RooUnfoldBayes::RooUnfoldBayes (const RooUnfoldBayes& rhs)
-  : RooUnfold (rhs.GetName(), rhs.GetTitle())
+  : RooUnfold (rhs)
 {
-  Setup ();
-  Setup (rhs);
+  Init();
+  CopyData (rhs);
 }
 
 RooUnfoldBayes::RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, Int_t niter, Bool_t smoothit,
-                                      const char* name, const char* title)
-  : RooUnfold (name, title)
+                                const char* name, const char* title)
+  : RooUnfold (res, meas, name, title), _niter(niter), _smoothit(smoothit)
 {
-  Setup();
-  Setup (res, meas, niter, smoothit);
+  Init();
 }
 
-RooUnfoldBayes&
-RooUnfoldBayes::Clear()
-{
-  delete _bayes;
-  RooUnfold::Clear();
-  return *this;
-}
-
-RooUnfoldBayes&
-RooUnfoldBayes::Setup()
+void
+RooUnfoldBayes::Init()
 {
   _bayes= 0;
-  _niter= 0;
-  _smoothit= false;
-  return *this;
 }
 
-RooUnfoldBayes&
-RooUnfoldBayes::Setup (const RooUnfoldBayes& rhs)
+void
+RooUnfoldBayes::Destroy()
 {
-  return Setup (rhs._niter, rhs._smoothit);
+  delete _bayes;
 }
 
-RooUnfoldBayes&
-RooUnfoldBayes::Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t niter, Bool_t smoothit)
+void
+RooUnfoldBayes::Reset()
 {
-  RooUnfold::Setup (res, meas);
-  return Setup (niter, smoothit);
+  Destroy();
+  Init();
+  RooUnfold::Reset();
 }
 
-RooUnfoldBayes&
-RooUnfoldBayes::Setup (Int_t niter, Bool_t smoothit)
+void
+RooUnfoldBayes::Assign (const RooUnfoldBayes& rhs)
 {
-  _niter= niter;
-  _smoothit= smoothit;
+  RooUnfold::Assign (rhs);
+  CopyData (rhs);
+}
 
+void
+RooUnfoldBayes::CopyData (const RooUnfoldBayes& rhs)
+{
+  _niter=    rhs._niter;
+  _smoothit= rhs._smoothit;
+}
+
+void
+RooUnfoldBayes::Unfold()
+{
   _bayes= new RooUnfoldBayesImpl (GetName(), GetTitle());
 
   _bayes->build (1, vector<Int_t>(1,_nt), vector<Double_t>(1,0.0), vector<Double_t>(1,1.0),
@@ -107,14 +107,14 @@ RooUnfoldBayes::Setup (Int_t niter, Bool_t smoothit)
 
   _rec.ResizeTo (_nt);
   VD2V (causes, _rec);
-  _haveCov= false;
-
-  return *this;
+  _unfolded= true;
+  _haveCov=  false;
 }
 
 void
-RooUnfoldBayes::GetCov() const
+RooUnfoldBayes::GetCov()
 {
+  if (!_unfolded) Unfold();
   _cov.ResizeTo (_nt, _nt);
   getCovariance();
   if (_bayes->error() != 0.0) {
@@ -135,14 +135,14 @@ void
 RooUnfoldBayes::Print(Option_t* option) const
 {
   RooUnfold::Print (option);
-  _bayes->info();
+  if (_bayes) _bayes->info();
 }
 
 vector<Double_t>&
 RooUnfoldBayes::H2VD (const TH1* h, vector<Double_t>& v)
 {
   if (!h) return v;
-  Int_t nb= v.size();
+  size_t nb= v.size();
   for (size_t i= 0; i < nb; i++)
     v[i]= h->GetBinContent (RooUnfoldResponse::GetBin(h,i));
   return v;
@@ -153,13 +153,13 @@ RooUnfoldBayes::H2AD (const TH2D* h, Array2D& m, const TH1* norm)
 {
   if (!h) return m;
   Int_t nx= m.GetNrows(), ny= m.GetNcols();
-  for (size_t j= 0; j < ny; j++) {
+  for (Int_t j= 0; j < ny; j++) {
     Double_t nTrue= norm ? norm->GetBinContent (j+1) : 1.0;
     if (nTrue == 0.0) {
-      for (size_t i= 0; i < nx; i++)
+      for (Int_t i= 0; i < nx; i++)
         m.Set (j, i, 0.0);
     } else {
-      for (size_t i= 0; i < nx; i++)
+      for (Int_t i= 0; i < nx; i++)
         m.Set (j, i, h->GetBinContent(i+1,j+1) / nTrue);
     }
   }
@@ -170,7 +170,7 @@ TVectorD&
 RooUnfoldBayes::VD2V (const vector<Double_t>& vd, TVectorD& v)
 {
   Int_t nb= v.GetNrows();
-  for (size_t i= 0; i < nb; i++)
+  for (Int_t i= 0; i < nb; i++)
     v(i)= vd[i];
   return v;
 }
@@ -179,8 +179,8 @@ TMatrixD&
 RooUnfoldBayes::AD2M (const Array2D& ad, TMatrixD& m)
 {
   Int_t nx= m.GetNrows(), ny= m.GetNcols();
-  for (size_t i= 0; i < nx; i++)
-    for (size_t j= 0; j < ny; j++)
+  for (Int_t i= 0; i < nx; i++)
+    for (Int_t j= 0; j < ny; j++)
       m(i,j)= ad.Get(j,i);
   return m;
 }

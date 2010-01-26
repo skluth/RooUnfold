@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.cxx,v 1.5 2010-01-19 15:33:47 adye Exp $
+//      $Id: RooUnfoldBinByBin.cxx,v 1.6 2010-01-26 00:53:17 adye Exp $
 //
 // Description:
 //      Unfolding bin-by-bin. Just an interface to RooUnfoldBayesImpl.
@@ -31,17 +31,7 @@ RooUnfoldBinByBin::RooUnfoldBinByBin (const RooUnfoldBinByBin& rhs)
 
 RooUnfoldBinByBin::RooUnfoldBinByBin (const RooUnfoldResponse* res, const TH1* meas, Bool_t smoothit,
                                       const char* name, const char* title)
-  : RooUnfoldBayes(name, title)
-{
-  Setup (res, meas, smoothit);
-}
-
-RooUnfoldBinByBin&
-RooUnfoldBinByBin::Setup (const RooUnfoldResponse* res, const TH1* meas, Bool_t smoothit)
-{
-  RooUnfoldBayes::Setup (res, meas, 0, smoothit);
-  return *this;
-}
+  : RooUnfoldBayes(res, meas, 1, smoothit, name, title) {}
 
 // Override RooUnfoldBayes routines.
 Int_t RooUnfoldBinByBin::unfold (vector<Double_t>& causes) { return _bayes->unfoldBinByBin (causes, _smoothit); }

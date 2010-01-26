@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.h,v 1.4 2010-01-19 15:33:47 adye Exp $
+//      $Id: RooUnfoldSvd.h,v 1.5 2010-01-26 00:53:17 adye Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -35,15 +35,19 @@ public:
   RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm= 1, Int_t ntoys= 1000,
                 const char* name= 0, const char* title= 0);
 
-  // Set up an existing object
-  virtual RooUnfoldSvd& Clear ();
-  virtual RooUnfoldSvd& Setup (const RooUnfoldSvd& rhs);
-  virtual RooUnfoldSvd& Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm= 1, Int_t ntoys= 1000);
+  void SetKterm (Int_t kterm) { _kterm= kterm; }
+  void SetNtoys (Int_t ntoys) { _ntoys= ntoys; }
+
+  virtual void Reset();
 
 protected:
 
-  virtual RooUnfoldSvd& Setup();
-  virtual RooUnfoldSvd& Setup (Int_t kterm, Int_t ntoys);
+  void Init();
+  void Destroy();
+  virtual void Unfold();
+  virtual void GetCov();
+  void Assign   (const RooUnfoldSvd& rhs); // implementation of assignment operator
+  void CopyData (const RooUnfoldSvd& rhs);
 
   // instance variables
   TUnfHisto* _svd;
@@ -59,9 +63,9 @@ public:
 
 // Inline method definitions
 
-inline RooUnfoldSvd::RooUnfoldSvd()                                           : RooUnfold()           {Setup();}
-inline RooUnfoldSvd::RooUnfoldSvd (const char* name, const char* title)       : RooUnfold(name,title) {Setup();}
-inline RooUnfoldSvd::RooUnfoldSvd (const TString& name, const TString& title) : RooUnfold(name,title) {Setup();}
+inline RooUnfoldSvd::RooUnfoldSvd()                                           : RooUnfold()           {Init();}
+inline RooUnfoldSvd::RooUnfoldSvd (const char* name, const char* title)       : RooUnfold(name,title) {Init();}
+inline RooUnfoldSvd::RooUnfoldSvd (const TString& name, const TString& title) : RooUnfold(name,title) {Init();}
 inline RooUnfoldSvd& RooUnfoldSvd::operator= (const RooUnfoldSvd& rhs) {Assign(rhs); return *this;}
 
 #endif

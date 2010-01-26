@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.h,v 1.5 2010-01-19 15:33:47 adye Exp $
+//      $Id: RooUnfoldBinByBin.h,v 1.6 2010-01-26 00:53:17 adye Exp $
 //
 // Description:
 //      Unfolding bin-by-bin. Just an interface to RooUnfoldBayesImpl.
@@ -32,9 +32,6 @@ public:
   // Special constructors
   RooUnfoldBinByBin (const RooUnfoldResponse* res, const TH1* meas, Bool_t smoothit= false,
                      const char* name= 0, const char* title= 0);
-
-  // Set up an existing object
-  virtual RooUnfoldBinByBin& Setup (const RooUnfoldResponse* res, const TH1* meas, Bool_t smoothit= false);
 
 protected:
 

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.9 2010-01-21 01:23:59 adye Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.10 2010-01-26 00:53:17 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -71,13 +71,13 @@ RooUnfoldResponse&
 RooUnfoldResponse::operator= (const RooUnfoldResponse& rhs)
 {
   if (this == &rhs) return *this;
-  Clear();
+  Reset();
   SetNameTitle (rhs.GetName(), rhs.GetTitle());
   return Setup (rhs);
 }
 
 RooUnfoldResponse&
-RooUnfoldResponse::Clear()
+RooUnfoldResponse::Reset()
 {
   ClearCache();
   delete _mes;
@@ -107,7 +107,7 @@ RooUnfoldResponse::Setup (const RooUnfoldResponse& rhs)
 RooUnfoldResponse&
 RooUnfoldResponse::Setup (Int_t nm, Double_t mlo, Double_t mhi, Int_t nt, Double_t tlo, Double_t thi)
 {
-  Clear();
+  Reset();
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
   _mes= new TH1D ("measured", "Measured", nm, mlo, mhi);
@@ -131,7 +131,7 @@ RooUnfoldResponse::ReplaceAxis (TObject* hist, TAxis* dest, const TAxis* source)
 RooUnfoldResponse&
 RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
 {
-  Clear();
+  Reset();
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
   _mes= (TH1*) measured ->Clone();
@@ -153,7 +153,7 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
 RooUnfoldResponse&
 RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2D* response)
 {
-  Clear();
+  Reset();
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
   _mes= (TH1*)  measured->Clone();
@@ -250,7 +250,7 @@ RooUnfoldResponse::FindBin(const TH1* h, Double_t x, Double_t y, Double_t z)
 }
 
 Int_t
-RooUnfoldResponse::GetBinDim (const TH1* h, size_t i)
+RooUnfoldResponse::GetBinDim (const TH1* h, Int_t i)
 {
   Int_t nx= h->GetNbinsX();
   if (h->GetDimension() == 2) {
@@ -297,7 +297,7 @@ RooUnfoldResponse::H2H1D(const TH1* h, Int_t nb)
 {
   if (h->GetDimension() == 1) return (TH1D*) h->Clone();
   TH1D* h1d= new TH1D(h->GetName(), h->GetTitle(), nb, 0.0, 1.0);
-  for (size_t i= 0; i < nb; i++) {
+  for (Int_t i= 0; i < nb; i++) {
     Int_t j= GetBin (h, i);  // don't bother with under/overflow bins
     h1d->SetBinContent (i+1, h->GetBinContent (j));
     h1d->SetBinError   (i+1, h->GetBinError   (j));
@@ -310,7 +310,7 @@ RooUnfoldResponse::H2V  (const TH1* h, Int_t nb)
 {
   TVectorD* v= new TVectorD (nb);
   if (!h) return v;
-  for (size_t i= 0; i < nb; i++) {
+  for (Int_t i= 0; i < nb; i++) {
     (*v)(i)= h->GetBinContent (i+1);
   }
   return v;
@@ -319,7 +319,7 @@ RooUnfoldResponse::H2V  (const TH1* h, Int_t nb)
 void
 RooUnfoldResponse::V2H (const TVectorD& v, TH1* h, Int_t nb)
 {
-  for (size_t i= 0; i < nb; i++) {
+  for (Int_t i= 0; i < nb; i++) {
     h->SetBinContent (i+1, v(i));
   }
 }
@@ -329,7 +329,7 @@ RooUnfoldResponse::H2VE (const TH1* h, Int_t nb)
 {
   TVectorD* v= new TVectorD (nb);
   if (!h) return v;
-  for (size_t i= 0; i < nb; i++) {
+  for (Int_t i= 0; i < nb; i++) {
     (*v)(i)= h->GetBinError (i+1);
   }
   return v;
@@ -340,14 +340,14 @@ RooUnfoldResponse::H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm)
 {
   TMatrixD* m= new TMatrixD (nx, ny);
   if (!h) return m;
-  for (size_t j= 0; j < ny; j++) {
+  for (Int_t j= 0; j < ny; j++) {
     Double_t nTrue= norm ? norm->GetBinContent (j+1) : 1.0;
     if (nTrue == 0.0) {
-      for (size_t i= 0; i < nx; i++) {
+      for (Int_t i= 0; i < nx; i++) {
         (*m)(i,j)= 0.0;
       }
     } else {
-      for (size_t i= 0; i < nx; i++) {
+      for (Int_t i= 0; i < nx; i++) {
         (*m)(i,j)= h->GetBinContent(i+1,j+1) / nTrue;
       }
     }
@@ -360,14 +360,14 @@ RooUnfoldResponse::H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm)
 {
   TMatrixD* m= new TMatrixD (nx, ny);
   if (!h) return m;
-  for (size_t j= 0; j < ny; j++) {
+  for (Int_t j= 0; j < ny; j++) {
     Double_t nTrue= norm ? norm->GetBinContent (j+1) : 1.0;
     if (nTrue == 0.0) {
-      for (size_t i= 0; i < nx; i++) {
+      for (Int_t i= 0; i < nx; i++) {
         (*m)(i,j)= 0.0;
       }
     } else {
-      for (size_t i= 0; i < nx; i++) {
+      for (Int_t i= 0; i < nx; i++) {
         // Assume Poisson nTrue, Multinomial P(mes|tru)
         (*m)(i,j)= h->GetBinError(i+1,j+1) / nTrue;
       }

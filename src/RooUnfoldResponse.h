@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.8 2010-01-21 01:23:59 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.9 2010-01-26 00:53:17 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -45,7 +45,7 @@ public:
 
   // Set up an existing object
 
-  virtual RooUnfoldResponse& Clear ();  // clear an existing object
+  virtual RooUnfoldResponse& Reset ();  // clear an existing object
   virtual RooUnfoldResponse& Setup (const RooUnfoldResponse& rhs);  // set up based on another instance
   virtual RooUnfoldResponse& Setup (Int_t nb, Double_t xlo, Double_t xhi);  // set up simple 1D case with same binning, measured vs truth
   virtual RooUnfoldResponse& Setup (Int_t nm, Double_t mlo, Double_t mhi, Int_t nt, Double_t tlo, Double_t thi);  // set up simple 1D case
@@ -95,7 +95,7 @@ public:
   static TMatrixD* H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm= 0);
   static TMatrixD* H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm= 0);
   static void      V2H  (const TVectorD& v, TH1* h, Int_t nb);
-  static Int_t   GetBin (const TH1*  h, size_t i);  // vector index (0..nx*ny-1) -> multi-dimensional histogram global bin number (0..(nx+2)*(ny+2)-1) skipping under/overflow bins
+  static Int_t   GetBin (const TH1*  h, Int_t i);  // vector index (0..nx*ny-1) -> multi-dimensional histogram global bin number (0..(nx+2)*(ny+2)-1) skipping under/overflow bins
 
   TH1* ApplyToTruth (const TH1* truth= 0, const char* name= "AppliedResponse") const; // If argument is 0, applies itself to its own truth
 
@@ -109,7 +109,7 @@ private:
 
   static Int_t FindBin   (const TH1* h, Double_t x, Double_t y);
   static Int_t FindBin   (const TH1* h, Double_t x, Double_t y, Double_t z);
-  static Int_t GetBinDim (const TH1* h, size_t i);
+  static Int_t GetBinDim (const TH1* h, Int_t i);
   static void ReplaceAxis(TObject* hist, TAxis* axis, const TAxis* source);
 
   // instance variables
@@ -137,7 +137,7 @@ public:
 inline RooUnfoldResponse::RooUnfoldResponse()                                           : TNamed()           {Setup();}
 inline RooUnfoldResponse::RooUnfoldResponse (const char*    name, const char*    title) : TNamed(name,title) {Setup();}
 inline RooUnfoldResponse::RooUnfoldResponse (const TString& name, const TString& title) : TNamed(name,title) {Setup();}
-inline RooUnfoldResponse::~RooUnfoldResponse()                                                               {Clear();}
+inline RooUnfoldResponse::~RooUnfoldResponse()                                                               {Reset();}
 
 inline RooUnfoldResponse& RooUnfoldResponse::Setup (Int_t nb, Double_t xlo, Double_t xhi) { return Setup (nb, xlo, xhi, nb, xlo, xhi); }
 
@@ -164,7 +164,7 @@ inline const TMatrixD& RooUnfoldResponse::Mresponse()         const { if (!_mRes
 inline const TMatrixD& RooUnfoldResponse::Eresponse()         const { if (!_eRes) _cached= (_eRes= H2ME (_res, _nm, _nt, _tru)); return *_eRes; }
 
 inline Double_t RooUnfoldResponse::operator() (Int_t r, Int_t t) const { return Mresponse()(r,t); }
-inline Int_t    RooUnfoldResponse::GetBin (const TH1* h, size_t i) { return (h->GetDimension()<2) ? i+1 : GetBinDim(h,i); }
+inline Int_t    RooUnfoldResponse::GetBin (const TH1* h, Int_t i) { return (h->GetDimension()<2) ? i+1 : GetBinDim(h,i); }
 
 inline Int_t RooUnfoldResponse::Miss (Double_t xt)                          { return                                Miss1D(xt);      }
 inline Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t w)              { return _mdim==2 ? Miss2D(xt,w) :      Miss1D(xt,w);    }

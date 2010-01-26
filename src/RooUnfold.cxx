@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.10 2010-01-22 15:46:07 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.11 2010-01-26 00:53:17 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -38,14 +38,14 @@ ClassImp (RooUnfold);
 RooUnfold::RooUnfold (const RooUnfold& rhs)
   : TNamed (rhs.GetName(), rhs.GetTitle())
 {
-  Setup ();
-  Setup (rhs);
+  Init();
+  CopyData (rhs);
 }
 
 RooUnfold::RooUnfold (const RooUnfoldResponse* res, const TH1* meas, const char* name, const char* title)
   : TNamed (name, title)
 {
-  Setup ();
+  Init();
   Setup (res, meas);
 }
 
@@ -53,38 +53,37 @@ void
 RooUnfold::Assign (const RooUnfold& rhs)
 {
   if (this == &rhs) return;
-  Clear();
+  Reset();
   SetNameTitle (rhs.GetName(), rhs.GetTitle());
-  Setup (rhs);
+  CopyData (rhs);
 }
 
-RooUnfold&
-RooUnfold::Setup (const RooUnfold& rhs)
+void
+RooUnfold::CopyData (const RooUnfold& rhs)
 {
-  return Setup (rhs.response(), rhs.Hmeasured());
+  Setup (rhs.response(), rhs.Hmeasured());
 }
 
-RooUnfold&
-RooUnfold::Clear()
+void
+RooUnfold::Reset()
 {
-  return Setup();
+  Init();
 }
 
-RooUnfold&
-RooUnfold::Setup()
+void
+RooUnfold::Init()
 {
   _res= 0;
   _meas= 0;
   _nm= _nt= 0;
   _verbose= 1;
-  _haveCov= false;
-  return *this;
+  _unfolded= _haveCov= false;
 }
 
 RooUnfold&
 RooUnfold::Setup (const RooUnfoldResponse* res, const TH1* meas)
 {
-  Clear();
+  Reset();
   _res= res;
   _meas= meas;
   _nm= _res->GetNbinsMeasured();
@@ -93,8 +92,34 @@ RooUnfold::Setup (const RooUnfoldResponse* res, const TH1* meas)
   return *this;
 }
 
+// Dummy unfolding - just copies input
 void
-RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError) const
+RooUnfold::Unfold()
+{
+  cout << "********************** " << ClassName() << ": dummy unfolding - just copy input **********************" << endl;
+  _rec.ResizeTo (_nt);
+  Int_t nb= _nm < _nt ? _nm : _nt;
+  for (Int_t i= 0; i < nb; i++) {
+    _rec[i]= _meas->GetBinContent (i+1);
+  }
+  _unfolded= true;
+}
+
+// Dummy covariance matrix - just uses input
+void
+RooUnfold::GetCov()
+{
+  _cov.ResizeTo (_nt, _nt);
+  Int_t nb= _nm < _nt ? _nm : _nt;
+  for (Int_t i= 0; i < nb; i++) {
+    Double_t err= _meas->GetBinError (i+1);
+    _cov(i,i)= err*err;
+  }
+  _haveCov= true;
+}
+
+void
+RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
 {
   const TH1* hMeas=      Hmeasured();
   const TH1* hReco=      Hreco (withError);
@@ -196,21 +221,18 @@ RooUnfold::SetNameTitleDefault()
 }
 
 TH1*
-RooUnfold::Hreco (Bool_t withError) const
+RooUnfold::Hreco (Bool_t withError)
 {
   TH1* reco= (TH1*) _res->Htruth()->Clone(GetName());
   reco->Reset();
   reco->SetTitle (GetTitle());
+  if (!_unfolded)             Unfold();
   if (withError && !_haveCov) GetCov();
-  for (size_t i= 0; i < _nt; i++) {
+  for (Int_t i= 0; i < _nt; i++) {
     Int_t j= RooUnfoldResponse::GetBin (reco, i);
     reco->SetBinContent (j,             _rec(i));
     if (withError)
       reco->SetBinError (j, sqrt (fabs (_cov(i,i))));
   }
   return reco;
-}
-
-void RooUnfold::GetCov() const {
-  _haveCov= true;
 }

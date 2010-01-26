@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.h,v 1.5 2010-01-19 15:33:47 adye Exp $
+//      $Id: RooUnfoldBayes.h,v 1.6 2010-01-26 00:53:17 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -32,17 +32,17 @@ public:
   RooUnfoldBayes (const char*    name, const char*    title); // named constructor
   RooUnfoldBayes (const TString& name, const TString& title); // named constructor
   RooUnfoldBayes (const RooUnfoldBayes& rhs); // copy constructor
+  virtual ~RooUnfoldBayes(); // destructor
   RooUnfoldBayes& operator= (const RooUnfoldBayes& rhs); // assignment operator
 
   // Special constructors
   RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, Int_t niter= 4, Bool_t smoothit= false,
                   const char* name= 0, const char* title= 0);
 
-  // Set up an existing object
-  virtual RooUnfoldBayes& Clear ();
-  virtual RooUnfoldBayes& Setup (const RooUnfoldBayes& rhs);
-  virtual RooUnfoldBayes& Setup (const RooUnfoldResponse* res, const TH1* meas, Int_t niter= 4, Bool_t smoothit= false);
+  virtual void SetIterations (Int_t niter= 4)         { _niter=    niter;    }
+  virtual void SetSmoothing  (Bool_t smoothit= false) { _smoothit= smoothit; }
 
+  virtual void Reset();
   virtual void Print (Option_t* option= "") const;
 
   static vector<Double_t>& H2VD (const TH1*  h, vector<Double_t>& v);
@@ -52,16 +52,21 @@ public:
 
 protected:
 
-  virtual RooUnfoldBayes& Setup();
-  virtual RooUnfoldBayes& Setup (Int_t niter, Bool_t smoothit);
+  void Init();
+  void Destroy();
+  virtual void Unfold();
   virtual Int_t unfold (vector<Double_t>& causes);
   virtual Int_t getCovariance() const;
-  virtual void GetCov() const;  // actually updates mutable _cov
+  virtual void GetCov();
+  void Assign   (const RooUnfoldBayes& rhs); // implementation of assignment operator
+  void CopyData (const RooUnfoldBayes& rhs);
 
   // instance variables
   RooUnfoldBayesImpl* _bayes;
   Int_t _niter;
   Int_t _smoothit;
+
+private:
 
 public:
 
@@ -70,9 +75,10 @@ public:
 
 // Inline method definitions
 
-inline RooUnfoldBayes::RooUnfoldBayes()                                           : RooUnfold()           {Setup();}
-inline RooUnfoldBayes::RooUnfoldBayes (const char* name, const char* title)       : RooUnfold(name,title) {Setup();}
-inline RooUnfoldBayes::RooUnfoldBayes (const TString& name, const TString& title) : RooUnfold(name,title) {Setup();}
+inline RooUnfoldBayes::RooUnfoldBayes()                                           : RooUnfold()           {Init();}
+inline RooUnfoldBayes::RooUnfoldBayes (const char* name, const char* title)       : RooUnfold(name,title) {Init();}
+inline RooUnfoldBayes::RooUnfoldBayes (const TString& name, const TString& title) : RooUnfold(name,title) {Init();}
+inline RooUnfoldBayes::~RooUnfoldBayes() {Destroy();}
 inline RooUnfoldBayes& RooUnfoldBayes::operator= (const RooUnfoldBayes& rhs) {Assign(rhs); return *this;}
 
 #endif

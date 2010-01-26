@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayesImpl.cxx,v 1.14 2010-01-19 23:30:59 adye Exp $
+//      $Id: RooUnfoldBayesImpl.cxx,v 1.15 2010-01-26 00:53:17 adye Exp $
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the
@@ -341,7 +341,7 @@ RooUnfoldBayesImpl::accumulate(const vector<Double_t>& xmeas)
 Int_t
 RooUnfoldBayesImpl::setupTrain(const vector<Double_t>& nCi, const vector<Double_t>& nEj, const Array2D& Nij)
 {
-  if (nCi.size() != _nc || nEj.size() != _ne || Nij.GetNrows() != _nc || Nij.GetNcols() != _ne) {
+  if ((Int_t)nCi.size() != _nc || (Int_t)nEj.size() != _ne || Nij.GetNrows() != _nc || Nij.GetNcols() != _ne) {
     cerr << "setupTrain: wrong vector size" << endl;
     return(0);
   }
@@ -353,7 +353,7 @@ RooUnfoldBayesImpl::setupTrain(const vector<Double_t>& nCi, const vector<Double_
 
 Int_t RooUnfoldBayesImpl::setupUnfold(const vector<Double_t>& nEstj)
 {
-  if (nEstj.size() != _ne) {
+  if ((Int_t)nEstj.size() != _ne) {
     cerr << "setupUnfold: wrong vector size" << endl;
     return(0);
   }

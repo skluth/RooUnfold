@@ -1,5 +1,14 @@
-History of RooUnfold     $Id: History,v 1.48 2010-01-25 15:35:53 adye Exp $
+History of RooUnfold     $Id: History,v 1.49 2010-01-26 00:53:13 adye Exp $
 ====================
+
+Tim Adye         25-Jan-2010 tja100125b
+  o Reorganise RooUnfold classes so as not to have hidden virtual methods
+    (Setup and Clear) and to perform unfolding on demand, rather than on
+    construction.
+  o Fix signed-unsigned comparison warnings.
+  RooUnfoldTest changes:
+  o rename Print to PrintParms to remove clash with TNamed::Print.
+  o method=0 now runs RooUnfold base: this just copies input.
 
 Tim Adye         25-Jan-2010 tja100125a
   RooUnfoldTest changes:

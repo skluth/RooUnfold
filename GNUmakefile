@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.15 2010-01-22 21:58:54 adye Exp $
+#      $Id: GNUmakefile,v 1.16 2010-01-26 00:53:13 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -46,7 +46,7 @@ ROOTLIBS      =   $(shell $(ROOTCONFIG) --libs)
 ROOTINCLUDES  = -I$(shell $(ROOTCONFIG) --incdir)
 CXXFLAGS      =   $(shell $(ROOTCONFIG) --cflags)
 CXX           = g++
-CXXFLAGS     += -Wall -Wno-sign-compare -fPIC
+CXXFLAGS     += -Wall -fPIC
 LD            = g++
 LDFLAGS       =
 SOFLAGS       = -shared
@@ -60,7 +60,6 @@ LDFLAGS      += -g
 endif
 else
 ROOTINCLUDES  = -I$(shell $(ROOTCONFIG) --incdir)
-CXXFLAGS     += -Wno-sign-compare
 endif
 ifeq ($(VERBOSE),1)
 _             =
@@ -72,7 +71,7 @@ endif
 
 CC            = $(CXX)
 ifeq ($(CC),g++)
-CCFLAGS       = $(filter-out -Woverloaded-virtual,$(CXXFLAGS)) -Wno-deprecated -Wno-parentheses -Wno-sign-compare
+CCFLAGS       = $(CXXFLAGS) -Woverloaded-virtual
 MFLAGS        = -MM -Wno-deprecated
 else
 CCFLAGS       = $(CXXFLAGS)

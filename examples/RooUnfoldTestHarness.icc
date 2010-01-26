@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.12 2010-01-22 15:46:04 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.13 2010-01-26 00:53:15 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -263,6 +263,8 @@ Int_t RooUnfoldTestHarness::Unfold ()
 {
   cout << "Create RooUnfold object for method " << method << endl;
   switch (method) {
+    case 0:  unfold= new RooUnfold         (response, hMeas);   // dummy unfolding
+             break;
     case 1:  unfold= new RooUnfoldBayes    (response, hMeas, regparm);
              break;
     case 2:  unfold= new RooUnfoldSvd      (response, hMeas, regparm, ntoys);
@@ -434,6 +436,7 @@ void RooUnfoldTestHarness::Reset()
   hResmat= 0;
   error= ipad= 0;
   dim= 1;
+  nbPDF= 500;
 }
 
 void RooUnfoldTestHarness::SetDefaults()
@@ -469,7 +472,7 @@ Int_t RooUnfoldTestHarness::CheckParms()
     }
   }
 
-  Print (cout);
+  PrintParms (cout);
 
   if (xlo >= xhi) {cout << "Error: xlo ("    << xlo    << ") >= xhi(" << xhi << ")" << endl; error = 2;}
   if (ntest<=0)   {cout << "Error: ntest ("  << ntest  << ") <= 0"                  << endl; error = 2;}
@@ -481,7 +484,7 @@ Int_t RooUnfoldTestHarness::CheckParms()
   return error;
 }
 
-void RooUnfoldTestHarness::Print (std::ostream& o) const
+void RooUnfoldTestHarness::PrintParms (std::ostream& o) const
 {
   ArgVars args;
   const_cast<RooUnfoldTestHarness*>(this)->Parms (args);
