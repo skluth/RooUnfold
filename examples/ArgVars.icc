@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: ArgVars.icc,v 1.5 2010-01-25 15:35:55 adye Exp $
+//      $Id: ArgVars.icc,v 1.6 2010-03-17 17:16:08 adye Exp $
 //
 // Description:
 //      Parse argument list for parameter settings
@@ -27,14 +27,14 @@ ArgVars::~ArgVars()
 {
   TIter next(&lst);
   TObject* arg;
-  while (arg= next()) delete arg;
+  while ((arg= next())) delete arg;
 }
 
 ArgVars& ArgVars::Add(const ArgVars& args)
 {
   TIter next(&args.lst);
   const TObject* arg;
-  while (arg= next()) lst.Add (arg->Clone());
+  while ((arg= next())) lst.Add (arg->Clone());
   return *this;
 }
 
@@ -45,7 +45,7 @@ ArgVars& ArgVars::Add (ArgVar* arg)
   else           pvar= arg->fvar;
   TIter next(&lst);
   const ArgVar* argx;
-  while (argx= dynamic_cast<const ArgVar*>(next())) {
+  while ((argx= dynamic_cast<const ArgVar*>(next()))) {
     if (strcmp (argx->name, arg->name) == 0) {
       std::cerr << "ArgVars::Add("<<arg->name<<") duplicate name in argument list" << std::endl;
       break;
@@ -64,7 +64,7 @@ void ArgVars::Print (std::ostream& o, const char* sep) const
   Int_t kilroy= 0;
   TIter next(&lst);
   const ArgVar* arg;
-  while (arg= dynamic_cast<const ArgVar*>(next())) {
+  while ((arg= dynamic_cast<const ArgVar*>(next()))) {
     if (kilroy++) o << sep;
     o << arg->name << '=';
     if (arg->ivar) o << *(arg->ivar);
@@ -83,7 +83,7 @@ void ArgVars::ArgHelp (std::ostream& o) const
 {
   TIter next(&lst);
   const ArgVar* arg;
-  while (arg= dynamic_cast<const ArgVar*>(next())) {
+  while ((arg= dynamic_cast<const ArgVar*>(next()))) {
     std::ios_base::fmtflags f= o.flags();
     o.width(10); o.setf (std::ios_base::left, std::ios_base::adjustfield);
     o << arg->name << ' ';
@@ -107,7 +107,7 @@ ArgVar* ArgVars::Find (const char* name) const
 {
   TIter next(&lst);
   ArgVar* arg;
-  while (arg= dynamic_cast<ArgVar*>(next())) {
+  while ((arg= dynamic_cast<ArgVar*>(next()))) {
     if (strcmp (name, arg->name) == 0) return arg;
   }
   return 0;
@@ -137,7 +137,7 @@ void ArgVars::SetDefaults() const
 {
   TIter next(&lst);
   const ArgVar* arg;
-  while (arg= dynamic_cast<const ArgVar*>(next())) {
+  while ((arg= dynamic_cast<const ArgVar*>(next()))) {
     if (!arg->setdef) continue;
     if (arg->ivar) *(arg->ivar)= arg->idef;
     else           *(arg->fvar)= arg->fdef;
@@ -178,7 +178,7 @@ Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split) const
         }
         d++;
         TIter next(&lst);
-        while (arg= dynamic_cast<ArgVar*>(next())) {
+        while ((arg= dynamic_cast<ArgVar*>(next()))) {
           if (strncmp (p, arg->name, nv) == 0) {
             char* nxt= 0;
             if (arg->ivar) *(arg->ivar)= strtol (d, &nxt, 10);

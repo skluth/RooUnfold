@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.49 2010-01-26 00:53:13 adye Exp $
+History of RooUnfold     $Id: History,v 1.50 2010-03-17 17:16:06 adye Exp $
 ====================
+
+Tim Adye         17-Mar-2010 tja100317a
+  o Remove gcc 4.1.2 compiler warning in examples/ArgVars.icc.
 
 Tim Adye         25-Jan-2010 tja100125b
   o Reorganise RooUnfold classes so as not to have hidden virtual methods
