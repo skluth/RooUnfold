@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayesImpl.cxx,v 1.15 2010-01-26 00:53:17 adye Exp $
+//      $Id: RooUnfoldBayesImpl.cxx,v 1.16 2010-03-21 02:22:13 adye Exp $
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the
@@ -882,6 +882,7 @@ RooUnfoldBayesImpl::getCovariance(Bool_t doUnfoldSystematic)
         Vc1->Set(k, l, Vc1->Get(l,k));
       } // l...
     } // k...
+    delete inv_npec;
   } // if (doUnfodsystematic
 
   // to get complete covariance add together
@@ -907,6 +908,7 @@ RooUnfoldBayesImpl::getCovariance(Bool_t doUnfoldSystematic)
       }
     }
   }
+  delete Vc0;
 
   _nCausesError = getError();
   return(1);

@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.50 2010-03-17 17:16:06 adye Exp $
+History of RooUnfold     $Id: History,v 1.51 2010-03-21 02:22:10 adye Exp $
 ====================
+
+Tim Adye         21-Mar-2010 tja100321a
+  o Fix one-time memory leak in RooUnfoldBayesImpl.cxx found by cppcheck.
 
 Tim Adye         17-Mar-2010 tja100317a
   o Remove gcc 4.1.2 compiler warning in examples/ArgVars.icc.
