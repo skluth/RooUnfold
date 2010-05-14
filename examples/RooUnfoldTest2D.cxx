@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTest2D.cxx,v 1.17 2010-01-22 15:46:04 adye Exp $
+//      $Id: RooUnfoldTest2D.cxx,v 1.18 2010-05-14 13:17:12 adye Exp $
 //
 // Description:
 //      2D test of RooUnfold package using toy MC generated according to PDFs
@@ -14,8 +14,6 @@
 
 #include "RooUnfoldTestHarness2D.h"
 
-#ifdef __CINT__
-
 RooUnfoldTestHarness2D* test2d= 0;
 bool RooUnfoldLoaded= false;
 
@@ -25,7 +23,9 @@ bool RooUnfoldLoaded= false;
 
 void RooUnfoldTest2D (const char* args= "")
 {
+#ifdef __CINT__
   if (!(RooUnfoldLoaded++)) gSystem->Load("libRooUnfold");
+#endif
 // If run interactively, remove canvas and all histograms that might have been
 // created with a previous invocation.
   delete test2d; test2d= 0;
@@ -35,15 +35,15 @@ void RooUnfoldTest2D (const char* args= "")
   test2d->Run();
 }
 
-#else   // __CINT__
+#ifndef __CINT__
 
 //==============================================================================
 // Main program when run stand-alone
 //==============================================================================
 
 int main (int argc, char** argv) {
-  RooUnfoldTestHarness2D test2d ("RooUnfoldTest2D", argc, argv);
-  return test2d.Run();
+  RooUnfoldTestHarness2D maintest2d ("RooUnfoldTest2D", argc, argv);
+  return maintest2d.Run();
 }
 
 #endif

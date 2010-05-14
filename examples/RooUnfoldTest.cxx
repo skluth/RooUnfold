@@ -1,10 +1,10 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.17 2010-01-22 15:46:04 adye Exp $
+//      $Id: RooUnfoldTest.cxx,v 1.18 2010-05-14 13:17:12 adye Exp $
 //
 // Description:
-//      Tests RooUnfold package using toy MC generated according to PDFs defined
-//      in RooUnfoldTestPdf.icc or RooUnfoldTestPdfRooFit.icc.
+//      Tests RooUnfold package using toy MC generated according to PDFs
+//      defined in RooUnfoldTestPdf.icc or RooUnfoldTestPdfRooFit.icc.
 //      This is the main program. The actual tests are performed using the
 //      RooUnfoldTestHarness class.
 //
@@ -13,8 +13,6 @@
 //==============================================================================
 
 #include "RooUnfoldTestHarness.h"
-
-#ifdef __CINT__
 
 RooUnfoldTestHarness* test= 0;
 bool RooUnfoldLoaded= false;
@@ -25,7 +23,9 @@ bool RooUnfoldLoaded= false;
 
 void RooUnfoldTest (const char* args= "")
 {
+#ifdef __CINT__
   if (!(RooUnfoldLoaded++)) gSystem->Load("libRooUnfold");
+#endif
 // If run interactively, remove canvas and all histograms that might have been
 // created with a previous invocation.
   delete test; test= 0;
@@ -35,15 +35,15 @@ void RooUnfoldTest (const char* args= "")
   test->Run();
 }
 
-#else   // __CINT__
+#ifndef __CINT__
 
 //==============================================================================
 // Main program when run stand-alone
 //==============================================================================
 
 int main (int argc, char** argv) {
-  RooUnfoldTestHarness test ("RooUnfoldTest", argc, argv);
-  return test.Run();
+  RooUnfoldTestHarness maintest ("RooUnfoldTest", argc, argv);
+  return maintest.Run();
 }
 
 #endif

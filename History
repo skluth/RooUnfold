@@ -1,5 +1,9 @@
-History of RooUnfold     $Id: History,v 1.51 2010-03-21 02:22:10 adye Exp $
+History of RooUnfold     $Id: History,v 1.52 2010-05-14 13:17:08 adye Exp $
 ====================
+
+Tim Adye         14-May-2010 tja100514a
+  o RooUnfoldTest*.cxx now also works with ACLiC (.L RooUnfoldTest.cxx+).
+    Requires explicit gSystem->Load("libRooUnfold") and .include src .
 
 Tim Adye         21-Mar-2010 tja100321a
   o Fix one-time memory leak in RooUnfoldBayesImpl.cxx found by cppcheck.
