@@ -1,6 +1,7 @@
-History of RooUnfold     $Id: History,v 1.52 2010-05-14 13:17:08 adye Exp $
+History of RooUnfold     $Id: History,v 1.53 2010-05-19 16:51:14 adye Exp $
 ====================
 
+Tim Adye         19-May-2010 V00-02-01
 Tim Adye         14-May-2010 tja100514a
   o RooUnfoldTest*.cxx now also works with ACLiC (.L RooUnfoldTest.cxx+).
     Requires explicit gSystem->Load("libRooUnfold") and .include src .

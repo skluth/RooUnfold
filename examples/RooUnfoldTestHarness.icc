@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.13 2010-01-26 00:53:15 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.14 2010-05-19 16:51:14 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -65,7 +65,7 @@ using std::endl;
 
 void RooUnfoldTestHarness::Parms (ArgVars& args)
 {
-  args.Add ("method",  &method,       1, "RooUnfold method: 1=Bayes, 2=SVD, 3=bin-by-bin");
+  args.Add ("method",  &method,       1, "RooUnfold method: 0=none, 1=Bayes, 2=SVD, 3=bin-by-bin");
   args.Add ("stage",   &stage,        0, "1=train (writes RooUnfoldTest.root), 2=test (reads), 0=both (default)");
   args.Add ("ftrainx", &ftrainx,      0, "training X PDF: 0=flat, 1=top-hat, 2=Gaussian, 3=double exp, 4=B-W, 5=double B-W, 6=exp, 7=Gaussian+exp");
   args.Add ("ftestx",  &ftestx,       5, "test X PDF");
