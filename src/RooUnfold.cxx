@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.11 2010-01-26 00:53:17 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.12 2010-05-20 22:50:59 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -77,7 +77,7 @@ RooUnfold::Init()
   _meas= 0;
   _nm= _nt= 0;
   _verbose= 1;
-  _unfolded= _haveCov= false;
+  _unfolded= _haveCov= _fail= false;
 }
 
 RooUnfold&
@@ -121,8 +121,9 @@ RooUnfold::GetCov()
 void
 RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
 {
-  const TH1* hMeas=      Hmeasured();
   const TH1* hReco=      Hreco (withError);
+  if (_fail) return;
+  const TH1* hMeas=      Hmeasured();
   const TH1* hTrainTrue= response()->Htruth();
   const TH1* hTrain=     response()->Hmeasured();
 
@@ -227,7 +228,9 @@ RooUnfold::Hreco (Bool_t withError)
   reco->Reset();
   reco->SetTitle (GetTitle());
   if (!_unfolded)             Unfold();
+  if (_fail)                  return 0;
   if (withError && !_haveCov) GetCov();
+  if (!_haveCov) withError= false;
   for (Int_t i= 0; i < _nt; i++) {
     Int_t j= RooUnfoldResponse::GetBin (reco, i);
     reco->SetBinContent (j,             _rec(i));

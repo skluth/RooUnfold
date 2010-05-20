@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldExample.cxx,v 1.4 2010-01-21 01:23:57 adye Exp $
+//      $Id: RooUnfoldExample.cxx,v 1.5 2010-05-20 22:50:57 adye Exp $
 //
 // Description:
 //      Simple example usage of the RooUnfold package using toy MC.
@@ -85,6 +85,8 @@ void RooUnfoldExample()
   unfold.PrintTable (cout, hTrue);
   hReco->Draw();
   hMeas->Draw("SAME");
+  hTrue->SetLineColor(8);
+  hTrue->Draw("SAME");
 }
 
 #ifndef __CINT__

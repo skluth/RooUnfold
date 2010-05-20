@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.14 2010-05-19 16:51:14 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.15 2010-05-20 22:50:57 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -90,6 +90,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("xbias",   &xbias,     -1.0, "shift in X");
   args.Add ("xsmear",  &xsmear,     0.5, "X smearing width in bins");
   args.Add ("dosmear", &dosmear,     -1, "do shift, smear, and rotation (disabled by default for bin-by-bin method)", "1");
+  args.Add ("verbose", &verbose,      1, "debug level: 0=warnings, 1=verbose, 2=debug, 3=detailed");
 }
 
 //==============================================================================
@@ -150,7 +151,7 @@ Int_t RooUnfoldTestHarness::RunTests()
     title.Form ("Test %dD", dim);
     response= new RooUnfoldResponse (name, title);
     if (!response) return 3;
-    cout << "==================================== TRAIN ====================================" << endl;
+    if (verbose>=0) cout << "==================================== TRAIN ====================================" << endl;
     if (!Train()) return 4;
     TString file (GetName());
     file += ".root";
@@ -171,9 +172,9 @@ Int_t RooUnfoldTestHarness::RunTests()
         return 5;
       }
     }
-    cout << "==================================== TEST =====================================" << endl;
+    if (verbose>=0) cout << "==================================== TEST =====================================" << endl;
     if (!Test())   return 6;
-    cout << "==================================== UNFOLD ===================================" << endl;
+    if (verbose>=0) cout << "==================================== UNFOLD ===================================" << endl;
     if (!Unfold()) {
       ShowTest();
       canvas->Update();
@@ -261,7 +262,7 @@ Int_t RooUnfoldTestHarness::Test()
 
 Int_t RooUnfoldTestHarness::Unfold ()
 {
-  cout << "Create RooUnfold object for method " << method << endl;
+  if (verbose>=0) cout << "Create RooUnfold object for method " << method << endl;
   switch (method) {
     case 0:  unfold= new RooUnfold         (response, hMeas);   // dummy unfolding
              break;
@@ -274,9 +275,11 @@ Int_t RooUnfoldTestHarness::Unfold ()
     default: cerr << "Unknown RooUnfold method " << method << endl;
              return 0;
   }
-  cout << "Created "; unfold->Print();
+  unfold->SetVerbose (verbose);
+  if (verbose>=0) {cout << "Created "; unfold->Print();}
   hReco= unfold->Hreco(doerror);
-  unfold->PrintTable (cout, hTrue, doerror);
+  if (!hReco) return 0;
+  if (verbose>=0) unfold->PrintTable (cout, hTrue, doerror);
 
   // Calculate pulls and residuals
   hRes=   dynamic_cast<TH1*>(hReco->Clone ("res"));   hRes  ->SetTitle ("Residuals");
@@ -351,7 +354,7 @@ TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char*
   TH1D* hPDF= new TH1D (name, title, nbPDF, xlo, xhi);
   hPDF->SetLineColor(kGreen);
   hPDF->SetLineWidth(2);
-  if (!RooUnfoldTestPdf (fpdf, nx, xlo, xhi, x, hPDF, mean, width, bkg)) return 0;
+  if (!RooUnfoldTestPdf (fpdf, nx, xlo, xhi, x, hPDF, mean, width, bkg, verbose)) return 0;
   hPDF->Scale (nbPDF/Double_t(nt));
   return hPDF;
 }
@@ -383,7 +386,7 @@ Double_t RooUnfoldTestHarness::Smear (Double_t x, Int_t nt, Double_t xlo, Double
   Double_t xsigma = (xhi-xlo) * smear / Double_t(nt);     // smear sigma
 
   Double_t delta= xsigma <= 0.0 ? bias : gRandom->Gaus(bias, xsigma);     // bias and smear
-  //cout << "SMEAR " << x << " " << xsmear << " " << << xsigma << endl;
+  if (verbose>=3) cout << "SMEAR " << x << " " << xsmear << " " << xsigma << endl;
   return x+delta;
 }
 
@@ -472,7 +475,7 @@ Int_t RooUnfoldTestHarness::CheckParms()
     }
   }
 
-  PrintParms (cout);
+  if (verbose>=0) PrintParms (cout);
 
   if (xlo >= xhi) {cout << "Error: xlo ("    << xlo    << ") >= xhi(" << xhi << ")" << endl; error = 2;}
   if (ntest<=0)   {cout << "Error: ntest ("  << ntest  << ") <= 0"                  << endl; error = 2;}

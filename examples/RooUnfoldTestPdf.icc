@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdf.icc,v 1.6 2010-01-21 20:05:14 adye Exp $
+//      $Id: RooUnfoldTestPdf.icc,v 1.7 2010-05-20 22:50:57 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented without RooFit.
@@ -44,7 +44,7 @@ using std::endl;
 #endif
 
 Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVectorD& x,
-                        TH1* h= 0, Double_t mean= 0.0, Double_t width= 2.5, Double_t bkg= 0.0)
+                        TH1* h= 0, Double_t mean= 0.0, Double_t width= 2.5, Double_t bkg= 0.0, Int_t verbose= 0)
 {
   static const Double_t pi= atan2 (0.0, -1.0);
   if (bkg<0.0) bkg= 0.0;
@@ -180,7 +180,7 @@ Int_t RooUnfoldTestPdf (Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi, TVecto
       }
       if (h) {
         const Double_t fnorm= norm / (tau * (exp(-xlo/tau) - exp(-xhi/tau)));
-        std::cout << "tau=" << tau << ", fnorm/norm=" << fnorm/norm << endl;
+        if (verbose>=1) std::cout << "tau=" << tau << ", fnorm/norm=" << fnorm/norm << endl;
         for (Int_t i= 1; i<=nb; i++) {
           Double_t z= h->GetBinCenter(i);
           h->SetBinContent (i, fnorm * exp(-z/tau) + bnorm);

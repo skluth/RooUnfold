@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.h,v 1.6 2010-01-26 00:53:17 adye Exp $
+//      $Id: RooUnfoldBayes.h,v 1.7 2010-05-20 22:50:59 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -41,9 +41,12 @@ public:
 
   virtual void SetIterations (Int_t niter= 4)         { _niter=    niter;    }
   virtual void SetSmoothing  (Bool_t smoothit= false) { _smoothit= smoothit; }
+  Int_t GetIterations() const { return _niter;    }
+  Int_t GetSmoothing()  const { return _smoothit; }
 
   virtual void Reset();
   virtual void Print (Option_t* option= "") const;
+  virtual TObject* Impl();
 
   static vector<Double_t>& H2VD (const TH1*  h, vector<Double_t>& v);
   static Array2D&          H2AD (const TH2D* h, Array2D& m, const TH1* norm= 0);

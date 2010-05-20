@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.9 2010-01-26 00:53:17 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.10 2010-05-20 22:50:59 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -65,29 +65,29 @@ public:
 
   // Accessors
 
-  Int_t        GetDimensionMeasured() const;
-  Int_t        GetDimensionTruth()    const;
-  Int_t        GetNbinsMeasured()     const;
-  Int_t        GetNbinsTruth()        const;
+  Int_t        GetDimensionMeasured() const;   // Dimensionality of the measured distribution
+  Int_t        GetDimensionTruth()    const;   // Dimensionality of the truth distribution
+  Int_t        GetNbinsMeasured()     const;   // Total number of bins in the 
+  Int_t        GetNbinsTruth()        const;   // Total number of bins in the truth distribution
 
-  const TH1*   Hmeasured()            const;
-  TH1*         Hmeasured();
-  const TH1*   Htruth()               const;
-  TH1*         Htruth();
-  const TH2D*  Hresponse()            const;
-  TH2D*        Hresponse();
+  const TH1*   Hmeasured()            const;   // Measured distribution, used for normalisation
+  TH1*         Hmeasured();                    // Measured distribution, used for normalisation
+  const TH1*   Htruth()               const;   // Truth distribution, used for normalisation
+  TH1*         Htruth();                       // Truth distribution, used for normalisation
+  const TH2D*  Hresponse()            const;   // Response matrix as a 2D-histogram: (x,y)=(measured,truth)
+  TH2D*        Hresponse();                    // Response matrix as a 2D-histogram: (x,y)=(measured,truth)
 
-  TH1D*        Hmeasured1D()          const;
-  TH1D*        Htruth1D()             const;
+  TH1D*        Hmeasured1D()          const;   // Measured distribution, packed into a 1D histogram
+  TH1D*        Htruth1D()             const;   // Truth distribution, packed into a 1D histogram
 
-  const TVectorD& Vmeasured()         const;
-  const TVectorD& Emeasured()         const;
-  const TVectorD& Vtruth()            const;
-  const TVectorD& Etruth()            const;
-  const TMatrixD& Mresponse()         const;
-  const TMatrixD& Eresponse()         const;
+  const TVectorD& Vmeasured()         const;   // Measured distribution as a TVectorD
+  const TVectorD& Emeasured()         const;   // Measured distribution errors as a TVectorD
+  const TVectorD& Vtruth()            const;   // Truth distribution as a TVectorD
+  const TVectorD& Etruth()            const;   // Truth distribution errors as a TVectorD
+  const TMatrixD& Mresponse()         const;   // Response matrix as a TMatrixD: (row,column)=(measured,truth)
+  const TMatrixD& Eresponse()         const;   // Response matrix errors as a TMatrixD: (row,column)=(measured,truth)
 
-  Double_t operator() (Int_t r, Int_t t) const;
+  Double_t operator() (Int_t r, Int_t t) const;// Response matrix element (measured,truth)
 
   static TH1D*     H2H1D(const TH1*  h, Int_t nb);
   static TVectorD* H2V  (const TH1*  h, Int_t nb);

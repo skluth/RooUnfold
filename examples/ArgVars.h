@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: ArgVars.h,v 1.5 2010-01-25 15:35:55 adye Exp $
+//      $Id: ArgVars.h,v 1.6 2010-05-20 22:50:57 adye Exp $
 //
 // Description:
 //      Parse argument list for parameter settings
@@ -19,21 +19,21 @@
 #include "TList.h"
 #endif
 
-class ArgVar : public TObject {
+class ArgVar : public TNamed {
 public:
-  const char *name, *help, *defhelp;
+  const char *defhelp;
   Int_t      *ivar, idef;
   Double_t   *fvar, fdef;
   bool       setdef;
-  ArgVar (const char *n,    Int_t *v) : name(n), help(0), ivar(v), idef(0), fvar(0), fdef(0), setdef(false) {}
-  ArgVar (const char *n, Double_t *v) : name(n), help(0), ivar(0), idef(0), fvar(v), fdef(0), setdef(false) {}
+  ArgVar (const char *n,    Int_t *v) : TNamed (n,""), ivar(v), idef(0), fvar(0), fdef(0), setdef(false) {}
+  ArgVar (const char *n, Double_t *v) : TNamed (n,""), ivar(0), idef(0), fvar(v), fdef(0), setdef(false) {}
   ArgVar (const char *n,    Int_t *v, Int_t    d, const char* h=0, const char* dh=0)
-    : name(n), help(h), defhelp(dh), ivar(v), idef(d), fvar(0), fdef(0), setdef(true) {}
+    : TNamed(n,h), defhelp(dh), ivar(v), idef(d), fvar(0), fdef(0), setdef(true) {}
   ArgVar (const char *n, Double_t *v, Double_t d, const char* h=0, const char* dh=0)
-    : name(n), help(h), defhelp(dh), ivar(0), idef(0), fvar(v), fdef(d), setdef(true) {}
+    : TNamed(n,h), defhelp(dh), ivar(0), idef(0), fvar(v), fdef(d), setdef(true) {}
 };
 
-class ArgVars {
+class ArgVars : public TObject {
 private:
   TList lst;
   static bool CmpOpt (const char* p, const char*  opt, const char* s);
@@ -53,7 +53,8 @@ public:
   ArgVars& SetDefault (const char* name, Double_t def);
   Int_t SetArgs (int argc, const char* const* argv, bool split= false) const;
   void  SetDefaults() const;
-  void  Print (std::ostream& o, const char* sep= " ") const;
+  virtual void  Print (std::ostream& o, const char* sep= " ") const;
+  virtual void  Print (const char* sep= " ") const { Print (std::cout, sep); }
   void  Usage (const char* prog) const;
   void  ArgHelp (std::ostream& o) const;
 };

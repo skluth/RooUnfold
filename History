@@ -1,5 +1,17 @@
-History of RooUnfold     $Id: History,v 1.53 2010-05-19 16:51:14 adye Exp $
+History of RooUnfold     $Id: History,v 1.54 2010-05-20 22:50:55 adye Exp $
 ====================
+
+Tim Adye         20-May-2010 tja100520a
+  o Fix RooUnfoldBayes for when the measured and truth distributions have
+    different numbers of bins. (Problem reported by Lluis Marti.)
+  o Fix RooUnfoldSvd to fill kterm and ntoys correctly (broken in tja100125b).
+  o New accessor methods for unfolding parameters and implementation object.
+  o Can control the verbosity of messages with RooUnfold::SetVerbose(level):
+    0=warnings, 1=verbose (default, as before), 2=debug, 3=detailed.
+  o Don't repeat fatal RooUnfoldSvd errors
+  o examples/ArgVars element (ArgVar) now a TNamed, with argument name and help
+    text stored in the name and title respectively.
+  o Add original truth plot to RooUnfoldExample.cxx.
 
 Tim Adye         19-May-2010 V00-02-01
 Tim Adye         14-May-2010 tja100514a

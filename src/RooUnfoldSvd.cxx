@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.7 2010-01-26 00:53:17 adye Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.8 2010-05-20 22:50:59 adye Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -61,7 +61,6 @@ void
 RooUnfoldSvd::Init()
 {
   _svd= 0;
-  _kterm= _ntoys= 0;
   _meas1d= _train1d= _truth1d= 0;
 }
 
@@ -79,9 +78,16 @@ RooUnfoldSvd::CopyData (const RooUnfoldSvd& rhs)
   _ntoys= rhs._ntoys;
 }
 
+TObject*
+RooUnfoldSvd::Impl()
+{
+  return _svd;
+}
+
 void
 RooUnfoldSvd::Unfold()
 {
+  if (_fail) return;
   if (_res->GetDimensionTruth() != 1 || _res->GetDimensionMeasured() != 1) {
     cerr << "RooUnfoldSvd may not work very well for multi-dimensional distributions" << endl;
   }
@@ -95,13 +101,20 @@ RooUnfoldSvd::Unfold()
   _truth1d= _res->Htruth1D();
   TH1::AddDirectory (oldstat);
 
+  if (_nt != _nm) {
+    cerr << "RooUnfoldSvd requires the same number of bins in the truth and measured distributions" << endl;
+    _fail= true;
+    return;
+  }
   if (_kterm < 0) {
     cerr << "RooUnfoldSvd invalid kterm: " << _kterm << endl;
+    _fail= true;
     return;
   }
   Int_t nb= _nm < _nt ? _nm : _nt;
   if (_kterm > nb) {
     cerr << "RooUnfoldSvd invalid kterm=" << _kterm << " with " << nb << " bins" << endl;
+    _fail= true;
     return;
   }
 
@@ -121,7 +134,7 @@ void
 RooUnfoldSvd::GetCov()
 {
   if (!_unfolded) Unfold();
-  if (!_unfolded) return;
+  if (_fail) return;
 
   TMatrixD covMeas(_nm,_nm);
   for (Int_t i= 0; i<_nm; i++) {

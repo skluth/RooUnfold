@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.12 2010-01-26 00:53:17 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.13 2010-05-20 22:50:59 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -81,6 +81,12 @@ RooUnfoldBayes::CopyData (const RooUnfoldBayes& rhs)
   _smoothit= rhs._smoothit;
 }
 
+TObject*
+RooUnfoldBayes::Impl()
+{
+  return _bayes;
+}
+
 void
 RooUnfoldBayes::Unfold()
 {
@@ -89,6 +95,7 @@ RooUnfoldBayes::Unfold()
   _bayes->build (1, vector<Int_t>(1,_nt), vector<Double_t>(1,0.0), vector<Double_t>(1,1.0),
                  1, vector<Int_t>(1,_nm), vector<Double_t>(1,0.0), vector<Double_t>(1,1.0));
 
+  _bayes->setDebug (verbose());
   if (verbose() >= 2) Print();
 
   vector<Double_t> vtruth(_nt), vtrain(_nm), vmeasured(_nm);
@@ -152,14 +159,14 @@ Array2D&
 RooUnfoldBayes::H2AD (const TH2D* h, Array2D& m, const TH1* norm)
 {
   if (!h) return m;
-  Int_t nx= m.GetNrows(), ny= m.GetNcols();
-  for (Int_t j= 0; j < ny; j++) {
+  Int_t nt= m.GetNrows(), nm= m.GetNcols();
+  for (Int_t j= 0; j < nt; j++) {
     Double_t nTrue= norm ? norm->GetBinContent (j+1) : 1.0;
     if (nTrue == 0.0) {
-      for (Int_t i= 0; i < nx; i++)
+      for (Int_t i= 0; i < nm; i++)
         m.Set (j, i, 0.0);
     } else {
-      for (Int_t i= 0; i < nx; i++)
+      for (Int_t i= 0; i < nm; i++)
         m.Set (j, i, h->GetBinContent(i+1,j+1) / nTrue);
     }
   }
@@ -178,9 +185,9 @@ RooUnfoldBayes::VD2V (const vector<Double_t>& vd, TVectorD& v)
 TMatrixD&
 RooUnfoldBayes::AD2M (const Array2D& ad, TMatrixD& m)
 {
-  Int_t nx= m.GetNrows(), ny= m.GetNcols();
-  for (Int_t i= 0; i < nx; i++)
-    for (Int_t j= 0; j < ny; j++)
+  Int_t nm= m.GetNrows(), nt= m.GetNcols();
+  for (Int_t i= 0; i < nm; i++)
+    for (Int_t j= 0; j < nt; j++)
       m(i,j)= ad.Get(j,i);
   return m;
 }

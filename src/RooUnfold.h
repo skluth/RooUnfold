@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.7 2010-01-26 00:53:17 adye Exp $
+//      $Id: RooUnfold.h,v 1.8 2010-05-20 22:50:59 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -39,6 +39,7 @@ public:
   // Set up an existing object
 
   virtual RooUnfold& Setup (const RooUnfoldResponse* res, const TH1* meas);
+  virtual void Reset ();
 
   // Accessors
 
@@ -50,9 +51,12 @@ public:
   virtual TMatrixD&                Ereco();
 
   virtual Int_t                    verbose() const;
+  virtual void SetVerbose (Int_t level);
 
-  virtual void Reset ();
   virtual void PrintTable (std::ostream& o, const TH1* hTrue= 0, Bool_t withError= true);
+
+  virtual TObject* Impl();
+
 
 protected:
 
@@ -68,7 +72,7 @@ protected:
   Int_t _verbose;  // Debug print level
   Int_t _nm;   // Total number of measured bins
   Int_t _nt;   // Total number of truth    bins
-  mutable Bool_t _unfolded, _haveCov;
+  mutable Bool_t _unfolded, _haveCov, _fail;
   const RooUnfoldResponse* _res;   // Response matrix (not owned)
   const TH1* _meas;                // Measured distribution (not owned)
   mutable TVectorD _rec;  // Reconstructed distribution
@@ -94,5 +98,7 @@ inline const RooUnfoldResponse* RooUnfold::response()  const { return _res;     
 inline const TH1*               RooUnfold::Hmeasured() const { return _meas;    }
 inline TVectorD&                RooUnfold::Vreco()           { if (!_unfolded) Unfold(); return _rec; }
 inline TMatrixD&                RooUnfold::Ereco()           { if (!_haveCov)  GetCov(); return _cov; }
+inline TObject*                 RooUnfold::Impl()            { return 0; };
+inline void RooUnfold::SetVerbose (Int_t level)              { _verbose= level; }
 
 #endif

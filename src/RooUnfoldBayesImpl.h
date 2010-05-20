@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayesImpl.h,v 1.6 2010-01-19 15:33:47 adye Exp $
+//      $Id: RooUnfoldBayesImpl.h,v 1.7 2010-05-20 22:50:59 adye Exp $
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the
@@ -23,7 +23,7 @@ class TH1;
 class RooUnfoldBayesImpl : public TNamed {
 
  public:
-  enum UnfoldType {BinByBin=0, Inversion=1, Iterative=2, Blobel=3, SVD=4, MEM=5};
+  enum UnfoldType {BinByBin=0, Iterative=1};
 
 private:
 //Prevent default methods being used (they won't work).
@@ -49,6 +49,10 @@ private:
   // calculate unfolding matrix
   Int_t train(Int_t iterations=3, Bool_t smoothit = false);
   Int_t trainBinByBin(Bool_t smoothit = false);
+  Bool_t debug(Int_t level) const {return (_fDebug>=level);}
+  Bool_t debug()   const {return (_fDebug>=2);}
+  Bool_t verbose() const {return (_fDebug>=1);}
+  Bool_t warn()    const {return (_fDebug>=0);}
 
   // Truth variables
   vector<Int_t> _nt;      // number of bins per dimension
@@ -117,7 +121,7 @@ private:
   void reset();
   Int_t clear();
 
-  // set the debug level
+  // set the debug level: 0=warnings, 1=verbose (default), 2=debug, 3=detailed
   Int_t setDebug(Int_t Db);
 
   // print some useful info

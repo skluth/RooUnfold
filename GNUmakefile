@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.16 2010-01-26 00:53:13 adye Exp $
+#      $Id: GNUmakefile,v 1.17 2010-05-20 22:50:55 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -26,6 +26,7 @@
 #      lib     - make libRooUnfold.a
 #      bin     - make lib and example programs
 #      commands- show commands to make each type of target
+#      html    - make documentation in htmldoc subdirectory
 #      cleanbin- delete test binaries and objects
 #      clean   - delete all intermediate and final build objects
 #
