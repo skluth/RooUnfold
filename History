@@ -1,5 +1,12 @@
-History of RooUnfold     $Id: History,v 1.55 2010-05-20 22:52:01 adye Exp $
+History of RooUnfold     $Id: History,v 1.56 2010-05-24 22:57:04 adye Exp $
 ====================
+
+Tim Adye         24-May-2010 tja100524a
+  RooUnfoldTest chanegs:
+  o Add legends to plots
+  o Fix Postscript output when onepage=0 
+  o Generate truth over a wider range than histogram (according to bias and
+    smearing) to allow for migration in/out of the range.
 
 Tim Adye         20-May-2010 V00-02-02
 Tim Adye         20-May-2010 tja100520a

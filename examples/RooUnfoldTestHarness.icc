@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.15 2010-05-20 22:50:57 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.16 2010-05-24 22:57:06 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -27,6 +27,7 @@
 #include "TString.h"
 #include "TStyle.h"
 #include "TCanvas.h"
+#include "TLegend.h"
 #include "TRandom.h"
 #include "TPostScript.h"
 #include "TH1D.h"
@@ -114,13 +115,18 @@ void RooUnfoldTestHarness::SetupCanvas()
 {
   gROOT->SetStyle("Plain");
   gStyle->SetOptStat(0);
-  if (onepage) gStyle->SetCanvasDefH(900);
+  if (!onepage)    gStyle->SetOptTitle(0);
+  if (onepage < 3) gStyle->SetHistLineWidth(2);
+  if (onepage>=2)  gStyle->SetCanvasDefH(900);
+  if (onepage)
+    canvas= new TCanvas (GetName(), GetName(), 1);
+  else
+    canvas= new TCanvas (GetName(), GetName(), 750, 300);
   TString psfile(GetName());
   psfile += ".ps";
-  ps= new TPostScript (psfile, 111);
-  canvas= new TCanvas(GetName(),GetName(),1);
-  canvas->Clear();
+  ps= new TPostScript (psfile, 112);
 
+  bool grid= false;
   if (onepage==2) {
     gStyle->SetPadTopMargin(0.05);
     gStyle->SetPadRightMargin(0.02);
@@ -131,14 +137,16 @@ void RooUnfoldTestHarness::SetupCanvas()
     TPad* pad2= (TPad*) canvas->GetPad(2);
     pad1->SetPad (pad1->GetXlowNDC(), .3, pad1->GetXlowNDC()+pad1->GetWNDC(), pad1->GetYlowNDC()+pad1->GetHNDC());
     pad2->SetPad (pad2->GetXlowNDC(), pad2->GetYlowNDC(), pad2->GetXlowNDC()+pad2->GetWNDC(), .3);
-    pad1->SetGrid(1);
-    pad2->SetGrid(1);
+    if (grid) {
+      pad1->SetGrid(1);
+      pad2->SetGrid(1);
+    }
   } else if (onepage>=6) {
-    canvas->SetGrid();
+    if (grid) canvas->SetGrid();
     canvas->Divide(2,(onepage+1)/2);
   } else if (onepage>=3)
     canvas->Divide(1,onepage);
-  else
+  else if (grid)
     canvas->SetGrid(1);
   ipad= 0;
 }
@@ -177,6 +185,7 @@ Int_t RooUnfoldTestHarness::RunTests()
     if (verbose>=0) cout << "==================================== UNFOLD ===================================" << endl;
     if (!Unfold()) {
       ShowTest();
+      lTest->Draw();
       canvas->Update();
       return 7;
     }
@@ -192,7 +201,7 @@ Int_t RooUnfoldTestHarness::RunTests()
 Int_t RooUnfoldTestHarness::Train()
 {
   TVectorD xtrue(ntrain);
-  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi, mtrainx, wtrainx, btrainx);
+  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi, mtrainx, wtrainx, btrainx, xbias, xsmear);
   if (!hPDFx) return 0;
 
   hTrainTrue= new TH1D ("traintrue", "Training", ntx, xlo, xhi);
@@ -225,6 +234,15 @@ Int_t RooUnfoldTestHarness::Train()
     hTrainTrue->Draw();
     hPDFx ->Draw("LSAME");
     hTrain->Draw("SAME");
+    if (!onepage) {
+      lTrain= new TLegend (0.79, 0.75, 0.894, 0.89);
+      lTrain->SetTextSize(0.035);
+      lTrain->SetTextFont(42);
+      lTrain->AddEntry (hPDFx,      "PDF",      "L");
+      lTrain->AddEntry (hTrainTrue, "truth",    "L");
+      lTrain->AddEntry (hTrain,     "measured", "L");
+      lTrain->Draw();
+    }
     canvas->Update();
   }
 
@@ -238,7 +256,7 @@ Int_t RooUnfoldTestHarness::Train()
 Int_t RooUnfoldTestHarness::Test()
 {
   TVectorD xtest(ntest);
-  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, mtestx, wtestx, btestx);
+  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, mtestx, wtestx, btestx, xbias, xsmear);
   if (!hTestPDFx) return 0;
 
   hTrue= new TH1D ("true", "Test", ntx, xlo, xhi);
@@ -317,6 +335,12 @@ void RooUnfoldTestHarness::ShowTest()
   hTrue    ->Draw();
   hTestPDFx->Draw("LSAME");
   hMeas    ->Draw("SAME");
+  lTest= new TLegend (0.79, 0.72, 0.894, 0.89);
+  lTest->SetTextSize(0.035);
+  lTest->SetTextFont(42);
+  lTest->AddEntry (hTestPDFx, "PDF",      "L");
+  lTest->AddEntry (hTrue,     "truth",    "L");
+  lTest->AddEntry (hMeas,     "measured", "L");
 }
 
 void RooUnfoldTestHarness::Results()
@@ -326,12 +350,16 @@ void RooUnfoldTestHarness::Results()
   setmax (hTrue, hReco);
   ShowTest();
   hReco    ->Draw("SAME");
+  lTest->AddEntry (hReco, "reconstructed", "P");
+  lTest->Draw();
+  canvas->Update();
 
   if (onepage>=2) canvas->cd(++ipad);
   if (!onepage || onepage >= 2) {
     hRes->Draw();
     TLine l; // draw a line at y=0;
     l.DrawLine(hRes->GetBinLowEdge(1), 0.0, hRes->GetBinLowEdge(ntx+1), 0.0);
+    canvas->Update();
   }
 
   if (onepage>=2) canvas->cd(++ipad);
@@ -339,8 +367,8 @@ void RooUnfoldTestHarness::Results()
     hPulls->SetMarkerStyle(kFullDotLarge);
     hPulls->Draw("P");
     TLine().DrawLine(hPulls->GetBinLowEdge(1), 0.0, hPulls->GetBinLowEdge(ntx+1), 0.0);  // draw a line at pull=0;
+    canvas->Update();
   }
- canvas->Update();
 }
 
 //==============================================================================
@@ -349,11 +377,18 @@ void RooUnfoldTestHarness::Results()
 
 TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char* title,
                                       Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi,
-                                      Double_t mean, Double_t width, Double_t bkg)
+                                      Double_t mean, Double_t width, Double_t bkg,
+                                      Double_t bias, Double_t smear)
 {
   TH1D* hPDF= new TH1D (name, title, nbPDF, xlo, xhi);
   hPDF->SetLineColor(kGreen);
   hPDF->SetLineWidth(2);
+  Double_t xwide = (5.0*smear + 2.0) * (xhi-xlo) / Double_t(nt);  // 5*sigma + 2 bins
+  xlo -= xwide;
+  if (bias>0.0) xlo -= bias;
+  xhi += xwide;
+  if (bias<0.0) xhi -= bias;
+  if (verbose >= 1) cout << "Generate values in range " << xlo << " to " << xhi << endl;
   if (!RooUnfoldTestPdf (fpdf, nx, xlo, xhi, x, hPDF, mean, width, bkg, verbose)) return 0;
   hPDF->Scale (nbPDF/Double_t(nt));
   return hPDF;
@@ -437,6 +472,7 @@ void RooUnfoldTestHarness::Reset()
   hPDFx= hTestPDFx= 0;
   hTrain= hTrainTrue= hTrue= hMeas= hReco= hRes= hPulls= 0;
   hResmat= 0;
+  lTrain= lTest= 0;
   error= ipad= 0;
   dim= 1;
   nbPDF= 500;

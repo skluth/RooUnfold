@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.15 2010-05-20 22:50:57 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.16 2010-05-24 22:57:06 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -31,6 +31,7 @@ class ArgVars;
 
 class TCanvas;
 class TPostScript;
+class TLegend;
 class TH1;
 class TH1D;
 class TH2D;
@@ -49,6 +50,7 @@ public:
   Int_t              error, ipad, ntbins, nmbins;
   TCanvas*           canvas;
   TPostScript*       ps;
+  TLegend            *lTrain, *lTest;
   TH1                *hTrain, *hTrainTrue, *hTrue, *hMeas, *hReco, *hRes, *hPulls;
   TH1D               *hPDFx, *hTestPDFx;
   TH2D               *hResmat;
@@ -72,7 +74,8 @@ public:
   virtual void     ShowTest();
   virtual void     Results();
   virtual TH1D*    Generate (TVectorD& x, const char* name, const char* title, Int_t nt, Int_t fpdf,
-                             Int_t nx, Double_t xlo, Double_t xhi, Double_t bkg, Double_t mean, Double_t width);
+                             Int_t nx, Double_t xlo, Double_t xhi, Double_t bkg, Double_t mean, Double_t width,
+                             Double_t bias, Double_t smear);
   virtual bool     Eff      (Double_t x,           Double_t xlo, Double_t xhi, Double_t efflo, Double_t effhi) const;
   virtual Double_t Smear    (Double_t x, Int_t nt, Double_t xlo, Double_t xhi, Double_t bias,  Double_t smear) const;
   virtual void     Reset();

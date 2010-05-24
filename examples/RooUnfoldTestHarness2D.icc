@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.12 2010-01-22 15:46:04 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.13 2010-05-24 22:57:06 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 2D toy MC.
@@ -74,9 +74,9 @@ Int_t RooUnfoldTestHarness2D::Train ()
 {
   TVectorD xtrue(ntrain), ytrue(ntrain);
 
-  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi, mtrainx, wtrainx, btrainx);
+  hPDFx= Generate (xtrue, "trainpdfx", "Training PDF X", ntx, ftrainx, ntrain, xlo, xhi, mtrainx, wtrainx, btrainx, xbias, xsmear);
   if (!hPDFx) return 0;
-  hPDFy= Generate (ytrue, "trainpdfy", "Training PDF Y", nty, ftrainy, ntrain, ylo, yhi, mtrainy, wtrainy, btrainy);
+  hPDFy= Generate (ytrue, "trainpdfy", "Training PDF Y", nty, ftrainy, ntrain, ylo, yhi, mtrainy, wtrainy, btrainy, ybias, ysmear);
   if (!hPDFy) return 0;
 
   hTrainTrue= new TH2D ("traintrue", "Training Truth", ntx, xlo, xhi, nty, ylo, yhi);
@@ -130,9 +130,9 @@ Int_t RooUnfoldTestHarness2D::Test ()
 {
   TVectorD xtest(ntest), ytest(ntest);
 
-  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, mtestx, wtestx, btestx);
+  hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, mtestx, wtestx, btestx, xbias, xsmear);
   if (!hTestPDFx) return 0;
-  hTestPDFy= Generate (ytest, "pdfy", "PDF Y", nty, ftesty, ntest, ylo, yhi, mtesty, wtesty, btesty);
+  hTestPDFy= Generate (ytest, "pdfy", "PDF Y", nty, ftesty, ntest, ylo, yhi, mtesty, wtesty, btesty, ybias, ysmear);
   if (!hTestPDFy) return 0;
 
   hTrue= new TH2D ("true", "Test Truth", ntx, xlo, xhi, nty, ylo, yhi);
