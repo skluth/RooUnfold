@@ -1,5 +1,10 @@
-History of RooUnfold     $Id: History,v 1.57 2010-05-25 17:33:59 adye Exp $
+History of RooUnfold     $Id: History,v 1.58 2010-05-25 21:03:26 adye Exp $
 ====================
+
+Tim Adye         25-May-2010 tja100525b
+  o Tidy up RooUnfoldTest display and printing options.
+  o Add wpaper and hpaper options for paper width and height.
+  o Show projections of 2D pulls.
 
 Tim Adye         25-May-2010 tja100525a
   o RooUnfold can now include the under/overflow bins. This is set by

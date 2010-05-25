@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.h,v 1.11 2010-01-22 15:46:04 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.h,v 1.12 2010-05-25 21:03:29 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 2D toy MC.
@@ -28,8 +28,8 @@ public:
   Double_t effylo, effyhi, rotxy, ybias, ysmear;
 
   // Data
-  TH1D *hTrainX, *hTrainTrueX, *hTrueX, *hMeasX, *hRecoX;
-  TH1D *hTrainY, *hTrainTrueY, *hTrueY, *hMeasY, *hRecoY, *hPDFy, *hTestPDFy;
+  TH1D *hTrainX, *hTrainTrueX, *hTrueX, *hMeasX, *hRecoX, *hPullsX;
+  TH1D *hTrainY, *hTrainTrueY, *hTrueY, *hMeasY, *hRecoY, *hPullsY, *hPDFy, *hTestPDFy;
 
   // Constructors
   RooUnfoldTestHarness2D (const char* name= "RooUnfoldTest2D");
@@ -41,7 +41,6 @@ public:
   virtual void  Parms (ArgVars& args);
   virtual Int_t Train();
   virtual Int_t Test();
-  virtual void  ShowTest();
   virtual void  Results();
   static  void  Rot     (Double_t& x, Double_t& y, Double_t angle, Double_t x0, Double_t y0);
   virtual bool  Eff2D   (Double_t  x, Double_t  y) const;

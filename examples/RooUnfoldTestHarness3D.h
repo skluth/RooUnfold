@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness3D.h,v 1.8 2010-01-22 15:46:04 adye Exp $
+//      $Id: RooUnfoldTestHarness3D.h,v 1.9 2010-05-25 21:03:29 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 3D toy MC.
@@ -30,8 +30,7 @@ public:
   Double_t effzlo, effzhi, rotxz, rotyz, zbias, zsmear;
 
   // Data
-  TH1D *hTrainZ, *hTrainTrueZ, *hTrueZ, *hMeasZ, *hRecoZ, *hPDFz, *hTestPDFz;
-  TH1D *hPullsX, *hPullsY, *hPullsZ;
+  TH1D *hTrainZ, *hTrainTrueZ, *hTrueZ, *hMeasZ, *hRecoZ, *hPullsZ, *hPDFz, *hTestPDFz;
 
   // Constructors
   RooUnfoldTestHarness3D (const char* name= "RooUnfoldTest3D");
@@ -43,7 +42,6 @@ public:
   virtual void  Parms (ArgVars& args);
   virtual Int_t Train();
   virtual Int_t Test();
-  virtual void  ShowTest();
   virtual void  Results();
   virtual void  Smear3D (Double_t& x, Double_t& y, Double_t& z) const;
   virtual bool  Eff3D   (Double_t  x, Double_t  y, Double_t  z) const;

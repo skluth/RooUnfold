@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.17 2010-05-25 17:34:00 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.18 2010-05-25 21:03:29 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -41,7 +41,7 @@ class RooUnfold;
 class RooUnfoldTestHarness : public TNamed {
 public:
   // Parameters
-  Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain;
+  Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain, wpaper, hpaper;
   Int_t    regparm, ntoys, nmx, onepage, doerror, dim, overflow, dosmear, nbPDF, verbose;
   Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx;
   Double_t effxlo, effxhi, xbias, xsmear;
@@ -71,7 +71,6 @@ public:
   virtual Int_t    Train();
   virtual Int_t    Test();
   virtual Int_t    Unfold();
-  virtual void     ShowTest();
   virtual void     Results();
   virtual TH1D*    Generate (TVectorD& x, const char* name, const char* title, Int_t nt, Int_t fpdf,
                              Int_t nx, Double_t xlo, Double_t xhi, Double_t bkg, Double_t mean, Double_t width,
@@ -87,6 +86,7 @@ public:
   virtual void     PrintParms (std::ostream& o) const;
   static  void     setmax   (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
                              const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0);
+  static  void     Legend (TLegend*& legend, const TH1* pdf, const TH1* truth, const TH1* meas, const TH1* reco= 0);
 };
 
 #ifndef NOINLINE

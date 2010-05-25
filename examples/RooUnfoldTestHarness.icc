@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.17 2010-05-25 17:34:00 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.18 2010-05-25 21:03:29 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -92,6 +92,8 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("xsmear",  &xsmear,     0.5, "X smearing width in bins");
   args.Add ("overflow",&overflow,     1, "0=unfolding ignores under/overflow bins, 1=unfolding uses under/overflow bins, 2=fill under/overflows into first/last bins");
   args.Add ("dosmear", &dosmear,     -1, "do shift, smear, and rotation (disabled by default for bin-by-bin method)", "1");
+  args.Add ("wpaper",  &wpaper,       0, "paper width", "");
+  args.Add ("hpaper",  &hpaper,       0, "paper height", "");
   args.Add ("verbose", &verbose,      1, "debug level: 0=warnings, 1=verbose, 2=debug, 3=detailed");
 }
 
@@ -118,11 +120,12 @@ void RooUnfoldTestHarness::SetupCanvas()
   gStyle->SetOptStat(0);
   if (!onepage)    gStyle->SetOptTitle(0);
   if (onepage < 3) gStyle->SetHistLineWidth(2);
-  if (onepage>=2)  gStyle->SetCanvasDefH(900);
-  if (onepage)
+  if (onepage) {
+    if (wpaper>0)  gStyle->SetCanvasDefW (wpaper);
+    if (hpaper>0)  gStyle->SetCanvasDefH (hpaper);
     canvas= new TCanvas (GetName(), GetName(), 1);
-  else
-    canvas= new TCanvas (GetName(), GetName(), 750, 300);
+  } else
+    canvas= new TCanvas (GetName(), GetName(), wpaper, hpaper);
   TString psfile(GetName());
   psfile += ".ps";
   ps= new TPostScript (psfile, 112);
@@ -186,9 +189,7 @@ Int_t RooUnfoldTestHarness::RunTests()
     if (!Test())   return 6;
     if (verbose>=0) cout << "==================================== UNFOLD ===================================" << endl;
     if (!Unfold()) {
-      ShowTest();
-      lTest->Draw();
-      canvas->Update();
+      Results();
       return 7;
     }
     Results();
@@ -236,15 +237,7 @@ Int_t RooUnfoldTestHarness::Train()
     hTrainTrue->Draw();
     hPDFx ->Draw("LSAME");
     hTrain->Draw("SAME");
-    if (!onepage) {
-      lTrain= new TLegend (0.79, 0.75, 0.894, 0.89);
-      lTrain->SetTextSize(0.035);
-      lTrain->SetTextFont(42);
-      lTrain->AddEntry (hPDFx,      "PDF",      "L");
-      lTrain->AddEntry (hTrainTrue, "truth",    "L");
-      lTrain->AddEntry (hTrain,     "measured", "L");
-      lTrain->Draw();
-    }
+    if (!onepage) Legend (lTrain, hPDFx, hTrainTrue, hTrain);
     canvas->Update();
   }
 
@@ -304,8 +297,6 @@ Int_t RooUnfoldTestHarness::Unfold ()
   // Calculate pulls and residuals
   hRes=   dynamic_cast<TH1*>(hReco->Clone ("res"));   hRes  ->SetTitle ("Residuals");
   hPulls= dynamic_cast<TH1*>(hReco->Clone ("pulls")); hPulls->SetTitle ("Pulls");
-  hRes  ->SetMarkerStyle(kFullDotLarge);
-  hPulls->SetMarkerStyle(kFullDotLarge);
 
   for (Int_t i= 1; i<=ntbins; i++) {
     if ((hReco->GetBinContent(i)!=0.0 || (doerror && hReco->GetBinError(i)>0.0)) &&
@@ -329,35 +320,29 @@ Int_t RooUnfoldTestHarness::Unfold ()
 // Show results
 //==============================================================================
 
-void RooUnfoldTestHarness::ShowTest()
+void RooUnfoldTestHarness::Results()
 {
   setmax (hTrue, hTestPDFx, hMeas);
+  if (hReco) {
+    hReco->SetLineColor(kBlack);
+    hReco->SetMarkerStyle(kFullDotLarge);
+    setmax (hTrue, hReco);
+  }
 
   if (onepage) canvas->cd(++ipad);
   hTrue    ->Draw();
   hTestPDFx->Draw("LSAME");
   hMeas    ->Draw("SAME");
-  lTest= new TLegend (0.79, 0.72, 0.894, 0.89);
-  lTest->SetTextSize(0.035);
-  lTest->SetTextFont(42);
-  lTest->AddEntry (hTestPDFx, "PDF",      "L");
-  lTest->AddEntry (hTrue,     "truth",    "L");
-  lTest->AddEntry (hMeas,     "measured", "L");
-}
+  if (hReco) hReco->Draw("SAME");
 
-void RooUnfoldTestHarness::Results()
-{
-  hReco->SetLineColor(kBlack);
-  hReco->SetMarkerStyle(kFullDotLarge);
-  setmax (hTrue, hReco);
-  ShowTest();
-  hReco    ->Draw("SAME");
-  lTest->AddEntry (hReco, "reconstructed", "P");
-  lTest->Draw();
+  Legend (lTest, hTestPDFx, hTrue, hMeas, hReco);
   canvas->Update();
+
+  if (!hReco) return;
 
   if (onepage>=2) canvas->cd(++ipad);
   if (!onepage || onepage >= 2) {
+    hRes->SetMarkerStyle(kFullDotLarge);
     hRes->Draw();
     TLine l; // draw a line at y=0;
     l.DrawLine(hRes->GetBinLowEdge(1), 0.0, hRes->GetBinLowEdge(ntx+1), 0.0);
@@ -488,6 +473,7 @@ void RooUnfoldTestHarness::Reset()
   error= ipad= 0;
   dim= 1;
   nbPDF= 500;
+  wpaper= hpaper= 0;
 }
 
 void RooUnfoldTestHarness::SetDefaults()
@@ -516,6 +502,12 @@ void RooUnfoldTestHarness::Init()
   }
   ntbins= ntx;
   nmbins= nmx;
+  if (onepage) {
+    if (hpaper==0) hpaper= 900;
+  } else {
+    if (wpaper==0) wpaper= 750;
+    if (hpaper==0) hpaper= 300;
+  }
 }
 
 Int_t RooUnfoldTestHarness::CheckParms()
@@ -559,6 +551,18 @@ void RooUnfoldTestHarness::PrintParms (std::ostream& o) const
   o << GetName() << " ";
   args.Print (o);
   o << endl;
+}
+
+void RooUnfoldTestHarness::Legend (TLegend*& legend, const TH1* pdf, const TH1* truth, const TH1* meas, const TH1* reco)
+{
+  legend= new TLegend (0.79, (reco ? 0.72 : 0.75), 0.894, 0.89);
+  legend->SetTextSize(0.035);
+  legend->SetTextFont(42);
+  legend->AddEntry (pdf,   "PDF",      "L");
+  legend->AddEntry (truth, "truth",    "L");
+  legend->AddEntry (meas,  "measured", "L");
+  if (reco) legend->AddEntry (reco, "reconstructed", "P");
+  legend->Draw();
 }
 
 //==============================================================================

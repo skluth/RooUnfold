@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.14 2010-05-25 17:34:00 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.15 2010-05-25 21:03:29 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 2D toy MC.
@@ -24,6 +24,7 @@
 #include "TRandom.h"
 #include "TH1D.h"
 #include "TH2D.h"
+#include "TProfile.h"
 #include "TVectorD.h"
 
 #include "RooUnfoldResponse.h"
@@ -108,16 +109,18 @@ Int_t RooUnfoldTestHarness2D::Train ()
   setmax (hTrainTrueX, hPDFx, hTrainX);
   setmax (hTrainTrueY, hPDFy, hTrainY);
 
-  canvas->cd(1);
+  if (onepage>=2) canvas->cd(++ipad);
   hTrainTrueX->Draw();
   hPDFx      ->Draw("LSAME");
   hTrainX    ->Draw("SAME");
+  if (!onepage) Legend (lTrain, hPDFx, hTrainTrueX, hTrainX);
+  canvas->Update();
 
-  canvas->cd(2);
+  if (onepage>=2) canvas->cd(++ipad);
   hTrainTrueY->Draw();
   hPDFy      ->Draw("LSAME");
   hTrainY    ->Draw("SAME");
-
+  if (!onepage) lTrain->Draw();
   canvas->Update();
 
   return 1;
@@ -163,50 +166,82 @@ Int_t RooUnfoldTestHarness2D::Test ()
 // Show results
 //==============================================================================
 
-void RooUnfoldTestHarness2D::ShowTest()
+void RooUnfoldTestHarness2D::Results()
 {
   setmax (hTrueX, hTestPDFx, hMeasX);
   setmax (hTrueY, hTestPDFy, hMeasY);
 
-  canvas->cd(3);
+  if (hReco) {
+    hRecoX= ProjectionX (hReco, "hRecoX", "Reconstructed X", "E");
+    hRecoY= ProjectionY (hReco, "hRecoY", "Reconstructed Y", "E");
+    hRecoX->SetLineColor(kBlack);
+    hRecoY->SetLineColor(kBlack);
+    hRecoX->SetMarkerStyle(kFullDotLarge);
+    hRecoY->SetMarkerStyle(kFullDotLarge);
+    setmax (hTrueX, hRecoX);
+    setmax (hTrueY, hRecoY);
+  }
+
+  if (onepage>=2) canvas->cd(++ipad);
   hTrueX   ->Draw();
   hTestPDFx->Draw("LSAME");
   hMeasX   ->Draw("SAME");
+  if (hRecoX) hRecoX->Draw("SAME");
+  Legend (lTest, hTestPDFx, hTrueX, hMeasX, hRecoX);
+  canvas->Update();
 
-  canvas->cd(4);
+  if (onepage>=2) canvas->cd(++ipad);
   hTrueY   ->Draw();
   hTestPDFy->Draw("LSAME");
   hMeasY   ->Draw("SAME");
+  if (hRecoY) hRecoY->Draw("SAME");
+  lTest->Draw();
+  canvas->Update();
 
-  canvas->cd(5);
+  if (onepage>=2) canvas->cd(++ipad);
   hTrue->Draw();
+  canvas->Update();
 
-  canvas->cd(6);
+  if (onepage>=2) canvas->cd(++ipad);
   hMeas->Draw();
-}
+  canvas->Update();
 
-void RooUnfoldTestHarness2D::Results()
-{
-  hRecoX= ProjectionX (hReco, "hRecoX", "Reconstructed X", "E");
-  hRecoY= ProjectionY (hReco, "hRecoY", "Reconstructed Y", "E");
-  hRecoX->SetMarkerStyle(8);
-  hRecoY->SetMarkerStyle(8);
+  if (!hReco) return;
 
-  setmax (hTrueX, hRecoX);
-  setmax (hTrueY, hRecoY);
-  ShowTest();
-
-  canvas->cd(3);
-  hRecoX   ->Draw("SAME");
-
-  canvas->cd(4);
-  hRecoY   ->Draw("SAME");
-
-  canvas->cd(7);
+  if (onepage>=2) canvas->cd(++ipad);
   hReco->Draw();
+  canvas->Update();
 
-  canvas->cd(8);
+  if (onepage>=2) canvas->cd(++ipad);
   hPulls->Draw("COLZ");
+  canvas->Update();
+
+  if (onepage && onepage < 10) return;
+
+  hPullsX= new TProfile ("hPullsX", "Pulls X", ntx, xlo, xhi);
+  hPullsY= new TProfile ("hPullsY", "Pulls Y", nty, ylo, yhi);
+  for (Int_t ix= 1; ix<=ntx; ix++) {
+    for (Int_t iy= 1; iy<=nty; iy++) {
+      if ( hReco->GetBinContent(ix,iy)!=0.0             && hReco->GetBinError(ix,iy)>0.0 &&
+          (hTrue->GetBinContent(ix,iy)!=0.0 || (doerror && hTrue->GetBinError(ix,iy)>0.0))) {
+        Double_t pull= (hReco->GetBinContent(ix,iy) - hTrue->GetBinContent(ix,iy)) / hReco->GetBinError(ix,iy);
+        hPullsX->Fill (hReco->GetXaxis()->GetBinCenter(ix), pull);
+        hPullsY->Fill (hReco->GetYaxis()->GetBinCenter(iy), pull);
+      }
+    }
+  }
+
+  hPullsX->SetMarkerStyle(kFullDotLarge);
+  hPullsY->SetMarkerStyle(kFullDotLarge);
+
+  if (onepage>=2) canvas->cd(++ipad);
+  hPullsX->Draw("P");
+  TLine().DrawLine(hPullsX->GetBinLowEdge(1), 0.0, hPullsX->GetBinLowEdge(ntx+1), 0.0);  // draw a line at pull=0;
+  canvas->Update();
+
+  if (onepage>=2) canvas->cd(++ipad);
+  hPullsY->Draw("P");
+  TLine().DrawLine(hPullsY->GetBinLowEdge(1), 0.0, hPullsY->GetBinLowEdge(nty+1), 0.0);  // draw a line at pull=0;
   canvas->Update();
 }
 
@@ -273,8 +308,8 @@ RooUnfoldTestHarness2D::RooUnfoldTestHarness2D (const char* name, const char* ar
 void RooUnfoldTestHarness2D::Reset()
 {
   RooUnfoldTestHarness::Reset();
-  hTrainX= hTrainTrueX= hTrueX= hMeasX= hRecoX=
-  hTrainY= hTrainTrueY= hTrueY= hMeasY= hRecoY= hPDFy= hTestPDFy= 0;
+  hTrainX= hTrainTrueX= hTrueX= hMeasX= hRecoX= hPullsX=
+  hTrainY= hTrainTrueY= hTrueY= hMeasY= hRecoY= hPullsY= hPDFy= hTestPDFy= 0;
   dim= 2;
 }
 
