@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.10 2010-05-20 22:50:59 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.11 2010-05-25 17:34:03 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -89,13 +89,16 @@ public:
 
   Double_t operator() (Int_t r, Int_t t) const;// Response matrix element (measured,truth)
 
+  void   UseOverflow (Bool_t set= kTRUE);      // Specify to use overflow bins
+  Bool_t UseOverflowStatus() const;            // Get UseOverflow setting
+
   static TH1D*     H2H1D(const TH1*  h, Int_t nb);
-  static TVectorD* H2V  (const TH1*  h, Int_t nb);
-  static TVectorD* H2VE (const TH1*  h, Int_t nb);
-  static TMatrixD* H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm= 0);
-  static TMatrixD* H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm= 0);
-  static void      V2H  (const TVectorD& v, TH1* h, Int_t nb);
-  static Int_t   GetBin (const TH1*  h, Int_t i);  // vector index (0..nx*ny-1) -> multi-dimensional histogram global bin number (0..(nx+2)*(ny+2)-1) skipping under/overflow bins
+  static TVectorD* H2V  (const TH1*  h, Int_t nb, Bool_t overflow= kFALSE);
+  static TVectorD* H2VE (const TH1*  h, Int_t nb, Bool_t overflow= kFALSE);
+  static TMatrixD* H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm= 0, Bool_t overflow= kFALSE);
+  static TMatrixD* H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm= 0, Bool_t overflow= kFALSE);
+  static void      V2H  (const TVectorD& v, TH1* h, Int_t nb, Bool_t overflow= kFALSE);
+  static Int_t   GetBin (const TH1*  h, Int_t i, Bool_t overflow= kFALSE);  // vector index (0..nx*ny-1) -> multi-dimensional histogram global bin number (0..(nx+2)*(ny+2)-1) skipping under/overflow bins
 
   TH1* ApplyToTruth (const TH1* truth= 0, const char* name= "AppliedResponse") const; // If argument is 0, applies itself to its own truth
 
@@ -121,6 +124,7 @@ private:
   TH1*  _mes;  // Measured histogram
   TH1*  _tru;  // Truth histogram
   TH2D* _res;  // Response histogram
+  Int_t _overflow; // Use histogram under/overflows if 1
 
   mutable TVectorD *_vMes, *_eMes; //! Cached measured     vector and error
   mutable TVectorD *_vTru, *_eTru; //! Cached truth    vector and error
@@ -156,18 +160,21 @@ inline TH2D*        RooUnfoldResponse::Hresponse()                  { return _re
 inline TH1D*        RooUnfoldResponse::Hmeasured1D()          const { return H2H1D (_mes, _nm); }
 inline TH1D*        RooUnfoldResponse::Htruth1D()             const { return H2H1D (_tru, _nt); }
 
-inline const TVectorD& RooUnfoldResponse::Vmeasured()         const { if (!_vMes) _cached= (_vMes= H2V  (_mes, _nm)); return *_vMes; }
-inline const TVectorD& RooUnfoldResponse::Emeasured()         const { if (!_eMes) _cached= (_eMes= H2VE (_mes, _nm)); return *_eMes; }
-inline const TVectorD& RooUnfoldResponse::Vtruth()            const { if (!_vTru) _cached= (_vTru= H2V  (_tru, _nt)); return *_vTru; }
-inline const TVectorD& RooUnfoldResponse::Etruth()            const { if (!_eTru) _cached= (_eTru= H2VE (_tru, _nt)); return *_eTru; }
-inline const TMatrixD& RooUnfoldResponse::Mresponse()         const { if (!_mRes) _cached= (_mRes= H2M  (_res, _nm, _nt, _tru)); return *_mRes; }
-inline const TMatrixD& RooUnfoldResponse::Eresponse()         const { if (!_eRes) _cached= (_eRes= H2ME (_res, _nm, _nt, _tru)); return *_eRes; }
+inline const TVectorD& RooUnfoldResponse::Vmeasured()         const { if (!_vMes) _cached= (_vMes= H2V  (_mes, _nm, _overflow)); return *_vMes; }
+inline const TVectorD& RooUnfoldResponse::Emeasured()         const { if (!_eMes) _cached= (_eMes= H2VE (_mes, _nm, _overflow)); return *_eMes; }
+inline const TVectorD& RooUnfoldResponse::Vtruth()            const { if (!_vTru) _cached= (_vTru= H2V  (_tru, _nt, _overflow)); return *_vTru; }
+inline const TVectorD& RooUnfoldResponse::Etruth()            const { if (!_eTru) _cached= (_eTru= H2VE (_tru, _nt, _overflow)); return *_eTru; }
+inline const TMatrixD& RooUnfoldResponse::Mresponse()         const { if (!_mRes) _cached= (_mRes= H2M  (_res, _nm, _nt, _tru, _overflow)); return *_mRes; }
+inline const TMatrixD& RooUnfoldResponse::Eresponse()         const { if (!_eRes) _cached= (_eRes= H2ME (_res, _nm, _nt, _tru, _overflow)); return *_eRes; }
 
 inline Double_t RooUnfoldResponse::operator() (Int_t r, Int_t t) const { return Mresponse()(r,t); }
-inline Int_t    RooUnfoldResponse::GetBin (const TH1* h, Int_t i) { return (h->GetDimension()<2) ? i+1 : GetBinDim(h,i); }
+inline Int_t    RooUnfoldResponse::GetBin (const TH1* h, Int_t i, Bool_t overflow) { return (h->GetDimension()<2) ? i+(overflow ? 0 : 1) : GetBinDim(h,i); }
 
 inline Int_t RooUnfoldResponse::Miss (Double_t xt)                          { return                                Miss1D(xt);      }
 inline Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t w)              { return _mdim==2 ? Miss2D(xt,w) :      Miss1D(xt,w);    }
 inline Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t yt, Double_t w) { return _mdim==3 ? Miss(xt,yt,w,1.0) : Miss2D(xt,yt,w); }
+
+inline void RooUnfoldResponse::UseOverflow (Bool_t set) { _overflow= (set ? 1 : 0); }
+inline Bool_t RooUnfoldResponse::UseOverflowStatus() const { return _overflow; }
 
 #endif

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.13 2010-05-24 22:57:06 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.14 2010-05-25 17:34:00 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 2D toy MC.
@@ -47,6 +47,7 @@ void RooUnfoldTestHarness2D::Parms (ArgVars& args)
   RooUnfoldTestHarness::Parms (args);
   args.SetDefault ("ntx",    30);
   args.SetDefault ("onepage", 8);
+  args.SetDefault ("overflow", 0);
   args.Add ("ftrainy", &ftrainy,      0, "training Y PDF");
   args.Add ("ftesty",  &ftesty ,      4, "test Y PDF");
   args.Add ("nty",     &nty,         10, "#truth Y bins");
@@ -282,6 +283,13 @@ void RooUnfoldTestHarness2D::Init()
   RooUnfoldTestHarness::Init();
   if (nty==-1) nty= ntx;
   if (nmy==-1) nmy= nty;
+  if (overflow==2) {
+    Double_t ywid= (yhi-ylo) / nty;
+    ylo -= ywid;
+    yhi += ywid;
+    nty += 2;
+    nmy += Int_t (2.0*(Double_t(nmy)/Double_t(nty)) + 0.5);
+  }
   ntbins= ntx*nty;
   nmbins= nmx*nmy;
 }

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.16 2010-05-24 22:57:06 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.17 2010-05-25 17:34:00 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -90,6 +90,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("effxhi",  &effxhi,     0.9, "efficiency at xhi");
   args.Add ("xbias",   &xbias,     -1.0, "shift in X");
   args.Add ("xsmear",  &xsmear,     0.5, "X smearing width in bins");
+  args.Add ("overflow",&overflow,     1, "0=unfolding ignores under/overflow bins, 1=unfolding uses under/overflow bins, 2=fill under/overflows into first/last bins");
   args.Add ("dosmear", &dosmear,     -1, "do shift, smear, and rotation (disabled by default for bin-by-bin method)", "1");
   args.Add ("verbose", &verbose,      1, "debug level: 0=warnings, 1=verbose, 2=debug, 3=detailed");
 }
@@ -159,6 +160,7 @@ Int_t RooUnfoldTestHarness::RunTests()
     title.Form ("Test %dD", dim);
     response= new RooUnfoldResponse (name, title);
     if (!response) return 3;
+    if (overflow==1) response->UseOverflow();
     if (verbose>=0) cout << "==================================== TRAIN ====================================" << endl;
     if (!Train()) return 4;
     TString file (GetName());
@@ -214,15 +216,15 @@ Int_t RooUnfoldTestHarness::Train()
   // or:  response->Setup (hTrain, hTrainTrue);
 
   for (Int_t i= 0; i<ntrain; i++) {
-    Double_t xt= xtrue[i];
-    hTrainTrue->Fill (xt);
+    Double_t xt= xtrue[i], xto= Overflow (xt, ntx, xlo, xhi);
+    hTrainTrue->Fill (xto);
     if (Eff (xt, xlo, xhi, effxlo, effxhi)) {
-      Double_t x= Smear (xt, ntx, xlo, xhi, xbias, xsmear);
-      hTrain  ->Fill (x);
-      hResmat ->Fill (x, xt);
-      response->Fill (x, xt);
+      Double_t x= Smear (xt, ntx, xlo, xhi, xbias, xsmear), xo= Overflow (x, ntx, xlo, xhi);
+      hTrain  ->Fill (xo);
+      hResmat ->Fill (xo, xto);
+      response->Fill (xo, xto);
     } else
-      response->Miss (xt);
+      response->Miss (xto);
   }
 
   // or:  response->Setup (hTrain, hTrainTrue, hResmat);
@@ -264,11 +266,11 @@ Int_t RooUnfoldTestHarness::Test()
   hMeas= new TH1D ("meas", "Test Measured", nmx, xlo, xhi);
   hMeas->SetLineColor(kRed);
   for (Int_t i=0; i<ntest ; i++) {
-    Double_t xt= xtest[i];
-    hTrue->Fill(xt);
+    Double_t xt= xtest[i], xto= Overflow (xt, ntx, xlo, xhi);
+    hTrue->Fill(xto);
     if (Eff (xt, xlo, xhi, effxlo, effxhi)) {
-      Double_t x = Smear (xt, ntx, xlo, xhi, xbias, xsmear);
-      hMeas->Fill(x);
+      Double_t x = Smear (xt, ntx, xlo, xhi, xbias, xsmear), xo= Overflow (x, ntx, xlo, xhi);
+      hMeas->Fill(xo);
     }
   }
   return 1;
@@ -383,12 +385,14 @@ TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char*
   TH1D* hPDF= new TH1D (name, title, nbPDF, xlo, xhi);
   hPDF->SetLineColor(kGreen);
   hPDF->SetLineWidth(2);
-  Double_t xwide = (5.0*smear + 2.0) * (xhi-xlo) / Double_t(nt);  // 5*sigma + 2 bins
-  xlo -= xwide;
-  if (bias>0.0) xlo -= bias;
-  xhi += xwide;
-  if (bias<0.0) xhi -= bias;
-  if (verbose >= 1) cout << "Generate values in range " << xlo << " to " << xhi << endl;
+  if (dosmear) {
+    Double_t xwide = (5.0*smear) * (xhi-xlo) / Double_t(nt);  // 5*sigma
+    xlo -= xwide;
+    if (bias>0.0) xlo -= bias;
+    xhi += xwide;
+    if (bias<0.0) xhi -= bias;
+    if (verbose >= 1) cout << "Generate values in range " << xlo << " to " << xhi << endl;
+  }
   if (!RooUnfoldTestPdf (fpdf, nx, xlo, xhi, x, hPDF, mean, width, bkg, verbose)) return 0;
   hPDF->Scale (nbPDF/Double_t(nt));
   return hPDF;
@@ -423,6 +427,14 @@ Double_t RooUnfoldTestHarness::Smear (Double_t x, Int_t nt, Double_t xlo, Double
   Double_t delta= xsigma <= 0.0 ? bias : gRandom->Gaus(bias, xsigma);     // bias and smear
   if (verbose>=3) cout << "SMEAR " << x << " " << xsmear << " " << xsigma << endl;
   return x+delta;
+}
+
+Double_t RooUnfoldTestHarness::Overflow (Double_t x, Int_t nt, Double_t xlo, Double_t xhi) const
+{
+  if (overflow!=2)     return x;
+  else if   (x < xlo)  return xlo + (xhi-xlo) / Double_t(2*nt);
+  else if (!(x < xhi)) return xhi - (xhi-xlo) / Double_t(2*nt);
+  else return x;
 }
 
 //==============================================================================
@@ -495,6 +507,13 @@ int RooUnfoldTestHarness::SetArgs (int argc, const char* const* argv, bool split
 void RooUnfoldTestHarness::Init()
 {
   if (nmx==-1) nmx= ntx;
+  if (overflow==2) {
+    Double_t xwid= (xhi-xlo) / ntx;
+    xlo -= xwid;
+    xhi += xwid;
+    ntx += 2;
+    nmx += Int_t (2.0*(Double_t(nmx)/Double_t(ntx)) + 0.5);
+  }
   ntbins= ntx;
   nmbins= nmx;
 }
@@ -502,7 +521,17 @@ void RooUnfoldTestHarness::Init()
 Int_t RooUnfoldTestHarness::CheckParms()
 {
   if (dosmear==-1) dosmear= (method == 3) ? 0 : 1;  // bin-by-bin can't handle smearing or bias
-  if (regparm==-999) regparm= (method==1 ? 3 : method==2 ? (ntbins>5 ? ntbins/2 : 2) : 0);
+  if (regparm==-999) {
+    switch (method) {
+    case 1: regparm= 3; break;
+    case 2: {
+      Int_t ntall= ntbins + (overflow==1 ? 2 : 0);
+      regparm= (ntall>5 ? ntall/2 : 2);
+      break;
+    }
+    default: regparm= 0;
+    }
+  }
   if (doerror==-1) {
     doerror= !(method==1 && ntbins*nmbins > 160000);
     if (!doerror) {

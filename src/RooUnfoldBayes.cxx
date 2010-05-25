@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.13 2010-05-20 22:50:59 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.14 2010-05-25 17:34:03 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -92,18 +92,19 @@ RooUnfoldBayes::Unfold()
 {
   _bayes= new RooUnfoldBayesImpl (GetName(), GetTitle());
 
-  _bayes->build (1, vector<Int_t>(1,_nt), vector<Double_t>(1,0.0), vector<Double_t>(1,1.0),
-                 1, vector<Int_t>(1,_nm), vector<Double_t>(1,0.0), vector<Double_t>(1,1.0));
+  Int_t overflow= (_overflow ? 2 : 0), nt= _nt+overflow, nm= _nm+overflow;
+  _bayes->build (1, vector<Int_t>(1,nt), vector<Double_t>(1,0.0), vector<Double_t>(1,1.0),
+                 1, vector<Int_t>(1,nm), vector<Double_t>(1,0.0), vector<Double_t>(1,1.0));
 
   _bayes->setDebug (verbose());
   if (verbose() >= 2) Print();
 
-  vector<Double_t> vtruth(_nt), vtrain(_nm), vmeasured(_nm);
-  Array2D aresp(_nt,_nm);
-  _bayes->setupTrain  (H2VD (_res->Htruth(),    vtruth),
-                       H2VD (_res->Hmeasured(), vtrain),
-                       H2AD (_res->Hresponse(), aresp));
-  _bayes->setupUnfold (H2VD (_meas,             vmeasured));
+  vector<Double_t> vtruth(nt), vtrain(nm), vmeasured(nm);
+  Array2D aresp(nt,nm);
+  _bayes->setupTrain  (H2VD (_res->Htruth(),    vtruth, _overflow),
+                       H2VD (_res->Hmeasured(), vtrain, _overflow),
+                       H2AD (_res->Hresponse(), aresp,  0, _overflow));
+  _bayes->setupUnfold (H2VD (_meas,             vmeasured, _overflow));
 
   if (verbose() >= 2) Print();
 
@@ -112,7 +113,7 @@ RooUnfoldBayes::Unfold()
 
   if (verbose() >= 2) Print();
 
-  _rec.ResizeTo (_nt);
+  _rec.ResizeTo (nt);
   VD2V (causes, _rec);
   _unfolded= true;
   _haveCov=  false;
@@ -122,13 +123,14 @@ void
 RooUnfoldBayes::GetCov()
 {
   if (!_unfolded) Unfold();
-  _cov.ResizeTo (_nt, _nt);
+  Int_t nt= _nt + (_overflow ? 2 : 0);
+  _cov.ResizeTo (nt, nt);
   getCovariance();
   if (_bayes->error() != 0.0) {
     AD2M (_bayes->covariance(), _cov);
   } else {
     cerr << "Covariance matrix not calculated - fill errors with sqrt(N)" << endl;
-    for (Int_t i= 0; i < _nt; i++)
+    for (Int_t i= 0; i < nt; i++)
       _cov(i,i)= sqrt (fabs (_rec(i)));
   }
   _haveCov= true;
@@ -146,28 +148,29 @@ RooUnfoldBayes::Print(Option_t* option) const
 }
 
 vector<Double_t>&
-RooUnfoldBayes::H2VD (const TH1* h, vector<Double_t>& v)
+RooUnfoldBayes::H2VD (const TH1* h, vector<Double_t>& v, Bool_t overflow)
 {
   if (!h) return v;
   size_t nb= v.size();
   for (size_t i= 0; i < nb; i++)
-    v[i]= h->GetBinContent (RooUnfoldResponse::GetBin(h,i));
+    v[i]= h->GetBinContent (RooUnfoldResponse::GetBin(h,i,overflow));
   return v;
 }
 
 Array2D&
-RooUnfoldBayes::H2AD (const TH2D* h, Array2D& m, const TH1* norm)
+RooUnfoldBayes::H2AD (const TH2D* h, Array2D& m, const TH1* norm, Bool_t overflow)
 {
   if (!h) return m;
+  Int_t first= overflow ? 0 : 1;
   Int_t nt= m.GetNrows(), nm= m.GetNcols();
   for (Int_t j= 0; j < nt; j++) {
-    Double_t nTrue= norm ? norm->GetBinContent (j+1) : 1.0;
+    Double_t nTrue= norm ? norm->GetBinContent (j+first) : 1.0;
     if (nTrue == 0.0) {
       for (Int_t i= 0; i < nm; i++)
         m.Set (j, i, 0.0);
     } else {
       for (Int_t i= 0; i < nm; i++)
-        m.Set (j, i, h->GetBinContent(i+1,j+1) / nTrue);
+        m.Set (j, i, h->GetBinContent(i+first,j+first) / nTrue);
     }
   }
   return m;

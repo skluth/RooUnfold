@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.10 2010-01-26 00:53:17 adye Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.11 2010-05-25 17:34:03 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -140,6 +140,10 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
   _tru->Reset();
   _mdim= _mes->GetDimension();
   _tdim= _tru->GetDimension();
+  if (_overflow && (_mdim > 1 || _tdim > 1)) {
+    cerr << "UseOverflow setting ignored for multi-dimensional distributions" << endl;
+    _overflow= 0;
+  }
   _nm= _mes->GetNbinsX() * _mes->GetNbinsY() * _mes->GetNbinsZ();
   _nt= _tru->GetNbinsX() * _tru->GetNbinsY() * _tru->GetNbinsZ();
   _res= new TH2D (GetName(), GetTitle(), _nm, 0.0, Double_t(_nm), _nt, 0.0, Double_t(_nt));
@@ -162,6 +166,10 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2D* res
   TH1::AddDirectory (oldstat);
   _mdim= _mes->GetDimension();
   _tdim= _tru->GetDimension();
+  if (_overflow && (_mdim > 1 || _tdim > 1)) {
+    cerr << "UseOverflow setting ignored for multi-dimensional distributions" << endl;
+    _overflow= 0;
+  }
   _nm= _mes->GetNbinsX() * _mes->GetNbinsY() * _mes->GetNbinsZ();
   _nt= _tru->GetNbinsX() * _tru->GetNbinsY() * _tru->GetNbinsZ();
   if (_nm != _res->GetNbinsX() || _nt != _res->GetNbinsY()) {
@@ -262,7 +270,7 @@ RooUnfoldResponse::GetBinDim (const TH1* h, Int_t i)
 //  cout << i << " -> " << "(" << i%nx+1 << "," << (i/nx)%ny+1 << "," << i/(nx*ny)+1 << ")" << endl;
     return h->GetBin (i%nx+1, (i/nx)%ny+1, i/(nx*ny)+1);
   }
-  return i+1;   // not used: 1D handled by inline GetBin(), don't support >3D.
+  return i+1;   // not used: 1D handled by inline GetBin() (and handling UseOverflow), don't support >3D.
 }
 
 Int_t
@@ -298,7 +306,7 @@ RooUnfoldResponse::H2H1D(const TH1* h, Int_t nb)
   if (h->GetDimension() == 1) return (TH1D*) h->Clone();
   TH1D* h1d= new TH1D(h->GetName(), h->GetTitle(), nb, 0.0, 1.0);
   for (Int_t i= 0; i < nb; i++) {
-    Int_t j= GetBin (h, i);  // don't bother with under/overflow bins
+    Int_t j= GetBin (h, i);  // don't bother with under/overflow bins (not supported for >1D)
     h1d->SetBinContent (i+1, h->GetBinContent (j));
     h1d->SetBinError   (i+1, h->GetBinError   (j));
   }
@@ -306,49 +314,60 @@ RooUnfoldResponse::H2H1D(const TH1* h, Int_t nb)
 }
 
 TVectorD*
-RooUnfoldResponse::H2V  (const TH1* h, Int_t nb)
+RooUnfoldResponse::H2V  (const TH1* h, Int_t nb, Bool_t overflow)
 {
+  Int_t first= overflow ? 0 : 1;
+  if (overflow) nb += 2;
   TVectorD* v= new TVectorD (nb);
   if (!h) return v;
   for (Int_t i= 0; i < nb; i++) {
-    (*v)(i)= h->GetBinContent (i+1);
+    (*v)(i)= h->GetBinContent (i+first);
   }
   return v;
 }
 
 void
-RooUnfoldResponse::V2H (const TVectorD& v, TH1* h, Int_t nb)
+RooUnfoldResponse::V2H (const TVectorD& v, TH1* h, Int_t nb, Bool_t overflow)
 {
+  Int_t first= overflow ? 0 : 1;
+  if (overflow) nb += 2;
   for (Int_t i= 0; i < nb; i++) {
-    h->SetBinContent (i+1, v(i));
+    h->SetBinContent (i+first, v(i));
   }
 }
 
 TVectorD*
-RooUnfoldResponse::H2VE (const TH1* h, Int_t nb)
+RooUnfoldResponse::H2VE (const TH1* h, Int_t nb, Bool_t overflow)
 {
+  Int_t first= overflow ? 0 : 1;
+  if (overflow) nb += 2;
   TVectorD* v= new TVectorD (nb);
   if (!h) return v;
   for (Int_t i= 0; i < nb; i++) {
-    (*v)(i)= h->GetBinError (i+1);
+    (*v)(i)= h->GetBinError (i+first);
   }
   return v;
 }
 
 TMatrixD*
-RooUnfoldResponse::H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm)
+RooUnfoldResponse::H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm, Bool_t overflow)
 {
+  Int_t first= overflow ? 0 : 1;
+  if (overflow) {
+    nx += 2;
+    ny += 2;
+  }
   TMatrixD* m= new TMatrixD (nx, ny);
   if (!h) return m;
   for (Int_t j= 0; j < ny; j++) {
-    Double_t nTrue= norm ? norm->GetBinContent (j+1) : 1.0;
+    Double_t nTrue= norm ? norm->GetBinContent (j+first) : 1.0;
     if (nTrue == 0.0) {
       for (Int_t i= 0; i < nx; i++) {
         (*m)(i,j)= 0.0;
       }
     } else {
       for (Int_t i= 0; i < nx; i++) {
-        (*m)(i,j)= h->GetBinContent(i+1,j+1) / nTrue;
+        (*m)(i,j)= h->GetBinContent(i+first,j+first) / nTrue;
       }
     }
   }
@@ -356,12 +375,17 @@ RooUnfoldResponse::H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm)
 }
 
 TMatrixD*
-RooUnfoldResponse::H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm)
+RooUnfoldResponse::H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm, Bool_t overflow)
 {
+  Int_t first= overflow ? 0 : 1;
+  if (overflow) {
+    nx += 2;
+    ny += 2;
+  }
   TMatrixD* m= new TMatrixD (nx, ny);
   if (!h) return m;
   for (Int_t j= 0; j < ny; j++) {
-    Double_t nTrue= norm ? norm->GetBinContent (j+1) : 1.0;
+    Double_t nTrue= norm ? norm->GetBinContent (j+first) : 1.0;
     if (nTrue == 0.0) {
       for (Int_t i= 0; i < nx; i++) {
         (*m)(i,j)= 0.0;
@@ -369,7 +393,7 @@ RooUnfoldResponse::H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm)
     } else {
       for (Int_t i= 0; i < nx; i++) {
         // Assume Poisson nTrue, Multinomial P(mes|tru)
-        (*m)(i,j)= h->GetBinError(i+1,j+1) / nTrue;
+        (*m)(i,j)= h->GetBinError(i+first,j+first) / nTrue;
       }
     }
   }
@@ -393,7 +417,7 @@ RooUnfoldResponse::ApplyToTruth (const TH1* truth, const char* name) const
       cerr << "Warning: RooUnfoldResponse::ApplyToTruth truth histogram is a different size ("
            << (truth->GetNbinsX() * truth->GetNbinsY() * truth->GetNbinsZ()) << " bins) or shape from response matrix truth ("
            << ( _tru->GetNbinsX() *  _tru->GetNbinsY() *  _tru->GetNbinsZ()) << " bins)" << endl;
-    resultvect= H2V (truth, GetNbinsTruth());
+    resultvect= H2V (truth, GetNbinsTruth(), _overflow);
     if (!resultvect) return 0;
   } else {
     resultvect= new TVectorD (Vtruth());
@@ -405,7 +429,7 @@ RooUnfoldResponse::ApplyToTruth (const TH1* truth, const char* name) const
   TH1* result= (TH1*) Hmeasured()->Clone (name);
   result->SetTitle (name);
   result->Reset();
-  V2H (*resultvect, result, GetNbinsMeasured());
+  V2H (*resultvect, result, GetNbinsMeasured(), _overflow);
   delete resultvect;
   return result;
 }

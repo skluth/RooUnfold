@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.12 2010-05-20 22:50:59 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.13 2010-05-25 17:34:03 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -77,6 +77,7 @@ RooUnfold::Init()
   _meas= 0;
   _nm= _nt= 0;
   _verbose= 1;
+  _overflow= 0;
   _unfolded= _haveCov= _fail= false;
 }
 
@@ -88,6 +89,7 @@ RooUnfold::Setup (const RooUnfoldResponse* res, const TH1* meas)
   _meas= meas;
   _nm= _res->GetNbinsMeasured();
   _nt= _res->GetNbinsTruth();
+  _overflow= _res->UseOverflowStatus() ? 1 : 0;
   SetNameTitleDefault();
   return *this;
 }
@@ -97,10 +99,12 @@ void
 RooUnfold::Unfold()
 {
   cout << "********************** " << ClassName() << ": dummy unfolding - just copy input **********************" << endl;
-  _rec.ResizeTo (_nt);
+  Int_t first= _overflow ? 0 : 1;
+  _rec.ResizeTo (_nt + (_overflow ? 2 : 0));
   Int_t nb= _nm < _nt ? _nm : _nt;
+  if (_overflow) nb += 2;
   for (Int_t i= 0; i < nb; i++) {
-    _rec[i]= _meas->GetBinContent (i+1);
+    _rec[i]= _meas->GetBinContent (i+first);
   }
   _unfolded= true;
 }
@@ -109,10 +113,13 @@ RooUnfold::Unfold()
 void
 RooUnfold::GetCov()
 {
-  _cov.ResizeTo (_nt, _nt);
+  Int_t first= _overflow ? 0 : 1;
+  Int_t nt= _nt + (_overflow ? 2 : 0);
+  _cov.ResizeTo (nt, nt);
   Int_t nb= _nm < _nt ? _nm : _nt;
+  if (_overflow) nb += 2;
   for (Int_t i= 0; i < nb; i++) {
-    Double_t err= _meas->GetBinError (i+1);
+    Double_t err= _meas->GetBinError (i+first);
     _cov(i,i)= err*err;
   }
   _haveCov= true;
@@ -139,11 +146,12 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
     << "====================================================================" << xwid << endl;
 
   Double_t chi2= 0.0;
-  Int_t ndf= 0;
-  Int_t maxbin= _nt < _nm ? _nm : _nt;
+  Int_t ndf= 0, first= (_overflow ? 0 : 1);
+  Int_t overflow= (_overflow ? 2 : 0), nt= _nt+overflow, nm= _nm+overflow;
+  Int_t maxbin= nt < nm ? nm : nt;
   for (Int_t i = 0 ; i < maxbin; i++) {
-    Int_t it= RooUnfoldResponse::GetBin (hReco, i);
-    Int_t im= RooUnfoldResponse::GetBin (hMeas, i);
+    Int_t it= RooUnfoldResponse::GetBin (hReco, i, _overflow);
+    Int_t im= RooUnfoldResponse::GetBin (hMeas, i, _overflow);
 
     if (dim==2 || dim==3) {
       // ROOT 5.26 has GetBinXYZ to do this.
@@ -153,26 +161,26 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
       o << setw(iw) << ix << ',' << setw(iw) << iy;
       if (dim==3) o << ',' << setw(iw) << ((it-ix)/ntxb - iy)/ntyb;
     } else
-      o << setw(iwid) << i+1;
+      o << setw(iwid) << i+first;
     o << std::fixed << setprecision(0);
-    if (i<_nt)
+    if (i<nt)
       o << ' ' << setw(8) << hTrainTrue->GetBinContent(it);
     else
       o << setw(9) << " ";
-    if (i<_nm)
+    if (i<nm)
       o << ' ' << setw(8) << hTrain->GetBinContent(im);
     else
       o << setw(9) << " ";
-    if (hTrue && i<_nt)
+    if (hTrue && i<nt)
       o << ' ' << setw(8) << hTrue->GetBinContent(it);
     else
       o << setw(9) << " ";
-    if (i<_nm)
+    if (i<nm)
       o << ' ' << setw(8) << hMeas->GetBinContent(im);
     else
       o << setw(9) << " ";
     o << setprecision(1);
-    if (i<_nt) {
+    if (i<nt) {
       o << ' ' << setw(8) << hReco->GetBinContent(it);
       if (hTrue &&
           ((hReco->GetBinContent(it)!=0.0 || (withError && hReco->GetBinError(it)>0.0)) &&
@@ -231,8 +239,9 @@ RooUnfold::Hreco (Bool_t withError)
   if (_fail)                  return 0;
   if (withError && !_haveCov) GetCov();
   if (!_haveCov) withError= false;
-  for (Int_t i= 0; i < _nt; i++) {
-    Int_t j= RooUnfoldResponse::GetBin (reco, i);
+  Int_t nt= _nt + (_overflow ? 2 : 0);
+  for (Int_t i= 0; i < nt; i++) {
+    Int_t j= RooUnfoldResponse::GetBin (reco, i, _overflow);
     reco->SetBinContent (j,             _rec(i));
     if (withError)
       reco->SetBinError (j, sqrt (fabs (_cov(i,i))));

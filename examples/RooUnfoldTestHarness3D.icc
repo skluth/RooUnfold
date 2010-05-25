@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness3D.icc,v 1.11 2010-05-24 22:57:06 adye Exp $
+//      $Id: RooUnfoldTestHarness3D.icc,v 1.12 2010-05-25 17:34:00 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 3D toy MC.
@@ -325,6 +325,13 @@ void RooUnfoldTestHarness3D::Init()
   RooUnfoldTestHarness2D::Init();
   if (ntz==-1) ntz= nty;
   if (nmz==-1) nmz= ntz;
+  if (overflow==2) {
+    Double_t zwid= (zhi-zlo) / ntz;
+    zlo -= zwid;
+    zhi += zwid;
+    ntz += 2;
+    nmz += Int_t (2.0*(Double_t(nmz)/Double_t(ntz)) + 0.5);
+  }
   ntbins= ntx*nty*ntz;
   nmbins= nmx*nmy*nmz;
 }

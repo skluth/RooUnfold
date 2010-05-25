@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.8 2010-05-20 22:50:59 adye Exp $
+//      $Id: RooUnfold.h,v 1.9 2010-05-25 17:34:03 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -72,6 +72,7 @@ protected:
   Int_t _verbose;  // Debug print level
   Int_t _nm;   // Total number of measured bins
   Int_t _nt;   // Total number of truth    bins
+  Int_t _overflow;   // Use histogram under/overflows if 1 (set from RooUnfoldResponse)
   mutable Bool_t _unfolded, _haveCov, _fail;
   const RooUnfoldResponse* _res;   // Response matrix (not owned)
   const TH1* _meas;                // Measured distribution (not owned)

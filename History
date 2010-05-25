@@ -1,5 +1,12 @@
-History of RooUnfold     $Id: History,v 1.56 2010-05-24 22:57:04 adye Exp $
+History of RooUnfold     $Id: History,v 1.57 2010-05-25 17:33:59 adye Exp $
 ====================
+
+Tim Adye         25-May-2010 tja100525a
+  o RooUnfold can now include the under/overflow bins. This is set by
+    RooUnfoldResponse::UseOverflow(). Currently only works for 1D.
+    Still to fix: RooUnfoldSvd now leaks a few histograms.
+  o RooUnfoldTest "overflow" option: 0=ignore under/overflows, 1=unfolding uses
+    overflows, 2=show under/overflow bins on test histograms.
 
 Tim Adye         24-May-2010 tja100524a
   RooUnfoldTest chanegs:
