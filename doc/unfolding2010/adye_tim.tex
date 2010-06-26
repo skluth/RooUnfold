@@ -1,0 +1,214 @@
+\documentclass{desyproc}
+
+\begin{document}
+%------------------------------------
+\title{RooUnfold --- unfolding framework and algorithms}
+
+\author{{\slshape Tim Adye$^1$, Kerstin Tackmann$^2$, Fergus Wilson$^1$}\\[1ex]
+$^1$Rutherford Appleton Laboratory, Science and Technology Facilities Council, Harwell Science and Innovation Campus, Didcot OX11 0QX, United Kingdom\\
+$^2$CERN, CH-1211 Geneva 23, Switzerland}
+
+% please do not modify the following 5 lines
+\contribID{xy}  % will be entered by the editors
+\confID{3009}
+\desyproc{DESY-PROC-2010-02}
+\acronym{Unfolding 2010}
+\doi            % will be entered by the editors
+
+\maketitle
+
+\begin{abstract}
+\end{abstract}
+
+\section{RooUnfold package aims and features}
+
+The RooUnfold package was designed to provide a framework for different unfolding algorithms.
+This approach simplifies the comparison between algorithms and has allowed
+common utilities to be written.
+
+Currently RooUnfold implements the iterative Bayes~\cite{D'Agostini:1994zf},
+Singular Value Decomposition (SVD)~\cite{Hocker:1995kb}, and correction factors methods.
+In each case, so far, RooUnfold was interfaced to existing code, which
+was then adapted and improved in-situ. We plan to continue this process with
+other algorithms.
+
+The package is designed around a simple object-oriented approach, implemented in
+C++, and using existing ROOT classes. RooUnfold defines classes for the different
+unfolding algorithms, which inherit from a common base class, and a class for
+the response matrix. The response matrix object is independent of the unfolding,
+so can be filled in a separate ``training'' program.
+
+RooUnfold can be linked into a stand-alone program, run from a ROOT/CINT script, or
+from executed interactively from the ROOT prompt.
+The response matrix can be initialised using existing histograms or matrices, or
+filled with build-in methods (these can take care of the normalisation when inefficiencies are to be considered).
+The results can be returned as a histogram with errors, or a vector with full covariance matrix.
+
+The framework also takes care of handling multi-dimensional distributions
+(with ROOT support for 1--, 2--, and 3--dimensional histograms),
+different binning for measured and truth distributions,
+variable binning, and the option to include or exclude of under- and over-flows.
+These details are handled by the framework, so don't have to be
+implemented for each algorithm. However they may not produce good results for
+algorithms that rely on the global shape (SVD).
+
+Common utility routines are provided for displaying the results with resolutions,
+pulls, and $\chi^2$. A toy Monte Carlo (MC) test framework is also provided, allowing
+selection of different MC probability distribution functions (PDF) and parameters,
+comparing different binning, and performing the unfolding with the different
+algorithms and varying the unfolding parameters (for regularisation).
+Tests can be performed with 1D, 2D, and 3D distributions.
+A few example tests are presented in section~\ref{sec:adye:examples}.
+
+
+
+\section{C++ classes}
+
+\begin{figure}[hb]
+\centerline{\includegraphics[width=\textwidth]{adye_tim.classes.eps}}
+\caption{RooUnfold classes}\label{Fig:adye:classes}
+\end{figure}
+
+Figure~\ref{Fig:adye:classes} summarises how the ROOT and RooUnfold classes are used
+together. The RooUnfoldResponse object can be constructed using a 2D response histogram (TH2D)
+and 1D truth and measured projections (these are required to determine the effect of inefficiencies).
+Alternatively, RooUnfoldResponse can be filled directly with the
+
+\begin{quote}
+\texttt{response->Fill($x_{\rm measured}$, $x_{\rm true}$)}
+\end{quote}
+
+and
+
+\begin{quote}
+\texttt{response->Miss($x_{\rm true}$)}
+\end{quote}
+
+where the \texttt{Miss} method is used to count an event that was not measured
+and should be counted towards the inefficiency.
+
+The RooUnfoldResponse object can be saved to disk using the usual ROOT input/output
+streamers. This allows the easy separation in separate programs
+of MC training from the unfolding step.
+
+A RooUnfold object is constructed using a RooUnfoldResponse object and the measured
+data. It can be constructed as a RooUnfoldBayes, RooUnfoldSVD, or RooUnfoldBinByBin
+object, depending on the algorithm required.
+
+The results of the unfolding can be obtained as ROOT histograms (TH1D, TH2D, or TH3D)
+or as a ROOT vector (TVectorD) and covariance matrix (TMatrixD). The histogram will
+include just the diagonal elements of the error matrix, which may be misleading
+given the significant correlations that can occur if there is much bin-to-bin migration.
+
+\section{Unfolding algorithms}
+
+\subsection{Iterative Bayes' theorem}
+
+The RooUnfoldBayes algorithm uses the method described by Giulio D'Agostini in~\cite{D'Agostini:1994zf}.
+
+Repeated application of Bayes' theorem is used to invert the response matrix.
+Regularisation is achieved by stopping iterations before reaching "true"
+(but wildly fluctuating) inverse.
+The regularisation parameters is just the number of iterations,
+which in principle has to be tuned according to the statistics, number of bins, etc.
+In practice, the results are fairly insensitive to the precise setting used.
+
+RooUnfoldBayes takes the training truth as its initial prior, rather than a flat distribution,
+as described by D'Agostini.
+This should not bias result once we have iterated, but could reach an optimum after fewer iterations.
+
+This implementation takes account of multinomial errors on the data sample but not,
+by default, uncertainties in the response matrix due to finite MC statistics.
+That calculation can be very slow, and usually the training sample is much larger
+than the data sample.
+
+RooUnfoldBayes does not normally do smoothing, since this has not not been necessary
+and can, in principle, bias the distribution. Smoothing can be enabled with an option.
+
+\subsection{Singular Value Decomposition}
+
+RooUnfoldSVD uses the method of Andreas H\"ocker and Vakhtang Kartvelishvili~\cite{Hocker:1995kb}
+and originally implemented for the BaBar $B \rightarrow X_ul\nu$ measurement~\cite{Aubert:2004bq}.
+
+The response matrix is inverted using singular value decomposition
+(The normalisation to the number of events is retained in order to keep
+track of the MC uncertainties.)
+Regularisation is performed using a smooth cut-off on small singular value contributions
+(these correspond to high-frequency fluctuations) by replacing
+$s_i^2 \rightarrow s_i^2 / (s_i^2 + s_k^2)$ where the choice of cut-off singular value index, $k$,
+determines the relative contributions of MC truth and data.
+
+If $k$ is too small, the result dominated by MC truth. 
+If $k$ is too large, result dominated by statistical fluctuations.
+$k$ needs to be tuned for the particular type of distribution, number of bins, and approximate sample size.
+
+The unfolded error matrix includes effect of finite MC training statistics, though these are usually quite small.
+
+\subsection{Simple correction factors}
+
+A very simple algorithm using bin-by-bin correction factors,
+with no inter-bin migration is included to aid comparison.
+
+\section{Examples\label{sec:adye:examples}}
+
+\begin{figure}[hb]
+\centerline{\includegraphics[angle=-90,width=\textwidth]{adye_tim.bayes1.eps}}\vspace{4ex}%
+\centerline{\includegraphics[angle=-90,width=\textwidth]{adye_tim.bayes2.eps}}
+\caption{Unfolding with the Bayes algorithm.}\label{Fig:adye:bayes-example}
+\end{figure}
+
+\begin{figure}[hb]
+\centerline{\includegraphics[angle=-90,width=\textwidth]{adye_tim.svd2.eps}}
+\caption{Unfolding with the SVD algorithm.}\label{Fig:adye:svd-example}
+\end{figure}
+
+\begin{figure}[hb]
+\centerline{\includegraphics[angle=-90,width=\textwidth]{adye_tim.bin2.eps}}
+\caption{Unfolding with simple correction factors.}\label{Fig:adye:bin-example}
+\end{figure}
+
+\section{Status and Plans}
+
+\section{Acknowledgments}
+
+\section{Bibliography}
+
+% ****************************************************************************
+% BIBLIOGRAPHY AREA
+% ****************************************************************************
+
+% please do not change the following line
+\begin{footnotesize}
+
+\begin{thebibliography}{99}
+
+\bibitem{D'Agostini:1994zf}
+  G.~D'Agostini,
+  %``A Multidimensional unfolding method based on Bayes' theorem,''
+  Nucl.\ Instrum.\ Meth.\  A {\bf 362} (1995) 487.
+  %%CITATION = NUIMA,A362,487;%%
+
+\bibitem{Hocker:1995kb}
+  A.~Hocker and V.~Kartvelishvili,
+  %``SVD Approach to Data Unfolding,''
+  Nucl.\ Instrum.\ Meth.\  A {\bf 372} (1996) 469
+  [arXiv:hep-ph/9509307].
+  %%CITATION = NUIMA,A372,469;%%
+
+\bibitem{Aubert:2004bq}
+  B.~Aubert {\it et al.}  [BABAR Collaboration],
+  %``Study of $B \to u \ell \bar{\nu}$ decays on the recoil of fully
+  %reconstructed $B$ mesons and determination of $|V_{ub}|$,''
+  arXiv:hep-ex/0408068.
+  %%CITATION = HEP-EX/0408068;%%
+
+\end{thebibliography}
+
+% please do not change the following line
+\end{footnotesize}
+
+% ****************************************************************************
+% END OF BIBLIOGRAPHY AREA
+% ****************************************************************************
+
+\end{document}
