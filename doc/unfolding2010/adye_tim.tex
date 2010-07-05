@@ -1,4 +1,5 @@
 \documentclass{desyproc}
+\newcommand{\babar}{\mbox{\sl B\hspace{-0.4em} {\small\sl A}\hspace{-0.37em} \sl B\hspace{-0.4em} {\small\sl A\hspace{-0.02em}R}}}
 
 \begin{document}
 %------------------------------------
@@ -128,7 +129,7 @@ and can, in principle, bias the distribution. Smoothing can be enabled with an o
 \subsection{Singular Value Decomposition}
 
 RooUnfoldSVD uses the method of Andreas H\"ocker and Vakhtang Kartvelishvili~\cite{Hocker:1995kb}
-and was originally implemented for the BaBar $B \rightarrow X_ul\nu$ measurement~\cite{Tackmann:2008qa}.
+and was originally implemented for the \babar\ $B \rightarrow X_ul\nu$ measurement~\cite{Tackmann:2008qa}.
 
 The response matrix is inverted using singular value decomposition,
 which allows for a linear implementation of the unfolding algorithm.
@@ -182,7 +183,7 @@ and~\ref{Fig:adye:bayes-example}.}\label{Fig:adye:svd-example}
 
 \section{Status and Plans}
 
-RooUnfold was first developed in the BaBar software environment.
+RooUnfold was first developed in the \babar\ software environment.
 It was released stand-alone in 2007.
 Since then, it has been used by physicists from many
 different particle physics, particle-astrophysics, and nuclear physics groups.
@@ -237,8 +238,8 @@ automating the validation and selection of regularisation parameters;
   See also \verb=http://root.cern.ch/=.
 
 \bibitem{Tackmann:2008qa}
-  K.~Tackmann [BABAR Collaboration],
-  ``Determination of the $b$-quark mass and nonperturbative parameters in semileptonic and radiative penguin decays at BABAR,''
+  K.~Tackmann [\babar\ Collaboration],
+  ``Determination of the $b$-quark mass and nonperturbative parameters in semileptonic and radiative penguin decays at \babar,''
   Eur.\ Phys.\ J.\  A {\bf 38} (2008) 137
   [arXiv:0801.2985 [hep-ex]].
   %%CITATION = EPHJA,A38,137;%%
