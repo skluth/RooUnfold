@@ -2,7 +2,7 @@
 
 \begin{document}
 %------------------------------------
-\title{RooUnfold --- unfolding framework and algorithms}
+\title{RooUnfold: unfolding framework and algorithms}
 
 \author{{\slshape Tim Adye$^1$, Kerstin Tackmann$^2$, Fergus Wilson$^1$}\\[1ex]
 $^1$Rutherford Appleton Laboratory, Science and Technology Facilities Council, Harwell Science and Innovation Campus, Didcot OX11 0QX, United Kingdom\\
@@ -128,19 +128,18 @@ and can, in principle, bias the distribution. Smoothing can be enabled with an o
 \subsection{Singular Value Decomposition}
 
 RooUnfoldSVD uses the method of Andreas H\"ocker and Vakhtang Kartvelishvili~\cite{Hocker:1995kb}
-and originally implemented for the BaBar $B \rightarrow X_ul\nu$ measurement~\cite{Aubert:2004bq}.
+and was originally implemented for the BaBar $B \rightarrow X_ul\nu$ measurement~\cite{Tackmann:2008qa}.
 
-The response matrix is inverted using singular value decomposition.
-(The normalisation to the number of events is retained in order to keep
-track of the MC uncertainties.)
-Regularisation is performed using a smooth cut-off on small singular value contributions
-(these correspond to high-frequency fluctuations) by replacing
-$s_i^2 \rightarrow s_i^2 / (s_i^2 + s_k^2)$ where the choice of cut-off singular value index, $k$,
-determines the relative contributions of MC truth and data.
+The response matrix is inverted using singular value decomposition,
+which allows for a linear implementation of the unfolding algorithm.
+The normalisation to the number of events is retained in order to minimize
+uncertainties due to the size of the training sample.
+Regularisation is performed using a smooth cut-off on small singular value contributions,
+which correspond to high-frequency fluctuations.
 
-If $k$ is too small, the result is dominated by MC truth. 
-If $k$ is too large, the result is dominated by statistical fluctuations.
-$k$ needs to be tuned for the particular type of distribution, number of bins, and approximate sample size.
+The regularisation needs to be tuned for the particular type of distribution, number of bins, and approximate sample size
+in order to not generate any significant bias due to the choice of the training sample
+while retaining small statistical fluctuations in the unfolding result.
 
 The unfolded error matrix includes the contribution of uncertainties on the
 response matrix due to finite MC training statistics, though these are usually quite small.
@@ -237,11 +236,12 @@ automating the validation and selection of regularisation parameters;
   %%CITATION = NUIMA,A389,81;%%
   See also \verb=http://root.cern.ch/=.
 
-\bibitem{Aubert:2004bq}
-  B.~Aubert {\it et al.}  [BABAR Collaboration],
-  ``Study of $B \to u \ell \bar{\nu}$ decays on the recoil of fully reconstructed $B$ mesons and determination of $|V_{ub}|$,''
-  arXiv:hep-ex/0408068.
-  %%CITATION = HEP-EX/0408068;%%
+\bibitem{Tackmann:2008qa}
+  K.~Tackmann [BABAR Collaboration],
+  ``Determination of the $b$-quark mass and nonperturbative parameters in semileptonic and radiative penguin decays at BABAR,''
+  Eur.\ Phys.\ J.\  A {\bf 38} (2008) 137
+  [arXiv:0801.2985 [hep-ex]].
+  %%CITATION = EPHJA,A38,137;%%
 
 \bibitem{Verkerke:2003ir}
   W.~Verkerke and D.~P.~Kirkby,
