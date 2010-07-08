@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.13 2010-05-25 17:34:03 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.14 2010-07-08 13:27:41 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -22,7 +22,7 @@
 #include "TH3.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
-
+#include "TDecompSVD.h"
 #include "RooUnfoldResponse.h"
 
 using std::cout;
@@ -125,6 +125,31 @@ RooUnfold::GetCov()
   _haveCov= true;
 }
 
+Double_t RooUnfold::Chi2(const TH1* hTrue)
+{
+	const TH1* hReco=Hreco ();
+	Int_t nt= _nt+(_overflow ? 2 : 0);
+	TMatrixD reco_matrix(nt,1);
+  	for (Int_t i = 0 ; i < nt; i++) {
+    	Int_t it= RooUnfoldResponse::GetBin (hReco, i, _overflow);
+    	if ((hReco->GetBinContent(it)!=0.0 || (hReco->GetBinError(it)>0.0)) &&
+            (hTrue->GetBinContent(it)!=0.0 || (hTrue->GetBinError(it)>0.0))) {
+           	reco_matrix(i,0)    = hReco->GetBinContent(it) - hTrue->GetBinContent(it);
+        }
+  	}
+  	TMatrixD Ereco_copy=Ereco();
+  	Double_t Ereco_det = Ereco_copy.Determinant();
+	if (Ereco_det<1e-16){
+		cerr << "Warning: Small Determinant of Covariance Matrix =" << Ereco_det << endl;
+	}
+	TDecompSVD svd(Ereco_copy);
+	Ereco_copy = svd.Invert();//SVD method of finding inverse matrix should allow for singular matrices.
+	TMatrixD chi = TMatrixD(reco_matrix,TMatrixD::kTransposeMult,Ereco_copy);
+	TMatrixD chisq = TMatrixD(chi, TMatrixD::kMult,reco_matrix);
+	return chisq(0,0);	
+}
+        
+
 void
 RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
 {
@@ -152,7 +177,7 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
   for (Int_t i = 0 ; i < maxbin; i++) {
     Int_t it= RooUnfoldResponse::GetBin (hReco, i, _overflow);
     Int_t im= RooUnfoldResponse::GetBin (hMeas, i, _overflow);
-
+	
     if (dim==2 || dim==3) {
       // ROOT 5.26 has GetBinXYZ to do this.
       Int_t iw= (dim==2) ? 3 : 2;
@@ -190,7 +215,7 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
         o << ' ' << setw(8) << ydiff;
         if (ydiffErr>0.0) {
           Double_t ypull = ydiff/ydiffErr;
-          chi2 += ypull*ypull;
+          chi2 += ypull*ypull;//calculates chi^2 value without matrix method. Only valid for diagonal covariance matrices
           ndf++;
           o << setprecision(3) << ' ' << setw(8) << ypull;
         }
@@ -198,7 +223,7 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
     }
     o << endl;
   }
-
+  
   o << "====================================================================" << xwid << endl
     << setw(iwid) << "" << std::fixed << setprecision(0)
     << ' ' << setw(8) << hTrainTrue->Integral()
@@ -212,7 +237,11 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
     << endl
     << "====================================================================" << xwid << endl;
   o.copyfmt (fmt);  // restore original ostream format
-  o << "Chi^2/NDF=" << chi2 << "/" << ndf << endl;
+  Double_t chi_squ = Chi2(hTrue);
+  o << "Chi^2/NDF=" << chi_squ << "/" << ndf << endl;
+  if (chi_squ<=0){
+  	cerr << "Warning: Invalid Chi^2 Value" << endl;
+  }
 }
 
 void

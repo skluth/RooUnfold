@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.9 2010-05-25 17:34:03 adye Exp $
+//      $Id: RooUnfold.h,v 1.10 2010-07-08 13:27:41 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -31,7 +31,7 @@ public:
   RooUnfold (const RooUnfold& rhs); // copy constructor
   virtual ~RooUnfold(); // destructor
   RooUnfold& operator= (const RooUnfold& rhs); // assignment operator
-
+  Double_t Chi2 (const TH1* hTrue);
   // Special constructors
 
   RooUnfold (const RooUnfoldResponse* res, const TH1* meas, const char* name= 0, const char* title= 0);
