@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.15 2010-05-25 21:03:29 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.16 2010-07-08 17:00:22 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 2D toy MC.
@@ -21,11 +21,13 @@
 
 #include "TROOT.h"
 #include "TCanvas.h"
+#include "TLegend.h"
 #include "TRandom.h"
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TProfile.h"
 #include "TVectorD.h"
+#include "TLine.h"
 
 #include "RooUnfoldResponse.h"
 #endif
@@ -106,6 +108,11 @@ Int_t RooUnfoldTestHarness2D::Train ()
   hTrainX=     ProjectionX (hTrain,     "hTrainX",     "Training Measured X");
   hTrainY=     ProjectionY (hTrain,     "hTrainY",     "Training Measured Y");
 
+  return 1;
+}
+
+void RooUnfoldTestHarness2D::TrainResults()
+{
   setmax (hTrainTrueX, hPDFx, hTrainX);
   setmax (hTrainTrueY, hPDFy, hTrainY);
 
@@ -122,8 +129,6 @@ Int_t RooUnfoldTestHarness2D::Train ()
   hTrainY    ->Draw("SAME");
   if (!onepage) lTrain->Draw();
   canvas->Update();
-
-  return 1;
 }
 
 //==============================================================================
@@ -211,6 +216,27 @@ void RooUnfoldTestHarness2D::Results()
   if (onepage>=2) canvas->cd(++ipad);
   hReco->Draw();
   canvas->Update();
+
+  if (overflow==2) {
+    Int_t kilroy= 0;
+    Double_t minpull= 0.0, maxpull= 0.0;
+    for (Int_t ix= 2; ix<=ntx-1; ix++) {
+      for (Int_t iy= 2; iy<=nty-1; iy++) {
+        if ( hReco->GetBinContent(ix,iy)!=0.0             && hReco->GetBinError(ix,iy)>0.0 &&
+            (hTrue->GetBinContent(ix,iy)!=0.0 || (doerror && hTrue->GetBinError(ix,iy)>0.0))) {
+          Double_t pull= (hReco->GetBinContent(ix,iy) - hTrue->GetBinContent(ix,iy)) / hReco->GetBinError(ix,iy);
+          if (!kilroy || pull < minpull) minpull= pull;
+          if (!kilroy || pull > maxpull) maxpull= pull;
+          kilroy++;
+        }
+      }
+    }
+    if (maxpull>minpull) {
+      cout << "pulls " << minpull << " to " << maxpull << endl;
+      hPulls->SetMinimum (minpull);
+      hPulls->SetMinimum (maxpull);
+    }
+  }
 
   if (onepage>=2) canvas->cd(++ipad);
   hPulls->Draw("COLZ");

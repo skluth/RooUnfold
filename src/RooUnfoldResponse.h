@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.11 2010-05-25 17:34:03 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.12 2010-07-08 17:00:24 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -104,6 +104,7 @@ public:
 
 private:
 
+  virtual RooUnfoldResponse& Init();
   virtual RooUnfoldResponse& Setup();
   virtual void ClearCache();
   virtual void SetNameTitleDefault (const char* defname= 0, const char* deftitle= 0);
@@ -138,9 +139,9 @@ public:
 
 // Inline method definitions
 
-inline RooUnfoldResponse::RooUnfoldResponse()                                           : TNamed()           {Setup();}
-inline RooUnfoldResponse::RooUnfoldResponse (const char*    name, const char*    title) : TNamed(name,title) {Setup();}
-inline RooUnfoldResponse::RooUnfoldResponse (const TString& name, const TString& title) : TNamed(name,title) {Setup();}
+inline RooUnfoldResponse::RooUnfoldResponse()                                           : TNamed()           {Init();}
+inline RooUnfoldResponse::RooUnfoldResponse (const char*    name, const char*    title) : TNamed(name,title) {Init();}
+inline RooUnfoldResponse::RooUnfoldResponse (const TString& name, const TString& title) : TNamed(name,title) {Init();}
 inline RooUnfoldResponse::~RooUnfoldResponse()                                                               {Reset();}
 
 inline RooUnfoldResponse& RooUnfoldResponse::Setup (Int_t nb, Double_t xlo, Double_t xhi) { return Setup (nb, xlo, xhi, nb, xlo, xhi); }

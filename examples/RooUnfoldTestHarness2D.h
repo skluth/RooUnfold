@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.h,v 1.12 2010-05-25 21:03:29 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.h,v 1.13 2010-07-08 17:00:22 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 2D toy MC.
@@ -40,6 +40,7 @@ public:
   // Methods and functions
   virtual void  Parms (ArgVars& args);
   virtual Int_t Train();
+  virtual void  TrainResults();
   virtual Int_t Test();
   virtual void  Results();
   static  void  Rot     (Double_t& x, Double_t& y, Double_t angle, Double_t x0, Double_t y0);

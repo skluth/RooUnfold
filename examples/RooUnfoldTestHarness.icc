@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.18 2010-05-25 21:03:29 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.19 2010-07-08 17:00:22 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -95,6 +95,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("wpaper",  &wpaper,       0, "paper width", "");
   args.Add ("hpaper",  &hpaper,       0, "paper height", "");
   args.Add ("verbose", &verbose,      1, "debug level: 0=warnings, 1=verbose, 2=debug, 3=detailed");
+  args.Add ("draw",    &dodraw,       1, "draw results");
 }
 
 //==============================================================================
@@ -107,9 +108,12 @@ Int_t RooUnfoldTestHarness::Run()
   if (error) return error;
   CheckParms();
   if (error) return error;
-  SetupCanvas();
+  if (dodraw) SetupCanvas();
   error= RunTests();
-  ps->Close(); delete ps; ps= 0;
+  if (dodraw) {
+    ps->Close();
+    delete ps; ps= 0;
+  }
   return error;
 }
 
@@ -166,6 +170,7 @@ Int_t RooUnfoldTestHarness::RunTests()
     if (overflow==1) response->UseOverflow();
     if (verbose>=0) cout << "==================================== TRAIN ====================================" << endl;
     if (!Train()) return 4;
+    if (dodraw) TrainResults();
     TString file (GetName());
     file += ".root";
     TFile f (file, "recreate");
@@ -189,10 +194,10 @@ Int_t RooUnfoldTestHarness::RunTests()
     if (!Test())   return 6;
     if (verbose>=0) cout << "==================================== UNFOLD ===================================" << endl;
     if (!Unfold()) {
-      Results();
+      if (dodraw) Results();
       return 7;
     }
-    Results();
+    if (dodraw) Results();
   }
   return 0;
 }
@@ -230,8 +235,14 @@ Int_t RooUnfoldTestHarness::Train()
 
   // or:  response->Setup (hTrain, hTrainTrue, hResmat);
 
-  setmax (hTrainTrue, hPDFx, hTrain);
+  if (dodraw) TrainResults();
 
+  return 1;
+}
+
+void RooUnfoldTestHarness::TrainResults()
+{
+  setmax (hTrainTrue, hPDFx, hTrain);
   if (onepage>=4) canvas->cd(++ipad);
   if (!onepage || onepage >= 4) {
     hTrainTrue->Draw();
@@ -240,8 +251,6 @@ Int_t RooUnfoldTestHarness::Train()
     if (!onepage) Legend (lTrain, hPDFx, hTrainTrue, hTrain);
     canvas->Update();
   }
-
-  return 1;
 }
 
 //==============================================================================

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness3D.icc,v 1.13 2010-05-25 21:03:29 adye Exp $
+//      $Id: RooUnfoldTestHarness3D.icc,v 1.14 2010-07-08 17:00:22 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 3D toy MC.
@@ -20,10 +20,12 @@
 
 #include "TROOT.h"
 #include "TCanvas.h"
+#include "TLegend.h"
 #include "TH1D.h"
 #include "TH3D.h"
 #include "TProfile.h"
 #include "TVectorD.h"
+#include "TLine.h"
 
 #include "RooUnfoldResponse.h"
 #endif
@@ -110,6 +112,12 @@ Int_t RooUnfoldTestHarness3D::Train()
   hTrainY=     ProjectionY (hTrain,     "hTrainY",     "Training Measured Y");
   hTrainZ=     ProjectionZ (hTrain,     "hTrainZ",     "Training Measured Z");
 
+  return 1;
+}
+
+
+void RooUnfoldTestHarness3D::TrainResults()
+{
   setmax (hTrainTrueX, hPDFx, hTrainX);
   setmax (hTrainTrueY, hPDFy, hTrainY);
   setmax (hTrainTrueZ, hPDFz, hTrainZ);
@@ -134,8 +142,6 @@ Int_t RooUnfoldTestHarness3D::Train()
   hTrainZ    ->Draw("SAME");
   if (!onepage) lTrain->Draw();
   canvas->Update();
-
-  return 1;
 }
 
 //==============================================================================

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.11 2010-05-25 17:34:03 adye Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.12 2010-07-08 17:00:24 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -31,7 +31,7 @@ ClassImp (RooUnfoldResponse);
 RooUnfoldResponse::RooUnfoldResponse (const RooUnfoldResponse& rhs)
   : TNamed (rhs.GetName(), rhs.GetTitle())
 {
-  Setup ();
+  Init();
   Setup (rhs);
 }
 
@@ -39,7 +39,7 @@ RooUnfoldResponse::RooUnfoldResponse (Int_t nb, Double_t xlo, Double_t xhi,
                                       const char* name, const char* title)
   : TNamed (name, title)
 {
-  Setup ();
+  Init();
   Setup (nb, xlo, xhi);
 }
 
@@ -47,7 +47,7 @@ RooUnfoldResponse::RooUnfoldResponse (Int_t nm, Double_t mlo, Double_t mhi, Int_
                                       const char* name, const char* title)
   : TNamed (name, title)
 {
-  Setup ();
+  Init();
   Setup (nm, mlo, mhi, nt, tlo, thi);
 }
 
@@ -55,7 +55,7 @@ RooUnfoldResponse::RooUnfoldResponse (const TH1* measured, const TH1* truth, con
                                       const char* name, const char* title)
   : TNamed (name, title)
 {
-  Setup ();
+  Init();
   Setup (measured, truth, response);
 }
 
@@ -63,7 +63,7 @@ RooUnfoldResponse::RooUnfoldResponse (const TH1* measured, const TH1* truth,
                                       const char* name, const char* title)
   : TNamed (name, title)
 {
-  Setup ();
+  Init();
   Setup (measured, truth);
 }
 
@@ -87,6 +87,13 @@ RooUnfoldResponse::Reset()
 }
 
 RooUnfoldResponse&
+RooUnfoldResponse::Init()
+{
+  _overflow= 0;
+  return Setup();
+}
+
+RooUnfoldResponse&
 RooUnfoldResponse::Setup()
 {
   _tru= _mes= 0;
@@ -101,6 +108,7 @@ RooUnfoldResponse::Setup()
 RooUnfoldResponse&
 RooUnfoldResponse::Setup (const RooUnfoldResponse& rhs)
 {
+  _overflow= rhs._overflow;
   return Setup (rhs.Hmeasured(), rhs.Htruth(), rhs.Hresponse());
 }
 

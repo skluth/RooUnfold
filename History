@@ -1,5 +1,14 @@
-History of RooUnfold     $Id: History,v 1.62 2010-07-08 13:27:41 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.63 2010-07-08 17:00:20 adye Exp $
 ====================
+
+Tim Adye          8-Jul-2010 tja100708a
+  o Fix missing initialisation of RooUnfoldResponse::_overflow.
+  o RooUnfoldTest draw=0 disables histogram drawing.
+  o Split off drawing of training histogram into new
+    RooUnfoldTest::TrainResults (and 2D,3D) method.
+  o Don't count under/overflow bins when setting colour range of RooUnfoldTest2D
+    pull histogram.
+
 Richard Claridge  8-Jul-2010 rgc100708a
   o Added method for Chi^2 using covariance matrix.
 
