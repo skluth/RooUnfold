@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.63 2010-07-08 17:00:20 adye Exp $
+History of RooUnfold     $Id: History,v 1.64 2010-07-13 16:51:05 adye Exp $
 ====================
+
+Tim Adye         13-Jul-2010 tja100713a
+  o Fix duplicate histogram plotting
 
 Tim Adye          8-Jul-2010 tja100708a
   o Fix missing initialisation of RooUnfoldResponse::_overflow.
