@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.10 2010-07-08 13:27:41 fwx38934 Exp $
+//      $Id: RooUnfold.h,v 1.11 2010-07-14 21:57:44 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -22,6 +22,11 @@ class RooUnfoldResponse;
 class RooUnfold : public TNamed {
 
 public:
+
+  enum Algorithm { kNone, kBayes, kSVD, kBinByBin };
+
+  static RooUnfold* New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Int_t regparm= -1,
+                         const char* name= 0, const char* title= 0);
 
   // Standard methods
 
@@ -57,6 +62,8 @@ public:
 
   virtual TObject* Impl();
 
+  virtual void  SetRegParm (Int_t parm);
+  virtual Int_t GetRegParm() const;
 
 protected:
 
@@ -100,6 +107,8 @@ inline const TH1*               RooUnfold::Hmeasured() const { return _meas;    
 inline TVectorD&                RooUnfold::Vreco()           { if (!_unfolded) Unfold(); return _rec; }
 inline TMatrixD&                RooUnfold::Ereco()           { if (!_haveCov)  GetCov(); return _cov; }
 inline TObject*                 RooUnfold::Impl()            { return 0; };
-inline void RooUnfold::SetVerbose (Int_t level)              { _verbose= level; }
+inline void  RooUnfold::SetVerbose (Int_t level)             { _verbose= level; }
+inline void  RooUnfold::SetRegParm (Int_t parm)              {}
+inline Int_t RooUnfold::GetRegParm() const                   {return -1;}
 
 #endif

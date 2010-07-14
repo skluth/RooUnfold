@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.17 2010-05-20 22:50:55 adye Exp $
+#      $Id: GNUmakefile,v 1.18 2010-07-14 21:57:32 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -71,11 +71,9 @@ endif
 # === RooUnfold directories and options ========================================
 
 CC            = $(CXX)
-ifeq ($(CC),g++)
-CCFLAGS       = $(CXXFLAGS) -Woverloaded-virtual
-MFLAGS        = -MM -Wno-deprecated
-else
 CCFLAGS       = $(CXXFLAGS)
+ifeq ($(CC),g++)
+MFLAGS        = -MM
 endif
 SRCDIR        = $(CURDIR)/src/
 WORKDIR       = $(CURDIR)/tmp/$(ARCH)/

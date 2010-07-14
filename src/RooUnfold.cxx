@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.14 2010-07-08 13:27:41 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.15 2010-07-14 21:57:44 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -25,6 +25,11 @@
 #include "TDecompSVD.h"
 #include "RooUnfoldResponse.h"
 
+// Need subclasses just for RooUnfold::New()
+#include "RooUnfoldBayes.h"
+#include "RooUnfoldSvd.h"
+#include "RooUnfoldBinByBin.h"
+
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -34,6 +39,32 @@ using std::sqrt;
 using std::fabs;
 
 ClassImp (RooUnfold);
+
+RooUnfold*
+RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Int_t regparm,
+                const char* name, const char* title)
+{
+  RooUnfold* unfold;
+  switch (alg) {
+    case kNone:
+      unfold= new RooUnfold         (res, meas);   // dummy unfolding
+      break;
+    case kBayes:
+      unfold= new RooUnfoldBayes    (res, meas, regparm);
+      break;
+    case kSVD:
+      unfold= new RooUnfoldSvd      (res, meas, regparm);
+      break;
+    case kBinByBin:
+      unfold= new RooUnfoldBinByBin (res, meas);
+      break;
+    default:
+      cerr << "Unknown RooUnfold method " << Int_t(alg) << endl;
+      return 0;
+  }
+  if (name || title) unfold->SetNameTitle (name, title);
+  return unfold;
+}
 
 RooUnfold::RooUnfold (const RooUnfold& rhs)
   : TNamed (rhs.GetName(), rhs.GetTitle())

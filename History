@@ -1,5 +1,14 @@
-History of RooUnfold     $Id: History,v 1.64 2010-07-13 16:51:05 adye Exp $
+History of RooUnfold     $Id: History,v 1.65 2010-07-14 21:57:32 adye Exp $
 ====================
+
+Tim Adye         14-Jul-2010 tja100714a
+  o Remove -Woverloaded-virtual -Wno-deprecated from GNUmakefile, since these
+    warnings have been fixed.
+  o New named constructor, RooUnfold::New() to create object based on
+    RooUnfold::Algorithm enum.
+  o RooUnfold::SetRegParm and GetRegParm give common method to set an interger
+    regularisation parameter for those algorithms that require it.
+  o RooUnfoldTestHarness uses RooUnfold::New().
 
 Tim Adye         13-Jul-2010 tja100713a
   o Fix duplicate histogram plotting

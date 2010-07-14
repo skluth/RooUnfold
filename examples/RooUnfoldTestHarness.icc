@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.20 2010-07-13 16:51:08 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.21 2010-07-14 21:57:42 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -37,9 +37,8 @@
 #include "TLine.h"
 
 #include "RooUnfoldResponse.h"
-#include "RooUnfoldBayes.h"
+#include "RooUnfold.h"
 #include "RooUnfoldSvd.h"
-#include "RooUnfoldBinByBin.h"
 #endif
 
 #include "ArgVars.h"
@@ -66,7 +65,9 @@ using std::endl;
 
 void RooUnfoldTestHarness::Parms (ArgVars& args)
 {
-  args.Add ("method",  &method,       1, "RooUnfold method: 0=none, 1=Bayes, 2=SVD, 3=bin-by-bin");
+  TString methodHelp= TString::Format("RooUnfold method: %d=none, %d=Bayes, %d=SVD, %d=bin-by-bin",
+                                      RooUnfold::kNone,RooUnfold::kBayes,RooUnfold::kSVD,RooUnfold::kBinByBin);
+  args.Add ("method",  &method,       RooUnfold::kBayes, methodHelp.Data());
   args.Add ("stage",   &stage,        0, "1=train (writes RooUnfoldTest.root), 2=test (reads), 0=both (default)");
   args.Add ("ftrainx", &ftrainx,      0, "training X PDF: 0=flat, 1=top-hat, 2=Gaussian, 3=double exp, 4=B-W, 5=double B-W, 6=exp, 7=Gaussian+exp");
   args.Add ("ftestx",  &ftestx,       5, "test X PDF");
@@ -283,19 +284,10 @@ Int_t RooUnfoldTestHarness::Test()
 Int_t RooUnfoldTestHarness::Unfold ()
 {
   if (verbose>=0) cout << "Create RooUnfold object for method " << method << endl;
-  switch (method) {
-    case 0:  unfold= new RooUnfold         (response, hMeas);   // dummy unfolding
-             break;
-    case 1:  unfold= new RooUnfoldBayes    (response, hMeas, regparm);
-             break;
-    case 2:  unfold= new RooUnfoldSvd      (response, hMeas, regparm, ntoys);
-             break;
-    case 3:  unfold= new RooUnfoldBinByBin (response, hMeas);
-             break;
-    default: cerr << "Unknown RooUnfold method " << method << endl;
-             return 0;
-  }
+  unfold= RooUnfold::New (RooUnfold::Algorithm(method), response, hMeas, regparm);
+  if (!unfold) return 0;
   unfold->SetVerbose (verbose);
+  if (method == RooUnfold::kSVD) dynamic_cast<RooUnfoldSvd*>(unfold)->SetNtoys (ntoys);
   if (verbose>=0) {cout << "Created "; unfold->Print();}
   hReco= unfold->Hreco(doerror);
   if (!hReco) return 0;
@@ -519,11 +511,11 @@ void RooUnfoldTestHarness::Init()
 
 Int_t RooUnfoldTestHarness::CheckParms()
 {
-  if (dosmear==-1) dosmear= (method == 3) ? 0 : 1;  // bin-by-bin can't handle smearing or bias
+  if (dosmear==-1) dosmear= (method == RooUnfold::kBinByBin) ? 0 : 1;  // bin-by-bin can't handle smearing or bias
   if (regparm==-999) {
     switch (method) {
-    case 1: regparm= 3; break;
-    case 2: {
+    case RooUnfold::kBayes: regparm= 3; break;
+    case RooUnfold::kSVD: {
       Int_t ntall= ntbins + (overflow==1 ? 2 : 0);
       regparm= (ntall>5 ? ntall/2 : 2);
       break;
@@ -532,7 +524,7 @@ Int_t RooUnfoldTestHarness::CheckParms()
     }
   }
   if (doerror==-1) {
-    doerror= !(method==1 && ntbins*nmbins > 160000);
+    doerror= !(method==RooUnfold::kBayes && ntbins*nmbins > 160000);
     if (!doerror) {
       cerr << "Don't calculate errors for Bayes algorithm - there are " << ntbins*nmbins
            << " bins in the response matrix and the error calculation would take too long (set doerror=1 to override this)" << endl;

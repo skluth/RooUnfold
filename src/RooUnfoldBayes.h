@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.h,v 1.8 2010-05-25 17:34:03 adye Exp $
+//      $Id: RooUnfoldBayes.h,v 1.9 2010-07-14 21:57:44 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -43,6 +43,9 @@ public:
   virtual void SetSmoothing  (Bool_t smoothit= false) { _smoothit= smoothit; }
   Int_t GetIterations() const { return _niter;    }
   Int_t GetSmoothing()  const { return _smoothit; }
+
+  virtual void  SetRegParm (Int_t parm) { SetIterations(parm); }
+  virtual Int_t GetRegParm() const { return GetIterations(); }
 
   virtual void Reset();
   virtual void Print (Option_t* option= "") const;
