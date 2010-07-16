@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.21 2010-07-14 21:57:42 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.22 2010-07-16 15:30:04 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -34,7 +34,11 @@
 #include "TH2D.h"
 #include "TFile.h"
 #include "TVectorD.h"
+#include "TProfile.h"
 #include "TLine.h"
+#include "TF1.h"
+#include "TNtuple.h"
+#include "RooUnfoldAll.h"
 
 #include "RooUnfoldResponse.h"
 #include "RooUnfold.h"
@@ -57,6 +61,7 @@
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::vector;
 #endif
 
 //==============================================================================
@@ -97,6 +102,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("hpaper",  &hpaper,       0, "paper height", "");
   args.Add ("verbose", &verbose,      1, "debug level: 0=warnings, 1=verbose, 2=debug, 3=detailed");
   args.Add ("draw",    &dodraw,       1, "draw results");
+  args.Add ("iterations",    &iterations,       100, "number of iterations");
 }
 
 //==============================================================================
@@ -122,7 +128,7 @@ Int_t RooUnfoldTestHarness::Run()
 void RooUnfoldTestHarness::SetupCanvas()
 {
   gROOT->SetStyle("Plain");
-  gStyle->SetOptStat(0);
+  gStyle->SetOptStat(1111);
   if (!onepage)    gStyle->SetOptTitle(0);
   if (onepage < 3) gStyle->SetHistLineWidth(2);
   if (onepage) {
@@ -163,7 +169,7 @@ void RooUnfoldTestHarness::SetupCanvas()
 
 Int_t RooUnfoldTestHarness::RunTests()
 {
-  if (stage != 2) {
+    if (stage != 2) {
     TString name("response"), title;
     title.Form ("Test %dD", dim);
     response= new RooUnfoldResponse (name, title);
@@ -171,7 +177,7 @@ Int_t RooUnfoldTestHarness::RunTests()
     if (overflow==1) response->UseOverflow();
     if (verbose>=0) cout << "==================================== TRAIN ====================================" << endl;
     if (!Train()) return 4;
-    if (dodraw) TrainResults();
+    //if (dodraw) TrainResults();
     TString file (GetName());
     file += ".root";
     TFile f (file, "recreate");
@@ -191,14 +197,25 @@ Int_t RooUnfoldTestHarness::RunTests()
         return 5;
       }
     }
+    
     if (verbose>=0) cout << "==================================== TEST =====================================" << endl;
     if (!Test())   return 6;
+    
     if (verbose>=0) cout << "==================================== UNFOLD ===================================" << endl;
     if (!Unfold()) {
       if (dodraw) Results();
       return 7;
     }
-    if (dodraw) Results();
+    if (dodraw){
+ 		Results(); 
+	    canvas->cd(2);
+	    RooUnfoldAll All(iterations,hTrue,unfold);
+    	All.Spread()->Draw("P");
+	    All.Unf_err()->Draw("P SAME");
+    	canvas->cd(3);
+	  	All.Chi2()->Draw("chi2");
+  	}
+
   }
   return 0;
 }
@@ -235,7 +252,6 @@ Int_t RooUnfoldTestHarness::Train()
   }
 
   // or:  response->Setup (hTrain, hTrainTrue, hResmat);
-
   return 1;
 }
 
@@ -274,6 +290,7 @@ Int_t RooUnfoldTestHarness::Test()
       hMeas->Fill(xo);
     }
   }
+
   return 1;
 }
 
@@ -309,6 +326,7 @@ Int_t RooUnfoldTestHarness::Unfold ()
       if (err>0.0) {
         hPulls->SetBinContent (i, res/err);
         hPulls->SetBinError   (i, 1.0);
+
       }
     }
   }
@@ -326,9 +344,8 @@ void RooUnfoldTestHarness::Results()
     hReco->SetLineColor(kBlack);
     hReco->SetMarkerStyle(kFullDotLarge);
     setmax (hTrue, hReco);
-  }
-
-  if (onepage) canvas->cd(++ipad);
+  }  
+  if (onepage) canvas->cd(1);
   hTrue    ->Draw();
   hTestPDFx->Draw("LSAME");
   hMeas    ->Draw("SAME");
@@ -341,19 +358,19 @@ void RooUnfoldTestHarness::Results()
 
   if (onepage>=2) canvas->cd(++ipad);
   if (!onepage || onepage >= 2) {
-    hRes->SetMarkerStyle(kFullDotLarge);
-    hRes->Draw();
-    TLine l; // draw a line at y=0;
-    l.DrawLine(hRes->GetBinLowEdge(1), 0.0, hRes->GetBinLowEdge(ntx+1), 0.0);
-    canvas->Update();
+    //hRes->SetMarkerStyle(kFullDotLarge);
+    //hRes->Draw();
+    //TLine l; // draw a line at y=0;
+    //l.DrawLine(hRes->GetBinLowEdge(1), 0.0, hRes->GetBinLowEdge(ntx+1), 0.0);
+    //canvas->Update();
   }
 
   if (onepage>=2) canvas->cd(++ipad);
   if (!onepage || onepage >= 2) {
-    hPulls->SetMarkerStyle(kFullDotLarge);
-    hPulls->Draw("P");
-    TLine().DrawLine(hPulls->GetBinLowEdge(1), 0.0, hPulls->GetBinLowEdge(ntx+1), 0.0);  // draw a line at pull=0;
-    canvas->Update();
+    //hPulls->SetMarkerStyle(kFullDotLarge);
+    //hPulls->Draw("P");
+    //TLine().DrawLine(hPulls->GetBinLowEdge(1), 0.0, hPulls->GetBinLowEdge(ntx+1), 0.0);  // draw a line at pull=0;
+    //canvas->Update();*/
   }
 }
 

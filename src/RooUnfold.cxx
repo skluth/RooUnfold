@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.15 2010-07-14 21:57:44 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.16 2010-07-16 15:30:10 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -169,9 +169,11 @@ Double_t RooUnfold::Chi2(const TH1* hTrue)
         }
   	}
   	TMatrixD Ereco_copy=Ereco();
-  	Double_t Ereco_det = Ereco_copy.Determinant();
-	if (Ereco_det<1e-16){
+
+  	Double_t Ereco_det = fabs(Ereco_copy.Determinant());
+	if (Ereco_det<1e-5){
 		cerr << "Warning: Small Determinant of Covariance Matrix =" << Ereco_det << endl;
+		cerr << "Chi^2 may be invalid due to small determinant" << endl;
 	}
 	TDecompSVD svd(Ereco_copy);
 	Ereco_copy = svd.Invert();//SVD method of finding inverse matrix should allow for singular matrices.
@@ -268,7 +270,13 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
     << endl
     << "====================================================================" << xwid << endl;
   o.copyfmt (fmt);  // restore original ostream format
-  Double_t chi_squ = Chi2(hTrue);
+  Double_t chi_squ;
+  if (withError){
+  	chi_squ = Chi2(hTrue);
+  }
+  else{
+  	chi_squ = chi2;
+  }
   o << "Chi^2/NDF=" << chi_squ << "/" << ndf << endl;
   if (chi_squ<=0){
   	cerr << "Warning: Invalid Chi^2 Value" << endl;

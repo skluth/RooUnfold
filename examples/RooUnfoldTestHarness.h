@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.19 2010-07-08 17:00:22 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.20 2010-07-16 15:30:03 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -42,7 +42,7 @@ class RooUnfoldTestHarness : public TNamed {
 public:
   // Parameters
   Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain, wpaper, hpaper;
-  Int_t    regparm, ntoys, nmx, onepage, doerror, dim, overflow, dosmear, nbPDF, verbose, dodraw;
+  Int_t    regparm, ntoys, nmx, onepage, doerror, dim, overflow, dosmear, nbPDF, verbose, dodraw,iterations;
   Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx;
   Double_t effxlo, effxhi, xbias, xsmear;
 
@@ -89,7 +89,6 @@ public:
                              const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0);
   static  void     Legend (TLegend*& legend, const TH1* pdf, const TH1* truth, const TH1* meas, const TH1* reco= 0);
 };
-
 #ifndef NOINLINE
 #include "RooUnfoldTestHarness.icc"
 #endif

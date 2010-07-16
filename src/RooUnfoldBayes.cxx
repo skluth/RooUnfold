@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.14 2010-05-25 17:34:03 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.15 2010-07-16 15:30:11 fwx38934 Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -131,7 +131,7 @@ RooUnfoldBayes::GetCov()
   } else {
     cerr << "Covariance matrix not calculated - fill errors with sqrt(N)" << endl;
     for (Int_t i= 0; i < nt; i++)
-      _cov(i,i)= sqrt (fabs (_rec(i)));
+      _cov(i,i)= fabs (_rec(i));
   }
   _haveCov= true;
 }

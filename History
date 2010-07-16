@@ -1,5 +1,11 @@
-History of RooUnfold     $Id: History,v 1.65 2010-07-14 21:57:32 adye Exp $
+History of RooUnfold     $Id: History,v 1.66 2010-07-16 15:29:48 fwx38934 Exp $
 ====================
+Richard Claridge 16-Jul-2010 rgc100716a
+  o Added RooUnfoldAll class to do  ensemble tests for spread and chi squared.
+  o Modified RooUnfoldTesHarness.icc to use the new class.
+  o Chi squared limit now allows for negative determinants. 
+  o Default error no longer uses a sqrt. 
+
 
 Tim Adye         14-Jul-2010 tja100714a
   o Remove -Woverloaded-virtual -Wno-deprecated from GNUmakefile, since these
