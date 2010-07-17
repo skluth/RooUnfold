@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.68 2010-07-17 00:48:44 adye Exp $
+History of RooUnfold     $Id: History,v 1.69 2010-07-17 01:06:07 adye Exp $
 ====================
+
+Tim Adye         16-Jul-2010 tja100716b
+  o Remove ClassDefs in examples and GNUMakefile changes for the moment.
 
 Tim Adye         16-Jul-2010 tja100716a
   o Add ClassDefs for classes in examples. Add rootcint for them in GNUMakefile.

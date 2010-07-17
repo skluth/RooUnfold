@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness3D.h,v 1.11 2010-07-17 00:47:15 adye Exp $
+//      $Id: RooUnfoldTestHarness3D.h,v 1.12 2010-07-17 01:06:09 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 3D toy MC.
@@ -55,15 +55,10 @@ public:
   static TH1D* ProjectionY  (const TH1* h, const char* name=0, const char* title=0, Option_t* opt="") {return Projection3D(h,"y",name,title,opt);}
   static TH1D* ProjectionZ  (const TH1* h, const char* name=0, const char* title=0, Option_t* opt="") {return Projection3D(h,"z",name,title,opt);}
   Int_t Fill (TH1* h, Double_t x, Double_t y, Double_t z) {TH3* h3= dynamic_cast<TH3*>(h); return h3->Fill(x,y,z);}
-  ClassDef (RooUnfoldTestHarness3D, 0);   //3D Test harness for RooUnfold
 };
 
 #ifndef NOINLINE
 #include "RooUnfoldTestHarness3D.icc"
-#endif
-
-#ifdef __MAKECINT__
-#pragma link C++ class RooUnfoldTestHarness3D;
 #endif
 
 #endif

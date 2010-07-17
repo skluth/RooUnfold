@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.20 2010-07-17 01:00:53 adye Exp $
+#      $Id: GNUmakefile,v 1.21 2010-07-17 01:06:07 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -107,7 +107,6 @@ endif
 
 MAIN          = $(notdir $(wildcard $(EXESRC)*.cxx))
 MAINEXE       = $(addprefix $(EXEDIR),$(patsubst %.cxx,%$(ExeSuf),$(MAIN)))
-MAINDEP       = $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(MAIN)))
 ROOTSYS      ?= ERROR_RootSysIsNotDefined
 HLIST         = $(filter-out $(SRCDIR)$(PACKAGE)_LinkDef.h,$(wildcard $(SRCDIR)*.h)) $(SRCDIR)$(PACKAGE)_LinkDef.h
 CINTFILE      = $(WORKDIR)$(PACKAGE)Cint.cxx
@@ -150,8 +149,6 @@ ROOFITCLIENTS = $(patsubst $(DEPDIR)%.d,$(OBJDIR)%.o,$(shell fgrep -l '/RooAbsAr
 endif
 endif
 
-MAINCINTOBJ = $(addprefix $(OBJDIR),$(patsubst %.d,%Cint.o,$(notdir $(shell grep -l '^ *$(EXESRC).*\.h ' $(MAINDEP) 2>/dev/null))))
-
 # === Implicit rules ===========================================================
 
 # Implicit rule making all dependency Makefiles included at the end of this makefile
@@ -185,6 +182,7 @@ $(OBJDIR)%.o : $(EXESRC)%.cxx $(HDEP)
 	@mkdir -p $(OBJDIR)
 	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
 
+
 # === Explicit rules ===========================================================
 
 default : shlib
@@ -197,15 +195,6 @@ $(CINTOBJ) : $(HLIST)
 	$(_)cd $(SRC) ; $(ROOTSYS)/bin/rootcint -f $(CINTFILE) -c -p $(INCLUDES) $(HLIST)
 	@echo "Compiling $(CINTFILE)"
 	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(CINTFILE) -o $(CINTOBJ) $(INCLUDES)
-
-# Rule to make test ROOTCINT output file
-$(MAINCINTOBJ) : $(wildcard $(EXESRC)*.h)
-	@mkdir -p $(WORKDIR)
-	@mkdir -p $(OBJDIR)
-	@echo "Running rootcint for $(addprefix $(EXESRC),$(patsubst %Cint.o,%.cxx,$(notdir $@)))"
-	$(_)cd $(SRC) ; $(ROOTSYS)/bin/rootcint -f $(addprefix $(WORKDIR),$(patsubst %.o,%.cxx,$(notdir $@))) -c -p $(INCLUDES) $(shell sed -n 's=^ *\($(EXESRC).*\.h\) .*=\1=p' $(addprefix $(DEPDIR),$(patsubst %Cint.o,%.d,$(notdir $@))))
-	@echo "Compiling $(addprefix $(WORKDIR),$(patsubst %.o,%.cxx,$(notdir $@)))"
-	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(addprefix $(WORKDIR),$(patsubst %.o,%.cxx,$(notdir $@))) -o $@ $(INCLUDES) -DNOINLINE
 
 # Rule to combine objects into a library
 $(LIBFILE) : $(OLIST) $(CINTOBJ)
@@ -222,10 +211,10 @@ $(SHLIBFILE) : $(OLIST) $(CINTOBJ)
 	@rm -f $(SHLIBFILE)
 	$(_)$(LD) $(SOFLAGS) $(LDFLAGS) $(OLIST) $(CINTOBJ) $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS)
 
-$(MAINEXE) : $(EXEDIR)%$(ExeSuf) : $(OBJDIR)%.o $(LINKLIB) $(filter $(OBJDIR)%Cint.o,$(MAINCINTOBJ))
+$(MAINEXE) : $(EXEDIR)%$(ExeSuf) : $(OBJDIR)%.o $(LINKLIB)
 	@echo "Making executable $@"
 	@mkdir -p $(EXEDIR)
-	$(_)$(LD) $(LDFLAGS) $< $(OutPutOpt)$@ $(LIBS) $(filter $(OBJDIR)$(patsubst %$(ExeSuf),%Cint.o,$(notdir $@)),$(MAINCINTOBJ)) $(LINKLIBOPT) $(ROOTLIBS) $(if $(findstring $<,$(ROOFITCLIENTS)),$(ROOFITLIBS))
+	$(_)$(LD) $(LDFLAGS) $< $(OutPutOpt)$@ $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(if $(findstring $<,$(ROOFITCLIENTS)),$(ROOFITLIBS))
 
 # Useful build targets
 include: $(DLIST)
@@ -248,7 +237,6 @@ clean : cleanbin
 	rm -f $(OLIST) $(CINTOBJ)
 	rm -f $(LIBFILE)
 	rm -f $(SHLIBFILE)
-	rm -f $(MAINCINTOBJ) $(addprefix $(WORKDIR),$(patsubst %.o,%.cxx,$(notdir $(MAINCINTOBJ))) $(patsubst %.o,%.h,$(notdir $(MAINCINTOBJ))))
 
 cleanbin :
 	rm -f $(addprefix $(OBJDIR),$(patsubst %.cxx,%.o,$(MAIN)))

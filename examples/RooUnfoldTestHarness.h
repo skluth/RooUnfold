@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.21 2010-07-17 00:47:15 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.22 2010-07-17 01:06:09 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -88,15 +88,9 @@ public:
   static  void     setmax   (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
                              const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0);
   static  void     Legend (TLegend*& legend, TH1* pdf, TH1* truth, TH1* meas, TH1* reco= 0);
-  ClassDef (RooUnfoldTestHarness, 0);   //Test harness for RooUnfold
 };
-
 #ifndef NOINLINE
 #include "RooUnfoldTestHarness.icc"
-#endif
-
-#ifdef __MAKECINT__
-#pragma link C++ class RooUnfoldTestHarness;
 #endif
 
 #endif
