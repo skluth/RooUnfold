@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: ArgVars.icc,v 1.7 2010-05-20 22:50:57 adye Exp $
+//      $Id: ArgVars.icc,v 1.8 2010-07-17 00:47:15 adye Exp $
 //
 // Description:
 //      Parse argument list for parameter settings
@@ -15,12 +15,11 @@
 #include "ArgVars.h"
 
 #if !defined(__CINT__) || defined(__MAKECINT__)
-#include "TROOT.h"
-#include "TObject.h"
-#include "TList.h"
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
+#include "TObject.h"
+#include "TList.h"
 #endif
 
 ArgVars::~ArgVars()

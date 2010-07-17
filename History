@@ -1,11 +1,17 @@
-History of RooUnfold     $Id: History,v 1.66 2010-07-16 15:29:48 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.67 2010-07-17 00:47:13 adye Exp $
 ====================
+
+Tim Adye         16-Jul-2010 tja100716a
+  o Add ClassDefs for classes in examples.
+  o Fix RooUnfoldTestHarness::Legend const error for ROOT 5.14.
+  o Move ArgVar out of ArgVars.h into new ArgVar.h.
+  o Fix RooUnfold::SetRegParm unused parameter warning.
+
 Richard Claridge 16-Jul-2010 rgc100716a
   o Added RooUnfoldAll class to do  ensemble tests for spread and chi squared.
   o Modified RooUnfoldTesHarness.icc to use the new class.
   o Chi squared limit now allows for negative determinants. 
   o Default error no longer uses a sqrt. 
-
 
 Tim Adye         14-Jul-2010 tja100714a
   o Remove -Woverloaded-virtual -Wno-deprecated from GNUmakefile, since these

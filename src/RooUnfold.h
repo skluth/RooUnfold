@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.11 2010-07-14 21:57:44 adye Exp $
+//      $Id: RooUnfold.h,v 1.12 2010-07-17 00:47:16 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -108,7 +108,7 @@ inline TVectorD&                RooUnfold::Vreco()           { if (!_unfolded) U
 inline TMatrixD&                RooUnfold::Ereco()           { if (!_haveCov)  GetCov(); return _cov; }
 inline TObject*                 RooUnfold::Impl()            { return 0; };
 inline void  RooUnfold::SetVerbose (Int_t level)             { _verbose= level; }
-inline void  RooUnfold::SetRegParm (Int_t parm)              {}
+inline void  RooUnfold::SetRegParm (Int_t)                   {}
 inline Int_t RooUnfold::GetRegParm() const                   {return -1;}
 
 #endif

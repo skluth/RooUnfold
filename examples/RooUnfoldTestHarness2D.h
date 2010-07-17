@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.h,v 1.13 2010-07-08 17:00:22 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.h,v 1.14 2010-07-17 00:47:15 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 2D toy MC.
@@ -54,10 +54,15 @@ public:
     {const TH2* h2=dynamic_cast<const TH2*>(h); TH1D* h1= h2->ProjectionX(name,0,-1,opt); if (title) h1->SetTitle(title); return h1;}
   static TH1D* ProjectionY (const TH1* h, const char* name="_py", const char* title=0, Option_t* opt="")
     {const TH2* h2=dynamic_cast<const TH2*>(h); TH1D* h1= h2->ProjectionY(name,0,-1,opt); if (title) h1->SetTitle(title); return h1;}
+  ClassDef (RooUnfoldTestHarness2D, 0);   //2D Test harness for RooUnfold
 };
 
 #ifndef NOINLINE
 #include "RooUnfoldTestHarness2D.icc"
+#endif
+
+#ifdef __MAKECINT__
+#pragma link C++ class RooUnfoldTestHarness2D;
 #endif
 
 #endif

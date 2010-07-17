@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.22 2010-07-16 15:30:04 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.23 2010-07-17 00:47:15 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -569,15 +569,16 @@ void RooUnfoldTestHarness::PrintParms (std::ostream& o) const
   o << endl;
 }
 
-void RooUnfoldTestHarness::Legend (TLegend*& legend, const TH1* pdf, const TH1* truth, const TH1* meas, const TH1* reco)
+void RooUnfoldTestHarness::Legend (TLegend*& legend, TH1* pdf, TH1* truth, TH1* meas, TH1* reco)
 {
   legend= new TLegend (0.79, (reco ? 0.72 : 0.75), 0.894, 0.89);
   legend->SetTextSize(0.035);
   legend->SetTextFont(42);
-  legend->AddEntry (pdf,   "PDF",      "L");
-  legend->AddEntry (truth, "truth",    "L");
-  legend->AddEntry (meas,  "measured", "L");
-  if (reco) legend->AddEntry (reco, "reconstructed", "P");
+  legend->AddEntry (pdf,   "PDF",           "L");
+  legend->AddEntry (truth, "truth",         "L");
+  legend->AddEntry (meas,  "measured",      "L");
+  if (reco)
+  legend->AddEntry (reco,  "reconstructed", "P");
   legend->Draw();
 }
 

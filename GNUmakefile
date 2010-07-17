@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.18 2010-07-14 21:57:32 adye Exp $
+#      $Id: GNUmakefile,v 1.19 2010-07-17 00:47:13 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -70,9 +70,7 @@ endif
 
 # === RooUnfold directories and options ========================================
 
-CC            = $(CXX)
-CCFLAGS       = $(CXXFLAGS)
-ifeq ($(CC),g++)
+ifneq ($(findstring g++,$(CXX)),)
 MFLAGS        = -MM
 endif
 SRCDIR        = $(CURDIR)/src/
@@ -109,6 +107,7 @@ endif
 
 MAIN          = $(notdir $(wildcard $(EXESRC)*.cxx))
 MAINEXE       = $(addprefix $(EXEDIR),$(patsubst %.cxx,%$(ExeSuf),$(MAIN)))
+MAINDEP       = $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(MAIN)))
 ROOTSYS      ?= ERROR_RootSysIsNotDefined
 HLIST         = $(filter-out $(SRCDIR)$(PACKAGE)_LinkDef.h,$(wildcard $(SRCDIR)*.h)) $(SRCDIR)$(PACKAGE)_LinkDef.h
 CINTFILE      = $(WORKDIR)$(PACKAGE)Cint.cxx
@@ -139,11 +138,19 @@ else
 # List of all dependency file to make
 DLIST         = $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(notdir $(wildcard $(SRCDIR)*.cxx $(EXESRC)*.cxx))))
 
+endif
+
 ifeq ($(NOROOFIT),)
+ifeq ($(DLIST),)
+# Since we can't check the dependencies, include RooFit on all binaries
+ROOFITCLIENTS = $(patsubst %.cxx,$(OBJDIR)%.o,$(MAIN))
+else
 # List of programs that use RooFit. Should only be those in $(EXESRC)
 ROOFITCLIENTS = $(patsubst $(DEPDIR)%.d,$(OBJDIR)%.o,$(shell fgrep -l '/RooAbsArg.h ' $(DLIST) 2>/dev/null))
 endif
 endif
+
+MAINCINTOBJ = $(addprefix $(OBJDIR),$(patsubst %.d,%Cint.o,$(notdir $(shell grep -l '^ *$(EXESRC).*\.h ' $(MAINDEP) 2>/dev/null))))
 
 # === Implicit rules ===========================================================
 
@@ -153,7 +160,7 @@ $(DEPDIR)%.d : $(SRCDIR)%.cxx
 	@mkdir -p $(DEPDIR)
 	@rm -f $@
 	$(_)set -e; \
-	 $(CC) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $< \
+	 $(CXX) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $< \
 	 | sed 's,\($(notdir $*)\.o\) *:,$(OBJDIR)\1 $@ :,g' > $@; \
 	 [ -s $@ ] || rm -f $@
 
@@ -162,7 +169,7 @@ $(DEPDIR)%.d : $(EXESRC)%.cxx
 	@mkdir -p $(DEPDIR)
 	@rm -f $@
 	$(_)set -e; \
-	 $(CC) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $< \
+	 $(CXX) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $< \
 	 | sed 's,\($(notdir $*)\.o\) *:,$(OBJDIR)\1 $@ :,g' > $@; \
 	 [ -s $@ ] || rm -f $@
 
@@ -170,14 +177,13 @@ $(DEPDIR)%.d : $(EXESRC)%.cxx
 $(OBJDIR)%.o : $(SRCDIR)%.cxx $(HDEP)
 	@echo "Compiling $<"
 	@mkdir -p $(OBJDIR)
-	$(_)$(CC) $(CCFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
+	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
 
 # Implicit rule to compile main program
 $(OBJDIR)%.o : $(EXESRC)%.cxx $(HDEP)
 	@echo "Compiling main program $<"
 	@mkdir -p $(OBJDIR)
-	$(_)$(CC) $(CCFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
-
+	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
 
 # === Explicit rules ===========================================================
 
@@ -190,7 +196,16 @@ $(CINTOBJ) : $(HLIST)
 	@echo "Running rootcint for $(SRCDIR)$(PACKAGE)_LinkDef.h"
 	$(_)cd $(SRC) ; $(ROOTSYS)/bin/rootcint -f $(CINTFILE) -c -p $(INCLUDES) $(HLIST)
 	@echo "Compiling $(CINTFILE)"
-	$(_)$(CC) $(CCFLAGS) $(CPPFLAGS) -c $(CINTFILE) -o $(CINTOBJ) $(INCLUDES)
+	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(CINTFILE) -o $(CINTOBJ) $(INCLUDES)
+
+# Rule to make test ROOTCINT output file
+$(MAINCINTOBJ) : $(wildcard $(EXESRC)*.h)
+	@mkdir -p $(WORKDIR)
+	@mkdir -p $(OBJDIR)
+	@echo "Running rootcint for $(addprefix $(EXESRC),$(patsubst %Cint.o,%.cxx,$(notdir $@)))"
+	$(_)cd $(SRC) ; $(ROOTSYS)/bin/rootcint -f $(addprefix $(WORKDIR),$(patsubst %.o,%.cxx,$(notdir $@))) -c -p $(INCLUDES) $(shell sed -n 's=^ *\($(EXESRC).*\.h\) .*=\1=p' $(addprefix $(DEPDIR),$(patsubst %Cint.o,%.d,$(notdir $@))))
+	@echo "Compiling $(addprefix $(WORKDIR),$(patsubst %.o,%.cxx,$(notdir $@)))"
+	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(addprefix $(WORKDIR),$(patsubst %.o,%.cxx,$(notdir $@))) -o $@ $(INCLUDES) -DNOINLINE
 
 # Rule to combine objects into a library
 $(LIBFILE) : $(OLIST) $(CINTOBJ)
@@ -207,10 +222,12 @@ $(SHLIBFILE) : $(OLIST) $(CINTOBJ)
 	@rm -f $(SHLIBFILE)
 	$(_)$(LD) $(SOFLAGS) $(LDFLAGS) $(OLIST) $(CINTOBJ) $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS)
 
-$(MAINEXE) : $(EXEDIR)%$(ExeSuf) : $(OBJDIR)%.o $(LINKLIB)
+$(MAINEXE) : $(EXEDIR)%$(ExeSuf) : $(OBJDIR)%.o $(LINKLIB) $(filter $(OBJDIR)%Cint.o,$(MAINCINTOBJ))
 	@echo "Making executable $@"
 	@mkdir -p $(EXEDIR)
-	$(_)$(LD) $(LDFLAGS) $< $(OutPutOpt)$@ $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(if $(findstring $<,$(ROOFITCLIENTS)),$(ROOFITLIBS))
+	$(_)$(LD) $(LDFLAGS) $< $(OutPutOpt)$@ $(LIBS) $(filter $(OBJDIR)$(patsubst %$(ExeSuf),%Cint.o,$(notdir $@)),$(MAINCINTOBJ)) $(LINKLIBOPT) $(ROOTLIBS) $(if $(findstring $<,$(ROOFITCLIENTS)),$(ROOFITLIBS))
+
+$(MAIN) : $(EXEDIR)%$(ExeSuf)
 
 # Useful build targets
 include: $(DLIST)
@@ -219,13 +236,16 @@ shlib: $(SHLIBFILE)
 bin: shlib $(MAINEXE)
 
 commands :
-	@echo "Make $(DEPDIR)%.d:	$(CC) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $(SRCDIR)%.cxx | sed 's,\(%\.o\) *:,$(OBJDIR)\1 $(DEPDIR)%.d :,g' > $(DEPDIR)%.d"
+	@echo "Make $(DEPDIR)%.d:	$(CXX) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $(SRCDIR)%.cxx | sed 's,\(%\.o\) *:,$(OBJDIR)\1 $(DEPDIR)%.d :,g' > $(DEPDIR)%.d"
 	@echo
-	@echo "Compile $(SRCDIR)%.cxx:	$(CC) $(CCFLAGS) $(CPPFLAGS) -c $(SRCDIR)%.cxx -o $(OBJDIR)%.o $(INCLUDES)"
+	@echo "Compile $(SRCDIR)%.cxx:	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(SRCDIR)%.cxx -o $(OBJDIR)%.o $(INCLUDES)"
 	@echo
 	@echo "Make $(SHLIBFILE):	$(LD) $(SOFLAGS) $(LDFLAGS) *.o $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS)"
 	@echo
 	@echo "Make executable $(EXEDIR)RooUnfoldTest$(ExeSuf):	$(LD) $(LDFLAGS) $(OBJDIR)RooUnfoldTest.o $(OutPutOpt)$(EXEDIR)RooUnfoldTest$(ExeSuf) $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(ROOFITLIBS)"
+	@echo "DLIST: $(DLIST)"
+	@echo "ROOFITCLIENTS: $(ROOFITCLIENTS)"
+	@echo "MAINCINTOBJ: $(MAINCINTOBJ)"
 
 clean : cleanbin
 	rm -f $(DLIST)
@@ -233,6 +253,7 @@ clean : cleanbin
 	rm -f $(OLIST) $(CINTOBJ)
 	rm -f $(LIBFILE)
 	rm -f $(SHLIBFILE)
+	rm -f $(MAINCINTOBJ) $(addprefix $(WORKDIR),$(patsubst %.o,%.cxx,$(notdir $(MAINCINTOBJ))) $(patsubst %.o,%.h,$(notdir $(MAINCINTOBJ))))
 
 cleanbin :
 	rm -f $(addprefix $(OBJDIR),$(patsubst %.cxx,%.o,$(MAIN)))
@@ -247,6 +268,14 @@ $(HTMLDOC)/index.html : $(SHLIBFILE)
 	 | root -l -b
 
 html : $(HTMLDOC)/index.html
+
+ifneq ($(EXEDIR),)
+RooUnfoldTest : $(EXEDIR)RooUnfoldTest$(ExeSuf)
+RooUnfoldTest2D : $(EXEDIR)RooUnfoldTest2D$(ExeSuf)
+RooUnfoldTest3D : $(EXEDIR)RooUnfoldTest3D$(ExeSuf)
+RooUnfoldExamples : $(EXEDIR)RooUnfoldExamples$(ExeSuf)
+.PHONY : RooUnfoldTest
+endif
 
 .PHONY : include shlib lib bin default clean cleanbin html
 
