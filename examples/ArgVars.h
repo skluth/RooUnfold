@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: ArgVars.h,v 1.7 2010-07-17 00:47:15 adye Exp $
+//      $Id: ArgVars.h,v 1.8 2010-07-17 01:10:56 adye Exp $
 //
 // Description:
 //      Parse argument list for parameter settings
@@ -45,16 +45,10 @@ public:
   virtual void  Print (const char* sep= " ") const { Print (std::cout, sep); }
   void  Usage (const char* prog) const;
   void  ArgHelp (std::ostream& o) const;
-  ClassDef (ArgVars, 0);   //Argument variables
 };
 
 #ifndef NOINLINE
 #include "ArgVars.icc"
 #endif
-
-#ifdef __MAKECINT__
-#pragma link C++ class ArgVars;
-#endif
-
 
 #endif

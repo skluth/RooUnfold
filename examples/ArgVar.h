@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: ArgVar.h,v 1.1 2010-07-17 00:47:15 adye Exp $
+//      $Id: ArgVar.h,v 1.2 2010-07-17 01:10:56 adye Exp $
 //
 // Description:
 //      Parse argument list for parameter settings
@@ -31,11 +31,6 @@ public:
     : TNamed(n,h), defhelp(dh), ivar(v), idef(d), fvar(0), fdef(0), setdef(true) {}
   ArgVar (const char *n, Double_t *v, Double_t d, const char* h=0, const char* dh=0)
     : TNamed(n,h), defhelp(dh), ivar(0), idef(0), fvar(v), fdef(d), setdef(true) {}
-  ClassDef (ArgVar, 0);  //Argument variable
 };
-
-#ifdef __MAKECINT__
-#pragma link C++ class ArgVar;
-#endif
 
 #endif
