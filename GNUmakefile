@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.19 2010-07-17 00:47:13 adye Exp $
+#      $Id: GNUmakefile,v 1.20 2010-07-17 01:00:53 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -227,8 +227,6 @@ $(MAINEXE) : $(EXEDIR)%$(ExeSuf) : $(OBJDIR)%.o $(LINKLIB) $(filter $(OBJDIR)%Ci
 	@mkdir -p $(EXEDIR)
 	$(_)$(LD) $(LDFLAGS) $< $(OutPutOpt)$@ $(LIBS) $(filter $(OBJDIR)$(patsubst %$(ExeSuf),%Cint.o,$(notdir $@)),$(MAINCINTOBJ)) $(LINKLIBOPT) $(ROOTLIBS) $(if $(findstring $<,$(ROOFITCLIENTS)),$(ROOFITLIBS))
 
-$(MAIN) : $(EXEDIR)%$(ExeSuf)
-
 # Useful build targets
 include: $(DLIST)
 lib: $(LIBFILE)
@@ -243,9 +241,6 @@ commands :
 	@echo "Make $(SHLIBFILE):	$(LD) $(SOFLAGS) $(LDFLAGS) *.o $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS)"
 	@echo
 	@echo "Make executable $(EXEDIR)RooUnfoldTest$(ExeSuf):	$(LD) $(LDFLAGS) $(OBJDIR)RooUnfoldTest.o $(OutPutOpt)$(EXEDIR)RooUnfoldTest$(ExeSuf) $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(ROOFITLIBS)"
-	@echo "DLIST: $(DLIST)"
-	@echo "ROOFITCLIENTS: $(ROOFITCLIENTS)"
-	@echo "MAINCINTOBJ: $(MAINCINTOBJ)"
 
 clean : cleanbin
 	rm -f $(DLIST)
@@ -268,14 +263,6 @@ $(HTMLDOC)/index.html : $(SHLIBFILE)
 	 | root -l -b
 
 html : $(HTMLDOC)/index.html
-
-ifneq ($(EXEDIR),)
-RooUnfoldTest : $(EXEDIR)RooUnfoldTest$(ExeSuf)
-RooUnfoldTest2D : $(EXEDIR)RooUnfoldTest2D$(ExeSuf)
-RooUnfoldTest3D : $(EXEDIR)RooUnfoldTest3D$(ExeSuf)
-RooUnfoldExamples : $(EXEDIR)RooUnfoldExamples$(ExeSuf)
-.PHONY : RooUnfoldTest
-endif
 
 .PHONY : include shlib lib bin default clean cleanbin html
 
