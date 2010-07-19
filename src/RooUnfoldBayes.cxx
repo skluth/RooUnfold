@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.15 2010-07-16 15:30:11 fwx38934 Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.16 2010-07-19 21:45:10 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -45,6 +45,14 @@ RooUnfoldBayes::RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, I
   : RooUnfold (res, meas, name, title), _niter(niter), _smoothit(smoothit)
 {
   Init();
+}
+
+RooUnfoldBayes*
+RooUnfoldBayes::Clone (const char* newname) const
+{
+  RooUnfoldBayes* unfold= new RooUnfoldBayes(*this);
+  if (newname && strlen(newname)) unfold->SetName(newname);
+  return unfold;
 }
 
 void

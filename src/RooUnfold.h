@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.12 2010-07-17 00:47:16 adye Exp $
+//      $Id: RooUnfold.h,v 1.13 2010-07-19 21:45:10 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -36,7 +36,8 @@ public:
   RooUnfold (const RooUnfold& rhs); // copy constructor
   virtual ~RooUnfold(); // destructor
   RooUnfold& operator= (const RooUnfold& rhs); // assignment operator
-  Double_t Chi2 (const TH1* hTrue);
+  virtual RooUnfold* Clone (const char* newname= 0) const;
+
   // Special constructors
 
   RooUnfold (const RooUnfoldResponse* res, const TH1* meas, const char* name= 0, const char* title= 0);
@@ -64,6 +65,8 @@ public:
 
   virtual void  SetRegParm (Int_t parm);
   virtual Int_t GetRegParm() const;
+
+  Double_t Chi2 (const TH1* hTrue);
 
 protected:
 

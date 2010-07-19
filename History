@@ -1,5 +1,11 @@
-History of RooUnfold     $Id: History,v 1.69 2010-07-17 01:06:07 adye Exp $
+History of RooUnfold     $Id: History,v 1.70 2010-07-19 21:45:07 adye Exp $
 ====================
+
+Tim Adye         19-Jul-2010 tja100719a
+  o Added Clone method for RooUnfold and subclasses.
+  o Add RooUnfoldSvd destructor.
+  o RooUnfold::Print shows bin-by-bin chi^2 for comparison with full chi^2.
+  o RooUnfoldTest iterations=0 disables ensemble tests.
 
 Tim Adye         16-Jul-2010 tja100716b
   o Remove ClassDefs in examples and GNUMakefile changes for the moment.

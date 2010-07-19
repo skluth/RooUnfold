@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.h,v 1.9 2010-07-14 21:57:44 adye Exp $
+//      $Id: RooUnfoldBayes.h,v 1.10 2010-07-19 21:45:10 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -34,8 +34,10 @@ public:
   RooUnfoldBayes (const RooUnfoldBayes& rhs); // copy constructor
   virtual ~RooUnfoldBayes(); // destructor
   RooUnfoldBayes& operator= (const RooUnfoldBayes& rhs); // assignment operator
+  virtual RooUnfoldBayes* Clone (const char* newname= 0) const;
 
   // Special constructors
+
   RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, Int_t niter= 4, Bool_t smoothit= false,
                   const char* name= 0, const char* title= 0);
 

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.16 2010-07-16 15:30:10 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.17 2010-07-19 21:45:10 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -63,6 +63,14 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, In
       return 0;
   }
   if (name || title) unfold->SetNameTitle (name, title);
+  return unfold;
+}
+
+RooUnfold*
+RooUnfold::Clone (const char* newname) const
+{
+  RooUnfold* unfold= new RooUnfold(*this);
+  if (newname && strlen(newname)) unfold->SetName(newname);
   return unfold;
 }
 
@@ -170,8 +178,8 @@ Double_t RooUnfold::Chi2(const TH1* hTrue)
   	}
   	TMatrixD Ereco_copy=Ereco();
 
-  	Double_t Ereco_det = fabs(Ereco_copy.Determinant());
-	if (Ereco_det<1e-5){
+  	Double_t Ereco_det = Ereco_copy.Determinant();
+	if (fabs(Ereco_det)<1e-5){
 		cerr << "Warning: Small Determinant of Covariance Matrix =" << Ereco_det << endl;
 		cerr << "Chi^2 may be invalid due to small determinant" << endl;
 	}
@@ -272,12 +280,14 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
   o.copyfmt (fmt);  // restore original ostream format
   Double_t chi_squ;
   if (withError){
-  	chi_squ = Chi2(hTrue);
+    chi_squ = Chi2(hTrue);
   }
   else{
-  	chi_squ = chi2;
+    chi_squ = chi2;
   }
-  o << "Chi^2/NDF=" << chi_squ << "/" << ndf << endl;
+  o << "Chi^2/NDF=" << chi_squ << "/" << ndf;
+  if (withError) o << " (bin-by-bin Chi^2=" << chi2 << ")";
+  o << endl;
   if (chi_squ<=0){
   	cerr << "Warning: Invalid Chi^2 Value" << endl;
   }

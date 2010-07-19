@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.cxx,v 1.1 2010-07-16 15:30:11 fwx38934 Exp $
+//      $Id: RooUnfoldAll.cxx,v 1.2 2010-07-19 21:45:10 adye Exp $
 //
 // Description:
 //       Graph Drawing Class for use with RooUnfold.
@@ -27,7 +27,6 @@
 #include "TAxis.h"
 
 #include "RooUnfold.h"
-#include "RooUnfoldBayes.h"
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -90,8 +89,9 @@ RooUnfoldAll::Plotting()
 	for (int j=0; j<iterations;j++){
 	TH1* hMeas_AR = dynamic_cast<TH1*>(hMeas_const->Clone ("Measured"));   hMeas_AR  ->SetTitle ("Measured");
     TH1* hMeas=Add_Random(hMeas_AR);
-    RooUnfoldBayes* unfold_copy = new RooUnfoldBayes(*dynamic_cast<const RooUnfoldBayes*>(unfold));
+    RooUnfold* unfold_copy = unfold->Clone("unfold_toy");
 	unfold_copy->Setup(unfold->response(),hMeas);
+        unfold_copy->SetVerbose(unfold->verbose());
     hReco= unfold_copy->Hreco();
     	for (int i=0; i<ntx+2; i++) {    
     		if ((hReco->GetBinContent(i)!=0.0 || (hReco->GetBinError(i)>0.0)) &&
