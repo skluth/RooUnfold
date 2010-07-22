@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.cxx,v 1.3 2010-07-22 10:30:25 fwx38934 Exp $
+//      $Id: RooUnfoldAll.cxx,v 1.4 2010-07-22 16:15:30 fwx38934 Exp $
 //
 // Description:
 //       Graph Drawing Class for use with RooUnfold.
@@ -36,32 +36,29 @@ using std::fabs;
 
 ClassImp (RooUnfoldAll);
 
-RooUnfoldAll::RooUnfoldAll (int Nits,const TH1* h_in,  const RooUnfold* unfold_in)
-:iterations(Nits), hTrue(h_in),unfold(unfold_in)
+RooUnfoldAll::RooUnfoldAll (int Nits,  const RooUnfold* unfold_in)
+:iterations(Nits),unfold(unfold_in)
 {
-	All_hTrue();
 	All_hMeas();
-	Plotting();
 }
+
 
 
 RooUnfoldAll::~RooUnfoldAll()
 {
-}
-
-void 
-RooUnfoldAll::All_hTrue()
-{
-	ntx=hTrue->GetNbinsX();
-	xlo=hTrue->GetXaxis()->GetXmin();
-	xhi=hTrue->GetXaxis()->GetXmax();
+  delete h_err;
+  delete h_err_res;
+  delete h_err_res_sq;
+  delete chi2;  
 }
 
 void 
 RooUnfoldAll::All_hMeas()
 {
 	hMeas_const=unfold->Hmeasured();
-	nmx=hMeas_const->GetNbinsX();
+	ntx=hMeas_const->GetNbinsX();
+	xlo=hMeas_const->GetXaxis()->GetXmin();
+	xhi=hMeas_const->GetXaxis()->GetXmax();
 }
 
 
@@ -72,11 +69,36 @@ RooUnfoldAll::Chi2()
 	return chi2;
 }
 
+TMatrixD
+RooUnfoldAll::True_err()
+{
+	TMatrixD Error(ntx,ntx);
+	for (int x=0;x<ntx;x++){
+		Error(x,x)=h_err_res_sq->GetBinContent(x);
+	}
+	return Error;
+}
+
+TH1*
+RooUnfoldAll::Spread(){
+	h_err_res->SetMarkerColor(2);
+	h_err_res->SetMarkerStyle(4);
+	h_err_res->SetMinimum(0);
+	return dynamic_cast<TH1D*>(h_err_res->Clone());
+}
+
+TH1* 
+RooUnfoldAll::Unf_err(){
+	h_err->SetMarkerColor(4);
+	h_err->SetMarkerStyle(24);
+	h_err->SetMinimum(0);
+	return dynamic_cast<TH1D*>(h_err->Clone());
+}
+
 
 void
-RooUnfoldAll::Plotting()
+RooUnfoldAll::Plotting(const TH1 *hTrue)
 {
-	
 	vector<TH1D*> graph_vector;    
     
     int odd_ch=0;
@@ -86,68 +108,60 @@ RooUnfoldAll::Plotting()
     for (int i= 0; i<ntx+2; i++) {
 	TString graph_title("Residuals at Bin ");
     graph_title+=i;
-    TH1D* graph_name = new TH1D (graph_title,graph_title, 200,-150,150);
+    TH1D* graph_name = new TH1D (graph_title,graph_title, 200,0,1000);
     graph_vector.push_back(graph_name);
     }
     
-    TNtuple* chi2_wip = new TNtuple("chi2","chi2","chi2");
-    TProfile* h_err_wip = new TProfile ("h_err", "Unfolding errors",ntx,xlo,xhi);
-    TH1D* h_err_res_wip = new TH1D ("h_err_res", "Spread",ntx,xlo,xhi); 
+    chi2 = new TNtuple("chi2","chi2","chi2");
+    h_err = new TProfile ("h_err", "Unfolding errors",ntx,xlo,xhi);
+    h_err_res = new TH1D ("h_err_res", "Spread",ntx,xlo,xhi); 
+    h_err_res_sq = new TH1D ("h_err_res_sq", "Spread^2",ntx,xlo,xhi);
 
-	
 	for (int j=0; j<iterations;j++){
-	TH1* hMeas_AR = dynamic_cast<TH1*>(hMeas_const->Clone ("Measured"));   hMeas_AR  ->SetTitle ("Measured");
-    TH1* hMeas=Add_Random(hMeas_AR);
-    RooUnfold* unfold_copy = unfold->Clone("unfold_toy");
-	unfold_copy->Setup(unfold->response(),hMeas);
-    unfold_copy->SetVerbose(unfold->verbose());
-    hReco= unfold_copy->Hreco();
+		TH1* hMeas_AR = dynamic_cast<TH1*>(hMeas_const->Clone ("Measured"));   hMeas_AR  ->SetTitle ("Measured");
+	    TH1* hMeas=Add_Random(hMeas_AR);
+	    RooUnfold* unfold_copy = unfold->Clone("unfold_toy");
+		unfold_copy->Setup(unfold->response(),hMeas);
+	    unfold_copy->SetVerbose(unfold->verbose());
+	    hReco= unfold_copy->Hreco();
     	for (int i=0; i<ntx+2; i++) {    
-    		if ((hReco->GetBinContent(i)!=0.0 || (hReco->GetBinError(i)>0.0)) &&
-        	(hTrue->GetBinContent(i)!=0.0 || (hTrue->GetBinError(i)>0.0))) {
-      		Double_t res= hReco->GetBinContent(i) - hTrue->GetBinContent(i);
-      		TH1D* projection=graph_vector[i];
-      		projection->Fill(res);
-     		graph_vector[i]=projection; 
+    		if (hReco->GetBinContent(i)!=0.0 || (hReco->GetBinError(i)>0.0)) 
+    		{
+      		Double_t res= hReco->GetBinContent(i);
+     		graph_vector[i]->Fill(res);
      		Double_t u_error=hReco->GetBinError(i); 
-    		h_err_wip->Fill(i*dx,u_error);  	
+    		h_err->Fill(i*dx,u_error);  
         	}
     	}
-    	double ch =unfold_copy->Chi2(hTrue);
-    	double f_ch = fabs(ch);
-    	chi2_wip->Fill(ch);
-    	if (f_ch>=max){
-    		cerr<<"Large |chi^2| value: "<< ch << endl;
-    		odd_ch++;
+    	if (hTrue){
+	    	double ch =unfold_copy->Chi2(hTrue);
+	    	double f_ch = fabs(ch);
+	    	chi2->Fill(ch);
+	    	if (f_ch>=max){
+	    		cerr<<"Large |chi^2| value: "<< ch << endl;
+	    		odd_ch++;
+	    	}
     	}
     	unfold_copy->Reset();
     	delete hMeas_AR;
     	delete hMeas;
-    	delete hReco;
+    	
 	}
 	for (unsigned int i=0; i<graph_vector.size(); i++){
-    	h_err_res_wip->SetBinContent(i,graph_vector[i]->GetRMS());
+		Double_t spr=(graph_vector[i]->GetRMS());
+    	h_err_res_sq->SetBinContent(i,spr*spr);
+    	h_err_res->SetBinContent(i,spr);
     }
-    h_err_res = h_err_res_wip;
-    chi2=chi2_wip;
-    h_err=h_err_wip;
-    cout <<"There are " << odd_ch << " bins over "<<max <<endl;
+    for (unsigned int i=0; i<graph_vector.size(); i++){
+    	delete graph_vector[i];
+    }
+    if (hTrue&&odd_ch!=0){
+    	cout <<"There are " << odd_ch << " bins over "<<max <<endl;
+    }
+    
 }
 
 
-TH1*
-RooUnfoldAll::Spread(){
-	h_err_res->SetMarkerColor(2);
-	h_err_res->SetMarkerStyle(4);
-	return h_err_res;
-}
-
-TH1* 
-RooUnfoldAll::Unf_err(){
-	h_err->SetMarkerColor(4);
-	h_err->SetMarkerStyle(24);
-	return h_err;
-}
 
 TH1*
 RooUnfoldAll::Add_Random(TH1* hMeas_AR)

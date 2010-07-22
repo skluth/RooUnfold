@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.25 2010-07-22 10:30:17 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.26 2010-07-22 16:15:24 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -203,11 +203,14 @@ Int_t RooUnfoldTestHarness::RunTests()
     }
     if (dodraw) Results(); 
     if (iterations>0) {
-      RooUnfoldAll All(iterations,hTrue,unfold);
+      RooUnfoldAll All(iterations,unfold);
+      All.Plotting(hTrue);
       if (dodraw) {
         canvas->cd(++ipad);
         All.Spread()->Draw("P");
         All.Unf_err()->Draw("P SAME");
+        
+        
         canvas->cd(++ipad);
         All.Chi2()->Draw("chi2","abs(chi2)<1e10");    
       }
@@ -300,6 +303,7 @@ Int_t RooUnfoldTestHarness::Unfold ()
   unfold= RooUnfold::New (RooUnfold::Algorithm(method), response, hMeas, regparm);
   if (!unfold) return 0;
   unfold->SetVerbose (verbose);
+  unfold->SetNits(iterations);
   if (method == RooUnfold::kSVD) dynamic_cast<RooUnfoldSvd*>(unfold)->SetNtoys (ntoys);
   if (verbose>=0) {cout << "Created "; unfold->Print();}
   hReco= unfold->Hreco(doerror);
@@ -345,7 +349,7 @@ void RooUnfoldTestHarness::Results()
   hTrue    ->Draw();
   hTestPDFx->Draw("LSAME");
   hMeas    ->Draw("SAME");
-  if (hReco) hReco->Draw("SAME");
+  if (hReco) hReco->Draw("SAME P");
 
   Legend (lTest, hTestPDFx, hTrue, hMeas, hReco);
   canvas->Update();

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.18 2010-07-22 10:30:25 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.19 2010-07-22 16:15:30 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -24,6 +24,7 @@
 #include "TVectorD.h"
 #include "TDecompSVD.h"
 #include "RooUnfoldResponse.h"
+#include "RooUnfoldAll.h"
 
 // Need subclasses just for RooUnfold::New()
 #include "RooUnfoldBayes.h"
@@ -118,6 +119,7 @@ RooUnfold::Init()
   _verbose= 1;
   _overflow= 0;
   _unfolded= _haveCov= _fail= false;
+  _Nits=100;
 }
 
 RooUnfold&
@@ -164,6 +166,19 @@ RooUnfold::GetCov()
   _haveCov= true;
 }
 
+void
+RooUnfold::Get_err_mat()
+{
+	
+  Int_t nt= _nt;
+  _err_mat.ResizeTo(nt,nt);
+  RooUnfoldAll All(_Nits,this);
+  All.Plotting();
+  _err_mat=All.True_err();
+  _err_mat.Print();
+  _have_err_mat= true;
+}
+
 
 Double_t RooUnfold::Chi2(const TH1* hTrue)
 {
@@ -200,7 +215,7 @@ Double_t RooUnfold::Chi2(const TH1* hTrue)
 
 
 void
-RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)
+RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Int_t withError)
 {
   const TH1* hReco=      Hreco (withError);
   if (_fail) return;
@@ -316,7 +331,7 @@ RooUnfold::SetNameTitleDefault()
 }
 
 TH1*
-RooUnfold::Hreco (Bool_t withError)
+RooUnfold::Hreco (Int_t withError)
 {
   TH1* reco= (TH1*) _res->Htruth()->Clone(GetName());
   reco->Reset();
@@ -324,13 +339,19 @@ RooUnfold::Hreco (Bool_t withError)
   if (!_unfolded)             Unfold();
   if (_fail)                  return 0;
   if (withError && !_haveCov) GetCov();
-  if (!_haveCov) withError= false;
+  if (!_haveCov) withError= 0;
   Int_t nt= _nt + (_overflow ? 2 : 0);
+  TMatrixD err_mat(nt,nt);
   for (Int_t i= 0; i < nt; i++) {
     Int_t j= RooUnfoldResponse::GetBin (reco, i, _overflow);
     reco->SetBinContent (j,             _rec(i));
-    if (withError)
+    if (withError==1){
       reco->SetBinError (j, sqrt (fabs (_cov(i,i))));
+  	}
+  	if (withError==2){
+  		TMatrixD Freco_copy =Freco();
+  		reco->SetBinError(j,sqrt(fabs(Freco_copy(j,j))));
+  	}
   }
   return reco;
 }
