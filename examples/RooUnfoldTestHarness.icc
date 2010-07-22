@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.24 2010-07-19 21:45:09 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.25 2010-07-22 10:30:17 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -209,7 +209,7 @@ Int_t RooUnfoldTestHarness::RunTests()
         All.Spread()->Draw("P");
         All.Unf_err()->Draw("P SAME");
         canvas->cd(++ipad);
-        All.Chi2()->Draw("chi2");
+        All.Chi2()->Draw("chi2","abs(chi2)<1e10");    
       }
     }
   }

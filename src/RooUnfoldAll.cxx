@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.cxx,v 1.2 2010-07-19 21:45:10 adye Exp $
+//      $Id: RooUnfoldAll.cxx,v 1.3 2010-07-22 10:30:25 fwx38934 Exp $
 //
 // Description:
 //       Graph Drawing Class for use with RooUnfold.
@@ -14,6 +14,7 @@
 
 #include <cfloat>
 #include <iostream>
+#include <cmath>
 
 #include "TROOT.h"
 #include "TString.h"
@@ -31,6 +32,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::vector;
+using std::fabs;
 
 ClassImp (RooUnfoldAll);
 
@@ -70,11 +72,16 @@ RooUnfoldAll::Chi2()
 	return chi2;
 }
 
+
 void
 RooUnfoldAll::Plotting()
 {
-	TNtuple* chi2_wip = new TNtuple("chi2","chi2","chi2");
+	
 	vector<TH1D*> graph_vector;    
+    
+    int odd_ch=0;
+    double max=1e10;
+    double dx=(xhi-xlo)/ntx;
     
     for (int i= 0; i<ntx+2; i++) {
 	TString graph_title("Residuals at Bin ");
@@ -82,16 +89,18 @@ RooUnfoldAll::Plotting()
     TH1D* graph_name = new TH1D (graph_title,graph_title, 200,-150,150);
     graph_vector.push_back(graph_name);
     }
-    double dx=(xhi-xlo)/ntx;
+    
+    TNtuple* chi2_wip = new TNtuple("chi2","chi2","chi2");
     TProfile* h_err_wip = new TProfile ("h_err", "Unfolding errors",ntx,xlo,xhi);
     TH1D* h_err_res_wip = new TH1D ("h_err_res", "Spread",ntx,xlo,xhi); 
+
 	
 	for (int j=0; j<iterations;j++){
 	TH1* hMeas_AR = dynamic_cast<TH1*>(hMeas_const->Clone ("Measured"));   hMeas_AR  ->SetTitle ("Measured");
     TH1* hMeas=Add_Random(hMeas_AR);
     RooUnfold* unfold_copy = unfold->Clone("unfold_toy");
 	unfold_copy->Setup(unfold->response(),hMeas);
-        unfold_copy->SetVerbose(unfold->verbose());
+    unfold_copy->SetVerbose(unfold->verbose());
     hReco= unfold_copy->Hreco();
     	for (int i=0; i<ntx+2; i++) {    
     		if ((hReco->GetBinContent(i)!=0.0 || (hReco->GetBinError(i)>0.0)) &&
@@ -104,21 +113,27 @@ RooUnfoldAll::Plotting()
     		h_err_wip->Fill(i*dx,u_error);  	
         	}
     	}
-    	chi2_wip->Fill(unfold_copy->Chi2(hTrue));
+    	double ch =unfold_copy->Chi2(hTrue);
+    	double f_ch = fabs(ch);
+    	chi2_wip->Fill(ch);
+    	if (f_ch>=max){
+    		cerr<<"Large |chi^2| value: "<< ch << endl;
+    		odd_ch++;
+    	}
     	unfold_copy->Reset();
     	delete hMeas_AR;
     	delete hMeas;
     	delete hReco;
 	}
-	
-	
 	for (unsigned int i=0; i<graph_vector.size(); i++){
     	h_err_res_wip->SetBinContent(i,graph_vector[i]->GetRMS());
     }
     h_err_res = h_err_res_wip;
     chi2=chi2_wip;
     h_err=h_err_wip;
+    cout <<"There are " << odd_ch << " bins over "<<max <<endl;
 }
+
 
 TH1*
 RooUnfoldAll::Spread(){

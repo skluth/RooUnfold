@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.17 2010-07-19 21:45:10 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.18 2010-07-22 10:30:25 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -16,12 +16,12 @@
 #include <sstream>
 #include <cmath>
 
+#include "TMatrixD.h"
 #include "TNamed.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
 #include "TVectorD.h"
-#include "TMatrixD.h"
 #include "TDecompSVD.h"
 #include "RooUnfoldResponse.h"
 
@@ -164,6 +164,7 @@ RooUnfold::GetCov()
   _haveCov= true;
 }
 
+
 Double_t RooUnfold::Chi2(const TH1* hTrue)
 {
 	const TH1* hReco=Hreco ();
@@ -177,19 +178,26 @@ Double_t RooUnfold::Chi2(const TH1* hTrue)
         }
   	}
   	TMatrixD Ereco_copy=Ereco();
-
+	TMatrixD Ereco_copy2=Ereco();
   	Double_t Ereco_det = Ereco_copy.Determinant();
+  	TMatrixD reco_matrix_t=reco_matrix;
+  	TMatrixD reco_matrix_copy=reco_matrix;
+	reco_matrix_t.T();
 	if (fabs(Ereco_det)<1e-5){
 		cerr << "Warning: Small Determinant of Covariance Matrix =" << Ereco_det << endl;
 		cerr << "Chi^2 may be invalid due to small determinant" << endl;
 	}
 	TDecompSVD svd(Ereco_copy);
-	Ereco_copy = svd.Invert();//SVD method of finding inverse matrix should allow for singular matrices.
-	TMatrixD chi = TMatrixD(reco_matrix,TMatrixD::kTransposeMult,Ereco_copy);
-	TMatrixD chisq = TMatrixD(chi, TMatrixD::kMult,reco_matrix);
-	return chisq(0,0);	
+	svd.MultiSolve(reco_matrix);
+	Double_t cond=svd.Condition();
+	TMatrixD chisq_nw = reco_matrix_t*reco_matrix;
+	
+	double cond_max=1e17;
+	if (cond>=cond_max){
+		cerr << "Warning, very large matrix condition= "<< cond<<" chi^2 may be inaccurate"<<endl;}
+	return chisq_nw(0,0);	
 }
-        
+
 
 void
 RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Bool_t withError)

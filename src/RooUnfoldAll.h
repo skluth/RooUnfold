@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.h,v 1.1 2010-07-16 15:30:11 fwx38934 Exp $
+//      $Id: RooUnfoldAll.h,v 1.2 2010-07-22 10:30:25 fwx38934 Exp $
 //
 // Description:
 //      Graph Drawing Class for use with RooUnfold.
@@ -30,6 +30,7 @@ public:
   TH1* h_err;
   TH1* h_err_res;
   TNtuple* chi2;  
+
   
   const RooUnfold* unfold;
 
@@ -45,6 +46,7 @@ public:
   TH1* Spread();
   TH1* Add_Random(TH1* hMeas);
   TH1* Unf_err();
+
 
   
   
