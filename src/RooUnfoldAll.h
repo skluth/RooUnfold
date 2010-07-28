@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.h,v 1.3 2010-07-22 16:15:30 fwx38934 Exp $
+//      $Id: RooUnfoldAll.h,v 1.4 2010-07-28 15:53:36 fwx38934 Exp $
 //
 // Description:
 //      Graph Drawing Class for use with RooUnfold.
@@ -12,7 +12,6 @@
 #ifndef ROOUNFOLDALL_H_
 #define ROOUNFOLDALL_H_
 #include "TNamed.h"
-class TLegend;
 class TH1;
 class RooUnfold;
 class TNtuple;
@@ -21,34 +20,29 @@ class TNtuple;
 class RooUnfoldAll : public TNamed {
 
 public:
-  //Data
-  double xlo, xhi;
-  int ntx, iterations, nmx;
-  const TH1* hMeas_const;
-  TH1* hReco;
   
-  TH1* h_err;
-  TH1* h_err_res;
-  TH1* h_err_res_sq;
-  TNtuple* chi2;  
-
-  
-  const RooUnfold* unfold;
-
-  // Constructor
+  int iterations; // Number of iterations 
+  const RooUnfold* unfold; // Input unfolding object
   RooUnfoldAll (int iterations,const RooUnfold* unfold);
   virtual ~RooUnfoldAll();
-
-  // Methods and functions
-  void All_hMeas();
-  TNtuple* Chi2();
-  void Plotting(const TH1* hTrue=0);
+  TNtuple* Chi2(const TH1* hTrue=0,Int_t doerror=1); 
+  void Plotting();
   TH1* Spread();
-  TH1* Add_Random(TH1* hMeas);
   TH1* Unf_err();
   TMatrixD True_err();
 
-
+protected:
+  TH1* h_err; // Output plot
+  TH1* h_err_res; // Output plot
+  TH1* h_err_res_sq; // Output plot
+  TNtuple* chi2;  // Output plot
+  TH1* Add_Random(TH1* hMeas);  
+  void All_hMeas();
+  double xlo; // Minimum x-axis value 
+  double xhi; // Maximum x-axis value
+  int ntx; // Number of bins in true distribution
+  const TH1* hMeas_const; // Measured Distribution
+  TH1* hReco; // Reconstructed Distribution
   
   
 public:

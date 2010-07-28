@@ -1,5 +1,11 @@
-History of RooUnfold     $Id: History,v 1.72 2010-07-22 16:15:18 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.73 2010-07-28 15:53:27 fwx38934 Exp $
 ====================
+
+Richard Claridge 28-Jul-2010 rgc100728a
+  o Added RooUnfold Parms class to investigate the effect of changing regularisation parameter
+  o Added documentation comments to RooUnfold, RooUnfoldAll, RooUnfoldParms
+  o Converted some public variables to protected in RooUnfoldAll
+  o To improve speed reduced use of GetCov when SVD unfolding is used.
 
 Richard Claridge 22-Jul-2010 rgc100722b
   o Parametrised iterations in RooUnfold

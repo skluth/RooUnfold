@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.10 2010-07-19 21:45:10 adye Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.11 2010-07-28 15:53:36 fwx38934 Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -12,6 +12,7 @@
 #include "RooUnfoldSvd.h"
 
 #include <iostream>
+#include <iomanip>
 
 #include "TNamed.h"
 #include "TH1.h"
@@ -152,7 +153,6 @@ RooUnfoldSvd::GetCov()
 {
   if (!_unfolded) Unfold();
   if (_fail) return;
-
   Int_t overflow= (_overflow ? 2 : 0), nt= _nt+overflow, nm= _nm+overflow;
 
   TMatrixD covMeas(nm,nm);
@@ -169,7 +169,6 @@ RooUnfoldSvd::GetCov()
   _cov= _svd->GetCov (covMeas, _meas1d, _ntoys, _kterm);
   //Get the covariance matrix for statistical uncertainties on signal MC
   TMatrixD ucovTrain= _svd->GetMatStatCov (_ntoys, _kterm);
-
   Double_t sf= (_truth1d->Integral() / _train1d->Integral()) * _meas1d->Integral();
   Double_t sf2= sf*sf;
   for (Int_t i= 0; i<nt; i++) {

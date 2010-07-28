@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.26 2010-07-22 16:15:24 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.27 2010-07-28 15:53:32 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -36,8 +36,9 @@
 #include "TVectorD.h"
 #include "TLine.h"
 #include "TNtuple.h"
+#include "TProfile.h"
 #include "RooUnfoldAll.h"
-
+#include "RooUnfoldParms.h"
 #include "RooUnfoldResponse.h"
 #include "RooUnfold.h"
 #include "RooUnfoldSvd.h"
@@ -99,7 +100,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("hpaper",  &hpaper,       0, "paper height", "");
   args.Add ("verbose", &verbose,      1, "debug level: 0=warnings, 1=verbose, 2=debug, 3=detailed");
   args.Add ("draw",    &dodraw,       1, "draw results");
-  args.Add ("iterations",&iterations,100,"number of iterations");
+  args.Add ("iterations",&iterations,500,"number of iterations");
 }
 
 //==============================================================================
@@ -125,7 +126,7 @@ Int_t RooUnfoldTestHarness::Run()
 void RooUnfoldTestHarness::SetupCanvas()
 {
   gROOT->SetStyle("Plain");
-  gStyle->SetOptStat(1111);
+  gStyle->SetOptStat(0);
   if (!onepage)    gStyle->SetOptTitle(0);
   if (onepage < 3) gStyle->SetHistLineWidth(2);
   if (onepage) {
@@ -201,18 +202,20 @@ Int_t RooUnfoldTestHarness::RunTests()
       if (dodraw) Results();
       return 7;
     }
-    if (dodraw) Results(); 
-    if (iterations>0) {
+    //if (dodraw) Results(); 
+    if (iterations>0) {;
       RooUnfoldAll All(iterations,unfold);
-      All.Plotting(hTrue);
+      All.Plotting();
+      RooUnfoldParms Parm(regparm,unfold,2,iterations,hTrue);
       if (dodraw) {
         canvas->cd(++ipad);
-        All.Spread()->Draw("P");
-        All.Unf_err()->Draw("P SAME");
-        
-        
+        Parm.GetChi2()->Draw("P");    
         canvas->cd(++ipad);
-        All.Chi2()->Draw("chi2","abs(chi2)<1e10");    
+        Parm.GetErr()->Draw("P");    
+        canvas->cd(++ipad);
+        Parm.GetRes()->Draw("P"); 
+        canvas->cd(++ipad);
+        Parm.GetRMSSpread()->Draw("P");   
       }
     }
   }

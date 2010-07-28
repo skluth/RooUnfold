@@ -2,7 +2,7 @@
 //Kerstin Tackmann, Heiko Lacker (TU Dresden)
 //based on 
 //Andreas Hoecker, Vakhtang Kartvelishvili, hep-ph/9509307
-//$Id: RooUnfHistoSvd.cxx,v 1.3 2008-01-23 23:06:14 adye Exp $
+//$Id: RooUnfHistoSvd.cxx,v 1.4 2010-07-28 15:53:36 fwx38934 Exp $
 ///////////////////////////////////////////////////////////////////////
 
 #include "RooUnfHistoSvd.h"
@@ -274,7 +274,6 @@ TMatrixD TUnfHisto::GetCov(const TMatrixD& cov, const TH1D *bref,  Int_t ntoys, 
   for(int i=0; i<nPar; i++)
     for(int j=0; j<nPar; j++)
       L(i,j) = 0.;
-
   for(Int_t iPar= 0; iPar < nPar; iPar++) {
     // calculate the diagonal term first
     L(iPar,iPar)= cov(iPar,iPar);
@@ -300,7 +299,6 @@ TMatrixD TUnfHisto::GetCov(const TMatrixD& cov, const TH1D *bref,  Int_t ntoys, 
         L(iPar,jPar) = 0.;
     }
   }
-
   // remember Lt
   TMatrixD *Lt= new TMatrixD(TMatrixD::kTransposed,L);
   TRandom random(123);
