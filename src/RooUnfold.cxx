@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.21 2010-08-04 14:53:04 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.22 2010-08-04 22:05:31 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -45,7 +45,9 @@ END_HTML */
 #include "RooUnfoldBayes.h"
 #include "RooUnfoldSvd.h"
 #include "RooUnfoldBinByBin.h"
+#ifndef NOTUNFOLD
 #include "RooUnfoldTUnfold.h"
+#endif
 
 using std::cout;
 using std::cerr;
@@ -81,9 +83,11 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, In
     case kBinByBin:
       unfold= new RooUnfoldBinByBin (res, meas);
       break;
+#ifndef NOTUNFOLD
     case kTUnfold:
       unfold= new RooUnfoldTUnfold (res,meas,regparm);
       break;
+#endif
     default:
       cerr << "Unknown RooUnfold method " << Int_t(alg) << endl;
       return 0;

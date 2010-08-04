@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.21 2010-07-17 01:06:07 adye Exp $
+#      $Id: GNUmakefile,v 1.22 2010-08-04 22:05:26 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -44,7 +44,6 @@ ifeq ($(ARCH),)
 out := $(shell echo "$(ROOTSYS)/test/Makefile.arch not found - trying a basic Linux config" >&2)
 ARCH          =   $(shell $(ROOTCONFIG) --arch)
 ROOTLIBS      =   $(shell $(ROOTCONFIG) --libs)
-ROOTINCLUDES  = -I$(shell $(ROOTCONFIG) --incdir)
 CXXFLAGS      =   $(shell $(ROOTCONFIG) --cflags)
 CXX           = g++
 CXXFLAGS     += -Wall -fPIC
@@ -59,8 +58,12 @@ ifneq ($(findstring debug,$(ROOTBUILD)),)
 CXXFLAGS     += -g
 LDFLAGS      += -g
 endif
-else
-ROOTINCLUDES  = -I$(shell $(ROOTCONFIG) --incdir)
+endif
+
+ROOTINCDIR    = $(shell $(ROOTCONFIG) --incdir)
+ROOTINCLUDES  = -I$(ROOTINCDIR)
+ifeq ($(ROOTCINT),)
+ROOTCINT      = rootcint
 endif
 ifeq ($(VERBOSE),1)
 _             =
@@ -74,19 +77,33 @@ ifneq ($(findstring g++,$(CXX)),)
 MFLAGS        = -MM
 endif
 SRCDIR        = $(CURDIR)/src/
+INCDIR        = $(SRCDIR)
 WORKDIR       = $(CURDIR)/tmp/$(ARCH)/
 LIBDIR        = $(CURDIR)/
 SHLIBDIR      = $(CURDIR)/
 EXEDIR        = $(CURDIR)/
 EXESRC        = $(CURDIR)/examples/
-INCLUDES      = -I$(SRCDIR)
+INCLUDES      = -I$(INCDIR)
 HTMLDOC       = htmldoc
+CXX          += $(EXTRAINCLUDES)
+LDFLAGS      += $(EXTRALDFLAGS)
 
 # === Internal configuration ===================================================
 
 PACKAGE       = RooUnfold
 OBJDIR        = $(WORKDIR)obj/
 DEPDIR        = $(WORKDIR)dep/
+
+ifeq ($(HAVE_TUNFOLD),)
+ifneq ($(wildcard $(ROOTINCDIR)/TUnfold.h),)
+HAVE_TUNFOLD  = 1
+endif
+endif
+
+ifeq ($(HAVE_TUNFOLD),)
+CPPFLAGS     += -DNOTUNFOLD
+EXCLUDE       = RooUnfoldTUnfold.cxx RooUnfoldTUnfold.h
+endif
 
 ifeq ($(NOROOFIT),)
 ifneq ($(shell $(ROOTCONFIG) --has-roofit),yes)
@@ -105,27 +122,29 @@ ROOFITLIBS   += -lRooFit -lMinuit -lHtml
 endif
 endif
 
-MAIN          = $(notdir $(wildcard $(EXESRC)*.cxx))
+MAIN          = $(filter-out $(EXCLUDE),$(notdir $(wildcard $(EXESRC)*.cxx)))
 MAINEXE       = $(addprefix $(EXEDIR),$(patsubst %.cxx,%$(ExeSuf),$(MAIN)))
 ROOTSYS      ?= ERROR_RootSysIsNotDefined
-HLIST         = $(filter-out $(SRCDIR)$(PACKAGE)_LinkDef.h,$(wildcard $(SRCDIR)*.h)) $(SRCDIR)$(PACKAGE)_LinkDef.h
-CINTFILE      = $(WORKDIR)$(PACKAGE)Cint.cxx
-CINTOBJ       = $(OBJDIR)$(PACKAGE)Cint.o
+LINKDEF       = $(INCDIR)$(PACKAGE)_LinkDef.h
+HLIST         = $(filter-out $(addprefix $(INCDIR),$(EXCLUDE)) $(LINKDEF),$(wildcard $(INCDIR)*.h)) $(LINKDEF)
+CINTFILE      = $(WORKDIR)$(PACKAGE)Dict.cxx
+CINTOBJ       = $(OBJDIR)$(PACKAGE)Dict.o
 LIBFILE       = $(LIBDIR)lib$(PACKAGE).a
 SHLIBFILE     = $(SHLIBDIR)lib$(PACKAGE).$(DllSuf)
 
 ifneq ($(SHARED),)
 LIBS          = -L$(SHLIBDIR)
 LINKLIB       = $(SHLIBFILE)
-LINKLIBOPT    = -l$(PACKAGE)
+LINKLIBOPT    = -l$(PACKAGE) $(EXTRALIBS)
 else
 LIBS          = -L$(LIBDIR)
 LINKLIB       = $(LIBFILE)
-LINKLIBOPT    = -Wl,-static -l$(PACKAGE) -Wl,-Bdynamic
+LINKLIBOPT    = -Wl,-static -l$(PACKAGE) $(EXTRALIBS) -Wl,-Bdynamic
 endif
 
 # List of all object files to build
-OLIST         = $(addprefix $(OBJDIR),$(patsubst %.cxx,%.o,$(notdir $(wildcard $(SRCDIR)*.cxx))))
+SRCLIST       = $(filter-out $(EXCLUDE),$(notdir $(wildcard $(SRCDIR)*.cxx)))
+OLIST         = $(addprefix $(OBJDIR),$(patsubst %.cxx,%.o,$(SRCLIST)))
 
 ifeq ($(MFLAGS),)
 
@@ -135,7 +154,7 @@ HDEP          = $(HLIST)
 else
 
 # List of all dependency file to make
-DLIST         = $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(notdir $(wildcard $(SRCDIR)*.cxx $(EXESRC)*.cxx))))
+DLIST         = $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(SRCLIST) $(filter-out $(EXCLUDE),$(notdir $(wildcard $(EXESRC)*.cxx)))))
 
 endif
 
@@ -191,8 +210,8 @@ default : shlib
 $(CINTOBJ) : $(HLIST)
 	@mkdir -p $(WORKDIR)
 	@mkdir -p $(OBJDIR)
-	@echo "Running rootcint for $(SRCDIR)$(PACKAGE)_LinkDef.h"
-	$(_)cd $(SRC) ; $(ROOTSYS)/bin/rootcint -f $(CINTFILE) -c -p $(INCLUDES) $(HLIST)
+	@echo "Generating dictionary from $(LINKDEF)"
+	$(_)cd $(SRC) ; $(ROOTCINT) -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)
 	@echo "Compiling $(CINTFILE)"
 	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(CINTFILE) -o $(CINTOBJ) $(INCLUDES)
 
@@ -224,6 +243,8 @@ bin: shlib $(MAINEXE)
 
 commands :
 	@echo "Make $(DEPDIR)%.d:	$(CXX) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $(SRCDIR)%.cxx | sed 's,\(%\.o\) *:,$(OBJDIR)\1 $(DEPDIR)%.d :,g' > $(DEPDIR)%.d"
+	@echo
+	@echo "Make dictionary: $(ROOTCINT) -f $(CINTFILE) -c -p $(INCLUDES) $(HLIST)"
 	@echo
 	@echo "Compile $(SRCDIR)%.cxx:	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(SRCDIR)%.cxx -o $(OBJDIR)%.o $(INCLUDES)"
 	@echo

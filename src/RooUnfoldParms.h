@@ -28,5 +28,7 @@ class RooUnfoldParms : public TNamed {
 	TProfile* hres; // Output plot
 	TH1* htau;
 	void DoMath();
+public:
+	ClassDef (RooUnfoldParms, 0)
 };
 #endif /*ROOUNFOLDPARMS_H_*/

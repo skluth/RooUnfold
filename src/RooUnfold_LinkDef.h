@@ -16,6 +16,8 @@
 #pragma link C++ class TUnfHisto;
 #pragma link C++ class RooUnfoldAll+;
 #pragma link C++ class RooUnfoldParms+;
+#ifndef NOTUNFOLD
 #pragma link C++ class RooUnfoldTUnfold+;
+#endif
 
 #endif

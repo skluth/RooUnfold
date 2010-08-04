@@ -1,10 +1,18 @@
-History of RooUnfold     $Id: History,v 1.75 2010-08-04 16:24:30 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.76 2010-08-04 22:05:26 adye Exp $
 ====================
 
-Richard Claridge 4-Aug-2010  rgc100804b
+Tim Adye          4-Aug-2010 tja100804a
+  o GNUMakefile only make RooUnfoldTUnfold if ROOT has TUnfold.h.
+  o GNUMakefile uses EXTRAINCLUDES, EXTRALDFLAGS, and EXTRALIBS if set on
+    make command-line. INCDIR can be set separately from SRCDIR.
+  o GNUMakefile uses ROOTCINT macro to run rootcint.
+  o RooUnfoldParms ClassDef.
+  o Don't use TUNfold::SetInput return in ROOT 5.22, since it didn't return one.
+
+Richard Claridge  4-Aug-2010 rgc100804b
   o Modified RooUnfoldAll to do full covariance matrix calculation
 
-Richard Claridge 4-Aug-2010  rgc100804a
+Richard Claridge  4-Aug-2010 rgc100804a
   o Added RooUnfoldTUnfold class to unfold with ROOT's TUnfold method (method 4)
   o Converted set/get regparm to doubles to accommodate more variation in RoounfoldParms
 
@@ -24,7 +32,6 @@ Richard Claridge 22-Jul-2010 rgc100722a
   o Changed Chi2 method in RooUnfold to use svd.Solve, as opposed to svd.Invert
   o Added warnings for very high matrix conditions
   o Added counter of very high chi^2 values
-
 
 Tim Adye         19-Jul-2010 tja100719a
   o Added Clone method for RooUnfold and subclasses.
@@ -47,8 +54,8 @@ Tim Adye         16-Jul-2010 tja100716a
 Richard Claridge 16-Jul-2010 rgc100716a
   o Added RooUnfoldAll class to do  ensemble tests for spread and chi squared.
   o Modified RooUnfoldTesHarness.icc to use the new class.
-  o Chi squared limit now allows for negative determinants. 
-  o Default error no longer uses a sqrt. 
+  o Chi squared limit now allows for negative determinants.
+  o Default error no longer uses a sqrt.
 
 Tim Adye         14-Jul-2010 tja100714a
   o Remove -Woverloaded-virtual -Wno-deprecated from GNUmakefile, since these
@@ -98,7 +105,7 @@ Tim Adye         25-May-2010 tja100525a
 Tim Adye         24-May-2010 tja100524a
   RooUnfoldTest chanegs:
   o Add legends to plots
-  o Fix Postscript output when onepage=0 
+  o Fix Postscript output when onepage=0
   o Generate truth over a wider range than histogram (according to bias and
     smearing) to allow for migration in/out of the range.
 

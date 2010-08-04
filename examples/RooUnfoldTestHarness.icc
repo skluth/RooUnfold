@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.28 2010-08-04 14:54:01 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.29 2010-08-04 22:05:29 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -68,8 +68,8 @@ using std::endl;
 
 void RooUnfoldTestHarness::Parms (ArgVars& args)
 {
-  TString methodHelp= TString::Format("RooUnfold method: %d=none, %d=Bayes, %d=SVD, %d=bin-by-bin",
-                                      RooUnfold::kNone,RooUnfold::kBayes,RooUnfold::kSVD,RooUnfold::kBinByBin);
+  TString methodHelp= TString::Format("RooUnfold method: %d=none, %d=Bayes, %d=SVD, %d=bin-by-bin, %d=TUnfold",
+                                      RooUnfold::kNone,RooUnfold::kBayes,RooUnfold::kSVD,RooUnfold::kBinByBin,RooUnfold::kTUnfold);
   args.Add ("method",  &method,       RooUnfold::kBayes, methodHelp.Data());
   args.Add ("stage",   &stage,        0, "1=train (writes RooUnfoldTest.root), 2=test (reads), 0=both (default)");
   args.Add ("ftrainx", &ftrainx,      0, "training X PDF: 0=flat, 1=top-hat, 2=Gaussian, 3=double exp, 4=B-W, 5=double B-W, 6=exp, 7=Gaussian+exp");
@@ -359,11 +359,11 @@ void RooUnfoldTestHarness::Results()
   hTestPDFx->Draw("LSAME");
   hMeas    ->Draw("SAME");
   if (hReco) hReco->Draw("SAME P");
-  cout<<"Htrue integral="<<hTrue->Integral()<<" Hreco Integral= "<<hReco->Integral()<<" T/R= "<<hTrue->Integral()/hReco->Integral()<<endl;
   Legend (lTest, hTestPDFx, hTrue, hMeas, hReco);
   canvas->Update();
 
   if (!hReco) return;
+  cout<<"Htrue integral="<<hTrue->Integral()<<" Hreco Integral= "<<hReco->Integral()<<" T/R= "<<hTrue->Integral()/hReco->Integral()<<endl;
   if (iterations > 0) return;
 
   if (onepage>=2) canvas->cd(++ipad);

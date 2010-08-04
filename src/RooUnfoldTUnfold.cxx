@@ -117,9 +117,13 @@ RooUnfoldTUnfold::Unfold()
   TGraph *lCurve;
   // this method scans the parameter tau and finds the kink in the L curve
   // finally, the unfolding is done for the best choice of tau
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,23,0)  /* TUnfold v6 (included in ROOT 5.22) didn't have setInput return value */
   if(_unf->SetInput(_meas,0.0)>=10000) {
     cerr<<"Unfolding result may be wrong\n";
   }
+#else
+  _unf->SetInput(_meas,0.0);
+#endif
   _unf->SetInput(_meas);
   if (!tau_set){
   iBest=_unf->ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);

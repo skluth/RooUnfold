@@ -2,12 +2,12 @@
 #define ROOUNFOLDTUNFOLD_H_
 
 #include "RooUnfold.h"
+#include "TUnfold.h"
 
 class RooUnfoldResponse;
 class TH1;
 class TH1D;
 class TH2D;
-class TUnfold;
 
 class RooUnfoldTUnfold : public RooUnfold {
 
