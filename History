@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.74 2010-08-04 14:53:49 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.75 2010-08-04 16:24:30 fwx38934 Exp $
 ====================
+
+Richard Claridge 4-Aug-2010  rgc100804b
+  o Modified RooUnfoldAll to do full covariance matrix calculation
 
 Richard Claridge 4-Aug-2010  rgc100804a
   o Added RooUnfoldTUnfold class to unfold with ROOT's TUnfold method (method 4)

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.h,v 1.4 2010-07-28 15:53:36 fwx38934 Exp $
+//      $Id: RooUnfoldAll.h,v 1.5 2010-08-04 16:24:35 fwx38934 Exp $
 //
 // Description:
 //      Graph Drawing Class for use with RooUnfold.
@@ -34,7 +34,7 @@ public:
 protected:
   TH1* h_err; // Output plot
   TH1* h_err_res; // Output plot
-  TH1* h_err_res_sq; // Output plot
+  TMatrixD error_matrix; //Matrix of covariances
   TNtuple* chi2;  // Output plot
   TH1* Add_Random(TH1* hMeas);  
   void All_hMeas();

@@ -123,12 +123,10 @@ RooUnfoldTUnfold::Unfold()
   _unf->SetInput(_meas);
   if (!tau_set){
   iBest=_unf->ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
-  cout<<"Best value for tau= "<<_unf->GetTau()<<endl;
   }
   else{
   	_unf->DoUnfold(_tau);
   }
-  //cout<<"tau= "<<_tau<<endl;
   TH1D* reco=_unf->GetOutput("_rec","reconstructed dist",0,0);
   if (_overflow){
 	  _rec.ResizeTo (reco->GetNbinsX());
@@ -230,6 +228,6 @@ RooUnfoldTUnfold::Get_settings()
 {
 	_minparm=0;
 	_maxparm=2;
-	_stepsizeparm=1e-2;
+	_stepsizeparm=5e-2;
 	_defaultparm=1;
 }

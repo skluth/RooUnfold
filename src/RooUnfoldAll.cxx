@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.cxx,v 1.6 2010-08-04 14:53:04 fwx38934 Exp $
+//      $Id: RooUnfoldAll.cxx,v 1.7 2010-08-04 16:24:35 fwx38934 Exp $
 //
 // Description:
 //      Unfolding errors class
@@ -61,7 +61,7 @@ RooUnfoldAll::RooUnfoldAll (int Nits,  const RooUnfold* unfold_in)
 {
 	h_err=0;
     h_err_res=0;
-    h_err_res_sq=0;
+    error_matrix=0;
     chi2=0; 
     All_hMeas(); 
 }
@@ -73,7 +73,6 @@ RooUnfoldAll::~RooUnfoldAll()
 
   delete h_err;
   delete h_err_res;
-  delete h_err_res_sq;
   delete chi2;  
 }
 
@@ -133,12 +132,8 @@ covariance matrix from True_err()*/
 TMatrixD
 RooUnfoldAll::True_err()
 {
-	//Returns a matrix of errors based on the spread of the reconstructed points//
-	TMatrixD Error(ntx,ntx);
-	for (int x=0;x<ntx;x++){
-		Error(x,x)=h_err_res_sq->GetBinContent(x);
-	}
-	return Error;
+	//Returns a matrix of errors based on the covariance of the reconstructed points//
+	return error_matrix;
 }
 
 TH1*
@@ -178,6 +173,9 @@ RooUnfoldAll::Plotting()
 {
 	//Does the math//
 	vector<TH1D*> graph_vector;    
+	vector<double> cov_vector(ntx);
+	TMatrixD cov_matrix(ntx,ntx);
+    error_matrix.ResizeTo(ntx,ntx);
     for (int i= 0; i<ntx+2; i++) {
 	TString graph_title("Residuals at Bin ");
     graph_title+=i;
@@ -185,9 +183,8 @@ RooUnfoldAll::Plotting()
     graph_vector.push_back(graph_name);
     }
     h_err_res = new TH1D ("h_err_res", "Spread",ntx,xlo,xhi); 
-    h_err_res_sq = new TH1D ("h_err_res_sq", "Spread^2",ntx,xlo,xhi);
 	
-	for (int j=0; j<iterations;j++){
+	for (int k=0; k<iterations;k++){
 		TH1* hMeas_AR = dynamic_cast<TH1*>(hMeas_const->Clone ("Measured"));   hMeas_AR  ->SetTitle ("Measured");
 	    TH1* hMeas=Add_Random(hMeas_AR);
 	    RooUnfold* unfold_copy = unfold->Clone("unfold_toy");
@@ -195,22 +192,28 @@ RooUnfoldAll::Plotting()
 	    unfold_copy->SetVerbose(unfold->verbose());
 	    unfold_copy->SetNits(iterations);
 	    hReco= unfold_copy->Hreco();
-    	for (int i=0; i<ntx+2; i++) {    
-    		if (hReco->GetBinContent(i)!=0.0 || (hReco->GetBinError(i)>0.0)) 
-    		{
+		for (int i=0; i<ntx; i++) {    
       		Double_t res= hReco->GetBinContent(i);
-     		graph_vector[i]->Fill(res);  
-        	}
-    	}
+  			cov_vector[i]+=res;
+     		graph_vector[i]->Fill(res); 
+     		for (int j=0; j<ntx; j++){
+        		cov_matrix (i,j)+=(res*(hReco->GetBinContent(j)));
+        	} 
+    	}    	
 	}
 	for (unsigned int i=0; i<graph_vector.size(); i++){
 		Double_t spr=(graph_vector[i]->GetRMS());
-    	h_err_res_sq->SetBinContent(i,spr*spr);
     	h_err_res->SetBinContent(i,spr);
     }
     
     for (unsigned int i=0; i<graph_vector.size(); i++){
-    	delete graph_vector[i];
+		delete graph_vector[i];
+    }
+    
+    for (unsigned int i=0; i<cov_vector.size(); i++){
+    	for (unsigned int j=0; j<cov_vector.size(); j++){
+    		error_matrix(i,j)=(cov_matrix(i,j)-(cov_vector[i]*cov_vector[j])/iterations)/iterations;
+    	}
     }
     
 }
