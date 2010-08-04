@@ -1,5 +1,9 @@
-History of RooUnfold     $Id: History,v 1.73 2010-07-28 15:53:27 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.74 2010-08-04 14:53:49 fwx38934 Exp $
 ====================
+
+Richard Claridge 4-Aug-2010  rgc100804a
+  o Added RooUnfoldTUnfold class to unfold with ROOT's TUnfold method (method 4)
+  o Converted set/get regparm to doubles to accommodate more variation in RoounfoldParms
 
 Richard Claridge 28-Jul-2010 rgc100728a
   o Added RooUnfold Parms class to investigate the effect of changing regularisation parameter

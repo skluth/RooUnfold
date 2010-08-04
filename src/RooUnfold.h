@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.15 2010-07-28 15:53:36 fwx38934 Exp $
+//      $Id: RooUnfold.h,v 1.16 2010-08-04 14:53:04 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -23,7 +23,7 @@ class RooUnfold : public TNamed {
 
 public:
 
-  enum Algorithm { kNone, kBayes, kSVD, kBinByBin }; // Selection of unfolding algorithm.
+  enum Algorithm { kNone, kBayes, kSVD, kBinByBin, kTUnfold}; // Selection of unfolding algorithm.
 
   static RooUnfold* New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Int_t regparm= -1,
                          const char* name= 0, const char* title= 0);
@@ -51,7 +51,7 @@ public:
 
   virtual const RooUnfoldResponse* response() const;
   virtual const TH1*               Hmeasured() const;
-  virtual TH1*                     Hreco (Int_t withError= 0);
+  virtual TH1*                     Hreco (Int_t withError= 1);
 
   virtual TVectorD&                Vreco();
   virtual TMatrixD&                Ereco();
@@ -66,11 +66,21 @@ public:
 
   virtual TObject* Impl();
 
-  virtual void  SetRegParm (Int_t parm);
-  virtual Int_t GetRegParm() const; // Get Regularisation Parameter
-
+  virtual void  SetRegParm (Double_t parm);
+  virtual Double_t GetRegParm() const; // Get Regularisation Parameter
+ virtual void Get_settings();
   Double_t Chi2 (const TH1* hTrue,Int_t DoChi2=1);
-protected:
+  Double_t Get_minparm();
+  Double_t Get_maxparm();
+  Double_t Get_stepsizeparm();
+  Double_t Get_defaultparm();
+  
+  Double_t _minparm; //Minimum value to be used in RooUnfoldParms
+  Double_t _maxparm; //Maximum value to be used in RooUnfoldParms
+  Double_t _stepsizeparm; //StepSize value to be used in RooUnfoldParms
+  Double_t _defaultparm; //Recommended value for regularisation parameter
+  
+  protected:
 
   void Init();
   virtual void Unfold(); 
@@ -79,6 +89,7 @@ protected:
   virtual void Get_err_mat(); // Get covariance matrix using errors from residuals on reconstructed distribution
   void Assign   (const RooUnfold& rhs); // implementation of assignment operator
   void CopyData (const RooUnfold& rhs);
+ 
 
   // instance variables
 
@@ -118,7 +129,7 @@ inline TMatrixD&                RooUnfold::Freco()           { if (!_have_err_ma
 inline TObject*                 RooUnfold::Impl()            { return 0; };
 inline void  RooUnfold::SetVerbose (Int_t level)             { _verbose= level; } // Set verbose
 inline void  RooUnfold::SetNits (Int_t iterations)             { _Nits= iterations; } // Set iterations
-inline void  RooUnfold::SetRegParm (Int_t)                   {} // Set Regularisation parameter
-inline Int_t RooUnfold::GetRegParm() const                   {return -1;}
+inline void  RooUnfold::SetRegParm (Double_t)                   {} // Set Regularisation parameter
+inline Double_t RooUnfold::GetRegParm() const                   {return -1;}
 
 #endif

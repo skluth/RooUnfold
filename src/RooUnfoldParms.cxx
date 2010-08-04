@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldParms.cxx,v 1.1 2010-07-28 15:55:19 fwx38934 Exp $
+//      $Id: RooUnfoldParms.cxx,v 1.2 2010-08-04 14:53:04 fwx38934 Exp $
 //
 // Description:
 //      Optimisation of regularisation parameter class
@@ -47,6 +47,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::vector;
+
 ClassImp (RooUnfoldParms);
 
 RooUnfoldParms::RooUnfoldParms(Int_t reg ,const RooUnfold* unfold_in,Int_t err,Int_t its,const TH1* truth)
@@ -105,7 +106,7 @@ RooUnfoldParms::GetRMSSpread()
 	 Requires a known truth distribution*/
 	hrms->SetMarkerColor(1);
 	hrms->SetMarkerStyle(4);
-	hres->SetMinimum(0);
+	hrms->SetMinimum(0);
 	return dynamic_cast<TH1D*>(hrms->Clone());
 }
 
@@ -113,63 +114,82 @@ void
 RooUnfoldParms::DoMath()
 {
 	/*Does all the data handling. Called in constructor.*/
-	hch2=new TProfile("hch2","chi^2 vs regparm",regparm,0,regparm);
-	herr=new TProfile("herr","Error(squared) vs regparm",regparm,0,regparm);
-	hres=new TProfile("hres","rms vs regparm",regparm,0,regparm);
-	hrms=new TH1D("hrms","rms spread of residuals",regparm,0,regparm);
+	cout<<"Doing parms"<<endl;
+	RooUnfold* u_temp = unfold->Clone("unfold_toy");
+	u_temp->SetVerbose(unfold->verbose());
+	u_temp->SetNits(Nits);
+	u_temp->Setup(unfold->response(),unfold->Hmeasured());
+	Double_t _maxparm=u_temp->Get_maxparm();
+	Double_t _minparm=u_temp->Get_minparm();
+	Double_t _stepsizeparm=u_temp->Get_stepsizeparm();
+	Int_t nobins=Int_t((_maxparm-_minparm)/_stepsizeparm);
+	
 	vector<TH1D*> graph_vector;    
-    for (int i= 0; i<regparm; i++) {
+    Double_t graphage=_minparm;
+    
+    while(graphage<=_maxparm) {
 	TString graph_title("Residuals at k= ");
-    graph_title+=i;
+    graph_title+=graphage;
     TH1D* graph_name = new TH1D (graph_title,graph_title, 200,0,1000);
     graph_vector.push_back(graph_name);
+    graphage+=_stepsizeparm;
     }
+    
+    Double_t xlo=_minparm;
+	Double_t xhi=_maxparm;
+	hch2=new TProfile("hch2","chi^2 vs regparm",nobins,xlo,xhi);
+	herr=new TProfile("herr","Error(squared) vs regparm",nobins,xlo,xhi);
+	hres=new TProfile("hres","rms vs regparm",nobins,xlo,xhi);
+	hrms=new TH1D("hrms","rms spread of residuals",nobins,xlo,xhi);
     Int_t bins=0;
-	for (Int_t k=1;k<regparm;k++)
-	{	
+    Int_t gvl=0;
+    delete u_temp;
+	for (Double_t k=_minparm;k<=_maxparm;k+=_stepsizeparm)
+	{
+		TH1* hMeas = dynamic_cast<TH1*>(unfold->Hmeasured()->Clone ("Measured"));
 		RooUnfold* unf = unfold->Clone("unfold_toy");
-		TH1* hMeas_AR = dynamic_cast<TH1*>(unfold->Hmeasured()->Clone ("Measured"));   hMeas_AR  ->SetTitle ("Measured");
-		unf->Setup(unfold->response(),hMeas_AR);
+		unf->Setup(unfold->response(),hMeas);
 	    unf->SetVerbose(unfold->verbose());
 	    unf->SetRegParm(k);
 	    unf->SetNits(Nits);
 		Double_t sq_err_tot=0;
-		TH1* hReco=unf->Hreco(2);
+		TH1* hReco=unf->Hreco(1);
 		bins=hReco->GetXaxis()->GetNbins(); 
 		for (int i=0;i<bins;i++)
 		{
 			sq_err_tot+=hReco->GetBinError(i);
 		}
 		herr->Fill(k,sqrt(sq_err_tot));
-		
 		if (hTrue)
 		{	
-			Double_t rsqt=0;
+			Double_t rsqt=0;	
 			for (int i=0;i<bins;i++){
 				if (hReco->GetBinContent(i)!=0.0 || (hReco->GetBinError(i)>0.0)) 
 	    		{
-				Double_t res=hReco->GetBinContent(i) - hTrue->GetBinContent(i);
-				Double_t rsq=res*res;
-				rsqt+=rsq;
-				graph_vector[k]->Fill(sqrt(rsq));
+					Double_t res=hReco->GetBinContent(i) - hTrue->GetBinContent(i);
+					Double_t rsq=res*res;
+					rsqt+=rsq;
+					graph_vector[gvl]->Fill(sqrt(rsq));
 	    		}
 			}
-			
-			Double_t chi2=unf->Chi2(hTrue,doerror);
+			double chi2=unf->Chi2(hTrue,doerror);
 			if (chi2<=1e10){
 				hch2->Fill(k,chi2);
 			}
 		hres->Fill(k,(sqrt(rsqt/bins)));	
 		}
-		
+		gvl++;
 		delete unf;
 	}
+	Double_t bn=_minparm;
 	for (unsigned int i=0; i<graph_vector.size(); i++){
 		Double_t spr=(graph_vector[i]->GetRMS());
-    	hrms->SetBinContent(i+1,spr/sqrt(bins));
+    	hrms->Fill(bn,spr/sqrt(bins));
+    	bn+=_stepsizeparm;
 	}
    	for (unsigned int i=0; i<graph_vector.size(); i++){
     	delete graph_vector[i];
     }
+    
 }
 

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.cxx,v 1.5 2010-07-28 15:53:36 fwx38934 Exp $
+//      $Id: RooUnfoldAll.cxx,v 1.6 2010-08-04 14:53:04 fwx38934 Exp $
 //
 // Description:
 //      Unfolding errors class
@@ -81,16 +81,24 @@ void
 RooUnfoldAll::All_hMeas()
 {
 	//Gets graph size parameters//
+	RooUnfold* u_c=unfold->Clone("clone");
+	u_c->SetVerbose(unfold->verbose());
+	u_c->SetNits(iterations);
+	TH1* HR=u_c->Hreco();
 	hMeas_const=unfold->Hmeasured();
-	ntx=hMeas_const->GetNbinsX();
-	xlo=hMeas_const->GetXaxis()->GetXmin();
-	xhi=hMeas_const->GetXaxis()->GetXmax();
+	ntx=HR->GetNbinsX();
+	xlo=HR->GetXaxis()->GetXmin();
+	xhi=HR->GetXaxis()->GetXmax();
 }
 
 
 TNtuple*
 RooUnfoldAll::Chi2(const TH1* hTrue,Int_t doerror)
 {   
+	if (!hTrue){
+		cerr <<"Error: no truth distribution"<<endl;
+	return 0;
+	}
 	/*Gets Chi squared values and returns an NTuple which can then be plotted. Prints error warning if chi squared 
 values over 10^10 are returned. If Doerror=0 the chi squared value will come from a simple summation of the 
 residuals. Doerror=1 will use the covariance matrix that comes from the unfolding. Doerror=2 will use the 
@@ -98,7 +106,6 @@ covariance matrix from True_err()*/
 	double max=1e10;
 	int odd_ch=0;
     chi2 = new TNtuple("chi2","chi2","chi2");
-
 	for (int j=0; j<iterations;j++){
 		TH1* hMeas_AR = dynamic_cast<TH1*>(hMeas_const->Clone ("Measured"));   hMeas_AR  ->SetTitle ("Measured");
 	    TH1* hMeas=Add_Random(hMeas_AR);
@@ -151,7 +158,7 @@ RooUnfoldAll::Unf_err(){
 	RooUnfold* unfold_copy = unfold->Clone("unfold_toy");
 	unfold_copy->SetVerbose(unfold->verbose());
 	unfold_copy->SetNits(iterations);
-	TH1* hReco_= unfold_copy->Hreco(2);
+	TH1* hReco_= unfold_copy->Hreco(1);
 	for (int i=0; i<ntx+2; i++) {    
     	if (hReco_->GetBinContent(i)!=0.0 || (hReco_->GetBinError(i)>0.0)) 
     	{

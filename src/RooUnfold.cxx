@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.20 2010-07-28 15:53:36 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.21 2010-08-04 14:53:04 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -45,6 +45,7 @@ END_HTML */
 #include "RooUnfoldBayes.h"
 #include "RooUnfoldSvd.h"
 #include "RooUnfoldBinByBin.h"
+#include "RooUnfoldTUnfold.h"
 
 using std::cout;
 using std::cerr;
@@ -79,6 +80,9 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, In
       break;
     case kBinByBin:
       unfold= new RooUnfoldBinByBin (res, meas);
+      break;
+    case kTUnfold:
+      unfold= new RooUnfoldTUnfold (res,meas,regparm);
       break;
     default:
       cerr << "Unknown RooUnfold method " << Int_t(alg) << endl;
@@ -142,7 +146,7 @@ RooUnfold::Init()
   _nm= _nt= 0;
   _verbose= 1;
   _overflow= 0;
-  _unfolded= _haveCov= _fail= false;
+  _unfolded= _haveCov= _fail=_have_err_mat= false;
   _Nits=50;
 }
 
@@ -157,6 +161,7 @@ RooUnfold::Setup (const RooUnfoldResponse* res, const TH1* meas)
   _nt= _res->GetNbinsTruth();
   _overflow= _res->UseOverflowStatus() ? 1 : 0;
   SetNameTitleDefault();
+  Get_settings();
   return *this;
 }
 
@@ -242,7 +247,7 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 		svd.MultiSolve(reco_matrix);
 		Double_t cond=svd.Condition();
 		TMatrixD chisq_nw = reco_matrix_t*reco_matrix;
-		
+
 		double cond_max=1e17;
 		if (cond>=cond_max){
 			cerr << "Warning, very large matrix condition= "<< cond<<" chi^2 may be inaccurate"<<endl;
@@ -392,8 +397,9 @@ RooUnfold::Hreco (Int_t withError)
   if (_fail)                  return 0;
   if (withError==1 && !_haveCov) GetCov();
   if (!_haveCov) withError= 0;
+  if (!_have_err_mat && withError==2) Get_err_mat();
+  if (!_err_mat.GetNoElements() && withError==2){cout<<"it breaks here..."<<endl;}
   Int_t nt= _nt + (_overflow ? 2 : 0);
-  TMatrixD err_mat(nt,nt);
   for (Int_t i= 0; i < nt; i++) {
     Int_t j= RooUnfoldResponse::GetBin (reco, i, _overflow);
     reco->SetBinContent (j,             _rec(i));
@@ -401,9 +407,38 @@ RooUnfold::Hreco (Int_t withError)
       reco->SetBinError (j, sqrt (fabs (_cov(i,i))));
   	}
   	if (withError==2){
-  		TMatrixD Freco_copy =Freco();
-  		reco->SetBinError(j,sqrt(fabs(Freco_copy(j,j))));
+  		reco->SetBinError(j,sqrt(fabs(_err_mat(i,i))));
   	}
   }
   return reco;
 }
+
+void
+RooUnfold::Get_settings(){
+	//Gets maximum and minimum parameters and step size
+	_minparm=0;
+	_maxparm=0;
+	_stepsizeparm=0;
+	_defaultparm=0;
+}
+
+Double_t
+RooUnfold::Get_minparm(){
+	return _minparm;
+}
+
+Double_t
+RooUnfold::Get_maxparm(){
+	return _maxparm;
+}
+
+Double_t
+RooUnfold::Get_stepsizeparm(){
+	return _stepsizeparm;
+}
+
+Double_t
+RooUnfold::Get_defaultparm(){
+	return _defaultparm;
+}
+

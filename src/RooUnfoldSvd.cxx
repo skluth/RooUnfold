@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.11 2010-07-28 15:53:36 fwx38934 Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.12 2010-08-04 14:53:04 fwx38934 Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -211,4 +211,12 @@ RooUnfoldSvd::CopyOverflow2D (const TH1* h) const
     }
   }
   return hx;
+}
+
+void
+RooUnfoldSvd::Get_settings(){
+	_minparm=0;
+	_maxparm=_kterm;
+	_stepsizeparm=1;
+	_defaultparm=_kterm/2;
 }

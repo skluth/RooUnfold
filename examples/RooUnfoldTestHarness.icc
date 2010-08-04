@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.27 2010-07-28 15:53:32 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.28 2010-08-04 14:54:01 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -158,7 +158,7 @@ void RooUnfoldTestHarness::SetupCanvas()
     if (grid) canvas->SetGrid();
     canvas->Divide(2,(onepage+1)/2);
   } else if (onepage>=3)
-    canvas->Divide(1,onepage);
+    canvas->Divide(2,onepage);
   else if (grid)
     canvas->SetGrid(1);
   ipad= 0;
@@ -206,7 +206,7 @@ Int_t RooUnfoldTestHarness::RunTests()
     if (iterations>0) {;
       RooUnfoldAll All(iterations,unfold);
       All.Plotting();
-      RooUnfoldParms Parm(regparm,unfold,2,iterations,hTrue);
+      RooUnfoldParms Parm(regparm,unfold,doerror,iterations,hTrue);
       if (dodraw) {
         canvas->cd(++ipad);
         Parm.GetChi2()->Draw("P");    
@@ -215,7 +215,13 @@ Int_t RooUnfoldTestHarness::RunTests()
         canvas->cd(++ipad);
         Parm.GetRes()->Draw("P"); 
         canvas->cd(++ipad);
-        Parm.GetRMSSpread()->Draw("P");   
+        Parm.GetRMSSpread()->Draw("P"); 
+        Results();
+        canvas->cd(++ipad);
+        All.Spread()->Draw("P");
+        All.Unf_err()->Draw("P SAME");
+        canvas->cd(++ipad);
+        All.Chi2(hTrue)->Draw("chi2","abs(chi2<1e10)");
       }
     }
   }
@@ -353,7 +359,7 @@ void RooUnfoldTestHarness::Results()
   hTestPDFx->Draw("LSAME");
   hMeas    ->Draw("SAME");
   if (hReco) hReco->Draw("SAME P");
-
+  cout<<"Htrue integral="<<hTrue->Integral()<<" Hreco Integral= "<<hReco->Integral()<<" T/R= "<<hTrue->Integral()/hReco->Integral()<<endl;
   Legend (lTest, hTestPDFx, hTrue, hMeas, hReco);
   canvas->Update();
 
@@ -541,6 +547,7 @@ Int_t RooUnfoldTestHarness::CheckParms()
       regparm= (ntall>5 ? ntall/2 : 2);
       break;
     }
+    case RooUnfold::kTUnfold: regparm=3; break;
     default: regparm= 0;
     }
   }

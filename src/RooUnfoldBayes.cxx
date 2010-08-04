@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.16 2010-07-19 21:45:10 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.17 2010-08-04 14:53:04 fwx38934 Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -201,4 +201,12 @@ RooUnfoldBayes::AD2M (const Array2D& ad, TMatrixD& m)
     for (Int_t j= 0; j < nt; j++)
       m(i,j)= ad.Get(j,i);
   return m;
+}
+
+void
+RooUnfoldBayes::Get_settings(){
+	_minparm=0;
+	_maxparm=_niter;
+	_stepsizeparm=1;
+	_defaultparm=4;
 }

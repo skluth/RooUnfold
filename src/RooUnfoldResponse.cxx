@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.13 2010-07-28 15:53:36 fwx38934 Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.14 2010-08-04 14:53:04 fwx38934 Exp $
 //
 // Description:
 //      Response Matrix
@@ -12,6 +12,7 @@
 //____________________________________________________________
 /* BEGIN_HTML
  <p> Class to create response object as used in RooUnfold </p>
+ <p> Contains measured and truth distributions as TH1s and the response matrix as a TH2D. Also contains methods for handling these data</p> 
 <p> Can handle 1,2 or 3 dimensional histograms and return vectors and matrices of their bin content and error (1 and 2D distributions respectively).
  Conversely can also convert these vectors and matrices into TH1Ds and TH2Ds. </p>
 <p> Can also take a variety of parameters as inputs. This includes maximum and minimum values, distributions and vectors/matrices of values. </p>

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.h,v 1.9 2010-07-19 21:45:10 adye Exp $
+//      $Id: RooUnfoldSvd.h,v 1.10 2010-08-04 14:53:04 fwx38934 Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -44,9 +44,9 @@ public:
   Int_t GetKterm() const { return _kterm; }
   Int_t GetNtoys() const { return _ntoys; }
 
-  virtual void  SetRegParm (Int_t parm) { SetKterm(parm); }
-  virtual Int_t GetRegParm() const { return GetKterm(); }
-
+  virtual void  SetRegParm (Double_t parm) { SetKterm(Int_t(parm+0.5)); }
+  virtual Double_t GetRegParm() const { return GetKterm(); }
+  virtual void Get_settings();
   virtual void Reset();
   virtual TObject* Impl();
 
