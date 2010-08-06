@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.16 2010-08-04 14:53:04 fwx38934 Exp $
+//      $Id: RooUnfold.h,v 1.17 2010-08-06 15:37:25 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -25,7 +25,7 @@ public:
 
   enum Algorithm { kNone, kBayes, kSVD, kBinByBin, kTUnfold}; // Selection of unfolding algorithm.
 
-  static RooUnfold* New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Int_t regparm= -1,
+  static RooUnfold* New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Double_t regparm= 1,
                          const char* name= 0, const char* title= 0);
 
   // Standard methods
@@ -74,6 +74,7 @@ public:
   Double_t Get_maxparm();
   Double_t Get_stepsizeparm();
   Double_t Get_defaultparm();
+  TH1* Runtoy(Int_t doerror=0,double* chi2=0,const TH1* hTrue=0);
   
   Double_t _minparm; //Minimum value to be used in RooUnfoldParms
   Double_t _maxparm; //Maximum value to be used in RooUnfoldParms
@@ -89,8 +90,7 @@ public:
   virtual void Get_err_mat(); // Get covariance matrix using errors from residuals on reconstructed distribution
   void Assign   (const RooUnfold& rhs); // implementation of assignment operator
   void CopyData (const RooUnfold& rhs);
- 
-
+  TH1* Add_Random(const TH1* hMeas_AR);
   // instance variables
 
   Int_t _verbose;  // Debug print level

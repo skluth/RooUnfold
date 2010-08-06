@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.12 2010-08-04 14:53:04 fwx38934 Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.13 2010-08-06 15:37:26 fwx38934 Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -36,9 +36,9 @@ RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldSvd& rhs)
   CopyData (rhs);
 }
 
-RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm, Int_t ntoys,
+RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Double_t kterm, Int_t ntoys,
                             const char* name, const char* title)
-  : RooUnfold (res, meas, name, title), _kterm(kterm), _ntoys(ntoys)
+  : RooUnfold (res, meas, name, title), _kterm(kterm ? kterm : meas->GetNbinsX()/2), _ntoys(ntoys)
 {
   Init();
 }
@@ -216,7 +216,7 @@ RooUnfoldSvd::CopyOverflow2D (const TH1* h) const
 void
 RooUnfoldSvd::Get_settings(){
 	_minparm=0;
-	_maxparm=_kterm;
+	_maxparm=_meas->GetNbinsX();
 	_stepsizeparm=1;
-	_defaultparm=_kterm/2;
+	_defaultparm=_meas->GetNbinsX()/2;
 }

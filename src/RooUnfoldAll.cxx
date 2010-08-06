@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.cxx,v 1.7 2010-08-04 16:24:35 fwx38934 Exp $
+//      $Id: RooUnfoldAll.cxx,v 1.8 2010-08-06 15:37:25 fwx38934 Exp $
 //
 // Description:
 //      Unfolding errors class
@@ -56,14 +56,14 @@ using std::fabs;
 
 ClassImp (RooUnfoldAll);
 
-RooUnfoldAll::RooUnfoldAll (int Nits,  const RooUnfold* unfold_in)
-:iterations(Nits),unfold(unfold_in)
+RooUnfoldAll::RooUnfoldAll (int Nits,  RooUnfold* unfold_in, const TH1* Truth)
+:iterations(Nits),unfold(unfold_in),hTrue(Truth)
 {
 	h_err=0;
     h_err_res=0;
-    error_matrix=0;
-    chi2=0; 
+    hchi2=0; 
     All_hMeas(); 
+    Plotting();
 }
 
 
@@ -73,7 +73,7 @@ RooUnfoldAll::~RooUnfoldAll()
 
   delete h_err;
   delete h_err_res;
-  delete chi2;  
+  delete hchi2;  
 }
 
 void 
@@ -83,7 +83,7 @@ RooUnfoldAll::All_hMeas()
 	RooUnfold* u_c=unfold->Clone("clone");
 	u_c->SetVerbose(unfold->verbose());
 	u_c->SetNits(iterations);
-	TH1* HR=u_c->Hreco();
+	TH1* HR=u_c->Hreco(0);
 	hMeas_const=unfold->Hmeasured();
 	ntx=HR->GetNbinsX();
 	xlo=HR->GetXaxis()->GetXmin();
@@ -92,48 +92,10 @@ RooUnfoldAll::All_hMeas()
 
 
 TNtuple*
-RooUnfoldAll::Chi2(const TH1* hTrue,Int_t doerror)
+RooUnfoldAll::Chi2()
 {   
-	if (!hTrue){
-		cerr <<"Error: no truth distribution"<<endl;
-	return 0;
-	}
-	/*Gets Chi squared values and returns an NTuple which can then be plotted. Prints error warning if chi squared 
-values over 10^10 are returned. If Doerror=0 the chi squared value will come from a simple summation of the 
-residuals. Doerror=1 will use the covariance matrix that comes from the unfolding. Doerror=2 will use the 
-covariance matrix from True_err()*/
-	double max=1e10;
-	int odd_ch=0;
-    chi2 = new TNtuple("chi2","chi2","chi2");
-	for (int j=0; j<iterations;j++){
-		TH1* hMeas_AR = dynamic_cast<TH1*>(hMeas_const->Clone ("Measured"));   hMeas_AR  ->SetTitle ("Measured");
-	    TH1* hMeas=Add_Random(hMeas_AR);
-	    RooUnfold* unfold_copy = unfold->Clone("unfold_toy");
-		unfold_copy->Setup(unfold->response(),hMeas);
-	    unfold_copy->SetVerbose(unfold->verbose());
-	    unfold_copy->SetNits(iterations);
-    	if (hTrue){
-	    	double ch =unfold_copy->Chi2(hTrue,doerror);
-	    	double f_ch = fabs(ch);
-	    	chi2->Fill(ch);
-	    	if (f_ch>=max){
-	    		cerr<<"Large |chi^2| value: "<< ch << endl;
-	    		odd_ch++;
-	    	}
-    	}
-	}
-    if (hTrue&&odd_ch!=0){
-    	cout <<"There are " << odd_ch << " bins over "<<max <<endl;
-    }
-	chi2->SetFillColor(4);
-	return chi2;
-}
-
-TMatrixD
-RooUnfoldAll::True_err()
-{
-	//Returns a matrix of errors based on the covariance of the reconstructed points//
-	return error_matrix;
+	hchi2->SetFillColor(4);
+	return hchi2;
 }
 
 TH1*
@@ -147,20 +109,7 @@ RooUnfoldAll::Spread(){
 
 TH1* 
 RooUnfoldAll::Unf_err(){
-	//Returns a TH1D of the erros from the unfolding// 
-	h_err = new TProfile ("h_err", "Unfolding errors",ntx,xlo,xhi);
-	double dx=(xhi-xlo)/ntx;
-	RooUnfold* unfold_copy = unfold->Clone("unfold_toy");
-	unfold_copy->SetVerbose(unfold->verbose());
-	unfold_copy->SetNits(iterations);
-	TH1* hReco_= unfold_copy->Hreco(1);
-	for (int i=0; i<ntx+2; i++) {    
-    	if (hReco_->GetBinContent(i)!=0.0 || (hReco_->GetBinError(i)>0.0)) 
-    	{
-		Double_t u_error=hReco_->GetBinError(i); 
-    	h_err->Fill(i*dx,u_error);
-    	}
-	}
+	//Returns a TH1D of the errors from the unfolding// 
 	h_err->SetMarkerColor(4);
 	h_err->SetMarkerStyle(24);
 	h_err->SetMinimum(0);
@@ -172,35 +121,45 @@ void
 RooUnfoldAll::Plotting()
 {
 	//Does the math//
-	vector<TH1D*> graph_vector;    
-	vector<double> cov_vector(ntx);
-	TMatrixD cov_matrix(ntx,ntx);
-    error_matrix.ResizeTo(ntx,ntx);
-    for (int i= 0; i<ntx+2; i++) {
+	if (!hTrue){
+		cerr <<"Error: no truth distribution"<<endl;
+	}
+	/*Gets Chi squared values and returns an NTuple which can then be plotted. Prints error warning if chi squared 
+values over 10^10 are returned. If Doerror=0 the chi squared value will come from a simple summation of the 
+residuals. Doerror=1 will use the covariance matrix that comes from the unfolding. Doerror=2 will use the 
+covariance matrix from True_err()*/
+	h_err = new TProfile ("h_err", "Unfolding errors",ntx,xlo,xhi);
+	double dx=(xhi-xlo)/ntx;
+	double max=1e10;
+	int odd_ch=0;
+    hchi2 = new TNtuple("chi2","chi2","chi2");
+    vector<TH1D*> graph_vector;
+    for (int a=0; a<ntx; a++) {
 	TString graph_title("Residuals at Bin ");
-    graph_title+=i;
+    graph_title+=a;
     TH1D* graph_name = new TH1D (graph_title,graph_title, 200,0,1000);
     graph_vector.push_back(graph_name);
     }
+    
     h_err_res = new TH1D ("h_err_res", "Spread",ntx,xlo,xhi); 
 	
-	for (int k=0; k<iterations;k++){
-		TH1* hMeas_AR = dynamic_cast<TH1*>(hMeas_const->Clone ("Measured"));   hMeas_AR  ->SetTitle ("Measured");
-	    TH1* hMeas=Add_Random(hMeas_AR);
-	    RooUnfold* unfold_copy = unfold->Clone("unfold_toy");
-		unfold_copy->Setup(unfold->response(),hMeas);
-	    unfold_copy->SetVerbose(unfold->verbose());
-	    unfold_copy->SetNits(iterations);
-	    hReco= unfold_copy->Hreco();
+	for (int k=0; k<iterations;k++){	
+		double chi2;
+		TH1* hReco_=unfold->Runtoy(1,&chi2,hTrue);
 		for (int i=0; i<ntx; i++) {    
-      		Double_t res= hReco->GetBinContent(i);
-  			cov_vector[i]+=res;
+      		Double_t res= hReco_->GetBinContent(i);
      		graph_vector[i]->Fill(res); 
-     		for (int j=0; j<ntx; j++){
-        		cov_matrix (i,j)+=(res*(hReco->GetBinContent(j)));
+     		Double_t u_error=hReco_->GetBinError(i); 
+    		h_err->Fill(i*dx,u_error);
         	} 
-    	}    	
-	}
+    	if (hTrue){
+		   	hchi2->Fill(chi2);
+	    	if (TMath::Abs(chi2)>=max && unfold->verbose()>=1){
+	    		cerr<<"Large |chi^2| value: "<< chi2 << endl;
+	    		odd_ch++;
+	    	}
+    	}
+	}    	
 	for (unsigned int i=0; i<graph_vector.size(); i++){
 		Double_t spr=(graph_vector[i]->GetRMS());
     	h_err_res->SetBinContent(i,spr);
@@ -210,26 +169,8 @@ RooUnfoldAll::Plotting()
 		delete graph_vector[i];
     }
     
-    for (unsigned int i=0; i<cov_vector.size(); i++){
-    	for (unsigned int j=0; j<cov_vector.size(); j++){
-    		error_matrix(i,j)=(cov_matrix(i,j)-(cov_vector[i]*cov_vector[j])/iterations)/iterations;
-    	}
+    if (odd_ch){
+    	cout <<"There are " << odd_ch << " bins over "<<max <<endl;
     }
-    
 }
 
-
-
-TH1*
-RooUnfoldAll::Add_Random(TH1* hMeas_AR)
-{
-	//Adds a random number to the measured distribution before the unfolding//
-	TH1* hMeas2=   dynamic_cast<TH1*>(hMeas_AR->Clone ("Measured"));   hMeas2  ->SetTitle ("Measured");
-	for (Int_t i=0; i<hMeas_AR->GetNbinsX()+2 ; i++){
-      		Double_t err=hMeas_AR->GetBinError(i);
-      		Double_t new_x = hMeas_AR->GetBinContent(i) + gRandom->Gaus(0,err);
-      		hMeas2->SetBinContent(i,new_x);
-      		hMeas2->SetBinError(i,err);
-    }
-	return hMeas2;
-}

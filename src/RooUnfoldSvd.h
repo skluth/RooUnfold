@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.h,v 1.10 2010-08-04 14:53:04 fwx38934 Exp $
+//      $Id: RooUnfoldSvd.h,v 1.11 2010-08-06 15:37:27 fwx38934 Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -36,7 +36,7 @@ public:
 
   // Special constructors
 
-  RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm= 1, Int_t ntoys= 1000,
+  RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Double_t kterm= 0, Int_t ntoys= 1000,
                 const char* name= 0, const char* title= 0);
 
   void SetKterm (Int_t kterm) { _kterm= kterm; }

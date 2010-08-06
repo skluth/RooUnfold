@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.29 2010-08-04 22:05:29 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.30 2010-08-06 15:37:19 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -42,6 +42,7 @@
 #include "RooUnfoldResponse.h"
 #include "RooUnfold.h"
 #include "RooUnfoldSvd.h"
+#include "TPaveText.h"
 #endif
 
 #include "ArgVars.h"
@@ -101,6 +102,12 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("verbose", &verbose,      1, "debug level: 0=warnings, 1=verbose, 2=debug, 3=detailed");
   args.Add ("draw",    &dodraw,       1, "draw results");
   args.Add ("iterations",&iterations,500,"number of iterations");
+  args.Add ("ploterrors",&ploterrors, 0, "plot error comparison and chi2 graph");
+  args.Add ("plotparms",&plotparms, 0, "plot graphs using RooUnfoldParms");
+  args.Add ("minparm",&minparm, -1e30, "minimum value for RooUnfoldParms");
+  args.Add ("maxparm",&maxparm, -1e30, "maximum value for RooUnfoldParms");
+  args.Add ("stepsize",&stepsize, 0, "stepsize in RooUnfoldParms");
+  
 }
 
 //==============================================================================
@@ -157,8 +164,14 @@ void RooUnfoldTestHarness::SetupCanvas()
   } else if (onepage>=6) {
     if (grid) canvas->SetGrid();
     canvas->Divide(2,(onepage+1)/2);
-  } else if (onepage>=3)
-    canvas->Divide(2,onepage);
+  } else if (onepage>=3) {
+    	if (plotparms>=1){
+		    canvas->Divide(2,onepage);
+	    }
+	    else{
+		    canvas->Divide(1,onepage);
+		    }
+	}
   else if (grid)
     canvas->SetGrid(1);
   ipad= 0;
@@ -203,11 +216,31 @@ Int_t RooUnfoldTestHarness::RunTests()
       return 7;
     }
     //if (dodraw) Results(); 
-    if (iterations>0) {;
-      RooUnfoldAll All(iterations,unfold);
-      All.Plotting();
-      RooUnfoldParms Parm(regparm,unfold,doerror,iterations,hTrue);
+    if (iterations>0) {
       if (dodraw) {
+      Results();
+      if (ploterrors>=1){
+      canvas->cd(++ipad);
+      RooUnfoldAll All(iterations,unfold,hTrue);
+      All.Spread()->Draw("P");
+      All.Unf_err()->Draw("P SAME");
+      canvas->cd(++ipad);
+      Double_t bad_chi= All.Chi2()->Draw("chi2","abs(chi2)<1e10");
+      cout<<bad_chi<<endl;
+      }
+      if(plotparms>=1){
+        RooUnfoldParms Parm(regparm,unfold,doerror,iterations,hTrue);
+        if (maxparm>minparm){
+        Parm.Set_Max(maxparm);
+        }
+        if (minparm!=-1e30)
+        {
+        Parm.Set_Min(minparm);
+        }
+        if (stepsize>0)
+        {
+        Parm.Set_Stepsize(stepsize);
+        }
         canvas->cd(++ipad);
         Parm.GetChi2()->Draw("P");    
         canvas->cd(++ipad);
@@ -216,12 +249,7 @@ Int_t RooUnfoldTestHarness::RunTests()
         Parm.GetRes()->Draw("P"); 
         canvas->cd(++ipad);
         Parm.GetRMSSpread()->Draw("P"); 
-        Results();
-        canvas->cd(++ipad);
-        All.Spread()->Draw("P");
-        All.Unf_err()->Draw("P SAME");
-        canvas->cd(++ipad);
-        All.Chi2(hTrue)->Draw("chi2","abs(chi2<1e10)");
+		}
       }
     }
   }
@@ -309,10 +337,17 @@ Int_t RooUnfoldTestHarness::Test()
 Int_t RooUnfoldTestHarness::Unfold ()
 {
   if (verbose>=0) cout << "Create RooUnfold object for method " << method << endl;
-  unfold= RooUnfold::New (RooUnfold::Algorithm(method), response, hMeas, regparm);
+  if (regparm==-999) 
+  {
+    unfold= RooUnfold::New (RooUnfold::Algorithm(method), response, hMeas);  
+  }
+  else{
+    unfold= RooUnfold::New (RooUnfold::Algorithm(method), response, hMeas, regparm);
+  }
   if (!unfold) return 0;
   unfold->SetVerbose (verbose);
   unfold->SetNits(iterations);
+  
   if (method == RooUnfold::kSVD) dynamic_cast<RooUnfoldSvd*>(unfold)->SetNtoys (ntoys);
   if (verbose>=0) {cout << "Created "; unfold->Print();}
   hReco= unfold->Hreco(doerror);
@@ -363,7 +398,9 @@ void RooUnfoldTestHarness::Results()
   canvas->Update();
 
   if (!hReco) return;
+  if (verbose>=1){
   cout<<"Htrue integral="<<hTrue->Integral()<<" Hreco Integral= "<<hReco->Integral()<<" T/R= "<<hTrue->Integral()/hReco->Integral()<<endl;
+  }
   if (iterations > 0) return;
 
   if (onepage>=2) canvas->cd(++ipad);
@@ -539,17 +576,14 @@ void RooUnfoldTestHarness::Init()
 Int_t RooUnfoldTestHarness::CheckParms()
 {
   if (dosmear==-1) dosmear= (method == RooUnfold::kBinByBin) ? 0 : 1;  // bin-by-bin can't handle smearing or bias
-  if (regparm==-999) {
-    switch (method) {
-    case RooUnfold::kBayes: regparm= 3; break;
-    case RooUnfold::kSVD: {
+  if (regparm==-999){
+      if (method==1) {regparm=4;}
+      else if (method==2) {
       Int_t ntall= ntbins + (overflow==1 ? 2 : 0);
       regparm= (ntall>5 ? ntall/2 : 2);
-      break;
-    }
-    case RooUnfold::kTUnfold: regparm=3; break;
-    default: regparm= 0;
-    }
+      }
+      else if (method==3) {regparm=2;}
+      else {regparm=0;}
   }
   if (doerror==-1) {
     doerror= !(method==RooUnfold::kBayes && ntbins*nmbins > 160000);

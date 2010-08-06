@@ -15,7 +15,7 @@ public:
 
   virtual ~RooUnfoldTUnfold(); // destructor
   virtual RooUnfoldTUnfold* Clone (const char* newname= 0) const;
-  RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm= 1,
+  RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas, Double_t kterm= 2,
                 const char* name= 0, const char* title= 0);
 	void Reset();
 	
@@ -32,7 +32,7 @@ protected:
   void Init();
   virtual void Unfold();
   void GetCov();
-  Int_t _kterm; //Regularisation parameter
+  Double_t _kterm; //Regularisation parameter
   TUnfold* _unf; //TUnfold object
   TH2D* Flip2D(const TH2D* Hres);
   TH2D* CopyOverflow(const TH2D* h)const;

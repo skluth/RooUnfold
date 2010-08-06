@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldParms.cxx,v 1.2 2010-08-04 14:53:04 fwx38934 Exp $
+//      $Id: RooUnfoldParms.cxx,v 1.3 2010-08-06 15:37:26 fwx38934 Exp $
 //
 // Description:
 //      Optimisation of regularisation parameter class
@@ -50,14 +50,28 @@ using std::vector;
 
 ClassImp (RooUnfoldParms);
 
-RooUnfoldParms::RooUnfoldParms(Int_t reg ,const RooUnfold* unfold_in,Int_t err,Int_t its,const TH1* truth)
+RooUnfoldParms::RooUnfoldParms(Double_t reg ,const RooUnfold* unfold_in,Int_t err,Int_t its,const TH1* truth)
 :regparm(reg),unfold(unfold_in),doerror(err),Nits(its),hTrue(truth)
+{
+	Init();
+}
+
+void
+RooUnfoldParms::Init()
 {
 	herr=0;
 	hch2=0;
 	hres=0;  
 	hrms=0;
-	DoMath();
+	_done_math=0;
+	RooUnfold* u_temp=unfold->Clone();
+	u_temp->SetVerbose(unfold->verbose());
+	u_temp->SetNits(Nits);
+	u_temp->Setup(unfold->response(),unfold->Hmeasured());
+	_maxparm=u_temp->Get_maxparm();
+	_minparm=u_temp->Get_minparm();
+	_stepsizeparm=u_temp->Get_stepsizeparm();
+	delete u_temp;
 }
 
 RooUnfoldParms::~RooUnfoldParms()
@@ -73,6 +87,7 @@ RooUnfoldParms::GetChi2()
 {
 	/*Returns TProfile of Chi squared values for each regularisation parameter.
 	 Requires a known truth distribution*/
+	if (!_done_math){DoMath();} 
 	hch2->SetMarkerColor(2);
 	hch2->SetMarkerStyle(4);
 	hch2->SetMinimum(0);
@@ -82,6 +97,7 @@ TProfile*
 RooUnfoldParms::GetErr()
 {
 	//Returns TProfile of errors for each regularisation parameter//
+	if (!_done_math){DoMath();} 
 	herr->SetMarkerColor(4);
 	herr->SetMarkerStyle(4);
 	herr->SetMinimum(0);
@@ -93,6 +109,7 @@ RooUnfoldParms::GetRes()
 {
 	/*Returns TProfile of RMS Residuals for each regularisation parameter.
 	 Requires a known truth distribution*/
+	 if (!_done_math){DoMath();} 
 	hres->SetMarkerColor(8);
 	hres->SetMarkerStyle(4);
 	hres->SetMinimum(0);
@@ -104,6 +121,7 @@ RooUnfoldParms::GetRMSSpread()
 {
 	/*Returns TH1D of RMS spread of Residuals for each regularisation parameter.
 	 Requires a known truth distribution*/
+	 if (!_done_math){DoMath();} 
 	hrms->SetMarkerColor(1);
 	hrms->SetMarkerStyle(4);
 	hrms->SetMinimum(0);
@@ -114,25 +132,18 @@ void
 RooUnfoldParms::DoMath()
 {
 	/*Does all the data handling. Called in constructor.*/
-	cout<<"Doing parms"<<endl;
+	
 	RooUnfold* u_temp = unfold->Clone("unfold_toy");
 	u_temp->SetVerbose(unfold->verbose());
 	u_temp->SetNits(Nits);
 	u_temp->Setup(unfold->response(),unfold->Hmeasured());
-	Double_t _maxparm=u_temp->Get_maxparm();
-	Double_t _minparm=u_temp->Get_minparm();
-	Double_t _stepsizeparm=u_temp->Get_stepsizeparm();
 	Int_t nobins=Int_t((_maxparm-_minparm)/_stepsizeparm);
-	
 	vector<TH1D*> graph_vector;    
-    Double_t graphage=_minparm;
-    
-    while(graphage<=_maxparm) {
+    for(Double_t a = _minparm; a<=_maxparm; a+=_stepsizeparm) {
 	TString graph_title("Residuals at k= ");
-    graph_title+=graphage;
+    graph_title+=a;
     TH1D* graph_name = new TH1D (graph_title,graph_title, 200,0,1000);
     graph_vector.push_back(graph_name);
-    graphage+=_stepsizeparm;
     }
     
     Double_t xlo=_minparm;
@@ -144,8 +155,9 @@ RooUnfoldParms::DoMath()
     Int_t bins=0;
     Int_t gvl=0;
     delete u_temp;
+    
 	for (Double_t k=_minparm;k<=_maxparm;k+=_stepsizeparm)
-	{
+	{   
 		TH1* hMeas = dynamic_cast<TH1*>(unfold->Hmeasured()->Clone ("Measured"));
 		RooUnfold* unf = unfold->Clone("unfold_toy");
 		unf->Setup(unfold->response(),hMeas);
@@ -153,7 +165,7 @@ RooUnfoldParms::DoMath()
 	    unf->SetRegParm(k);
 	    unf->SetNits(Nits);
 		Double_t sq_err_tot=0;
-		TH1* hReco=unf->Hreco(1);
+		TH1* hReco=unf->Hreco(doerror);
 		bins=hReco->GetXaxis()->GetNbins(); 
 		for (int i=0;i<bins;i++)
 		{
@@ -190,6 +202,23 @@ RooUnfoldParms::DoMath()
    	for (unsigned int i=0; i<graph_vector.size(); i++){
     	delete graph_vector[i];
     }
-    
+    _done_math=true;
 }
 
+void
+RooUnfoldParms::Set_Min(double min)
+{
+	_minparm=min;
+}
+
+void
+RooUnfoldParms::Set_Max(double max)
+{
+	_maxparm=max;
+}
+
+void
+RooUnfoldParms::Set_Stepsize(double size)
+{
+	_stepsizeparm=size;
+}

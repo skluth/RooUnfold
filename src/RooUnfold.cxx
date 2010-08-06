@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.22 2010-08-04 22:05:31 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.23 2010-08-06 15:37:25 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -40,6 +40,7 @@ END_HTML */
 #include "TDecompSVD.h"
 #include "RooUnfoldResponse.h"
 #include "RooUnfoldAll.h"
+#include "TRandom.h"
 
 // Need subclasses just for RooUnfold::New()
 #include "RooUnfoldBayes.h"
@@ -60,7 +61,7 @@ using std::fabs;
 ClassImp (RooUnfold);
 
 RooUnfold*
-RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Int_t regparm,
+RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Double_t regparm,
                 const char* name, const char* title)
 {
 	/*Unfolds according to the value of alg:
@@ -204,14 +205,28 @@ RooUnfold::GetCov()
 void
 RooUnfold::Get_err_mat()
 {
-	//Get error matrix based on residuals (uses RooUnfoldAll)
-  Int_t nt= _nt;
-  _err_mat.ResizeTo(nt,nt);
-  RooUnfoldAll All(_Nits,this);
-  All.Plotting();
-  _err_mat=All.True_err();
-  _have_err_mat= true;
+	//Get error matrix based on residuals
+	vector<double> bc_vec(_nt+2);
+	TMatrixD bc_mat(_nt+2,_nt+2);
+  	_err_mat.ResizeTo(_nt+2,_nt+2);
+  	for (int k=0; k<_Nits; k++){
+  		TH1* res=this->Runtoy();
+  		for (int i=0; i<_nt+2;i++){
+  			Double_t res_bci=res->GetBinContent(i);
+  			bc_vec[i]+=res_bci;
+  			for (int j=0; j<_nt+2; j++){
+  			bc_mat(i,j)+=(res_bci*res->GetBinContent(j));
+  			}
+  		}
+  	}
+  	for (int i=0; i<_nt+2;i++){
+  		for (int j=0; j<_nt+2; j++){
+  			_err_mat(i,j)=(bc_mat(i,j)-(bc_vec[i]*bc_vec[j])/_Nits)/_Nits;
+  		}
+  	}
+  	_have_err_mat=true;
 }
+
 Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 {
 	/*Calculates Chi squared. Method depends on value of DoChi2
@@ -219,6 +234,7 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 	1: use covariance matrix returned from unfolding
 	2: use covariance matrix returned from Get_err_mat() 
 	Returns warnings for small determinants of covariance matrices and if the condition is very large.*/
+
 	const TH1* hReco=Hreco (DoChi2);
 	Int_t nt= _nt+(_overflow ? 2 : 0);
 	if (DoChi2==1||DoChi2==2){
@@ -230,7 +246,6 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 	           	reco_matrix(i,0)    = hReco->GetBinContent(it) - hTrue->GetBinContent(it);
 	        }
 	  	}
-	  	
 	  	TMatrixD Ereco_copy(nt,nt);
 	  	if (DoChi2==1){
 	  	Ereco_copy=Ereco();
@@ -243,17 +258,17 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 	  	TMatrixD reco_matrix_t=reco_matrix;
 	  	TMatrixD reco_matrix_copy=reco_matrix;
 		reco_matrix_t.T();
-		if (fabs(Ereco_det)<1e-5){
+		if (fabs(Ereco_det)<1e-5 && _verbose>=1){
 			cerr << "Warning: Small Determinant of Covariance Matrix =" << Ereco_det << endl;
 			cerr << "Chi^2 may be invalid due to small determinant" << endl;
 		}
 		TDecompSVD svd(Ereco_copy);
-		svd.MultiSolve(reco_matrix);
 		Double_t cond=svd.Condition();
+				svd.MultiSolve(reco_matrix);
+		
 		TMatrixD chisq_nw = reco_matrix_t*reco_matrix;
-
 		double cond_max=1e17;
-		if (cond>=cond_max){
+		if (cond>=cond_max && _verbose>=1){
 			cerr << "Warning, very large matrix condition= "<< cond<<" chi^2 may be inaccurate"<<endl;
 		}
 		return chisq_nw(0,0);	
@@ -272,6 +287,7 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
         		}
         	}
 		}
+		
         return chi2;
 	}
 }
@@ -402,7 +418,6 @@ RooUnfold::Hreco (Int_t withError)
   if (withError==1 && !_haveCov) GetCov();
   if (!_haveCov) withError= 0;
   if (!_have_err_mat && withError==2) Get_err_mat();
-  if (!_err_mat.GetNoElements() && withError==2){cout<<"it breaks here..."<<endl;}
   Int_t nt= _nt + (_overflow ? 2 : 0);
   for (Int_t i= 0; i < nt; i++) {
     Int_t j= RooUnfoldResponse::GetBin (reco, i, _overflow);
@@ -446,3 +461,34 @@ RooUnfold::Get_defaultparm(){
 	return _defaultparm;
 }
 
+TH1*
+RooUnfold::Runtoy(Int_t witherror,double* chi2, const TH1* hTrue){
+	RooUnfold* unfold_copy = this->Clone("unfold_toy");
+	const TH1* hMeas_AR = this->Hmeasured();
+	TH1* hMeas=Add_Random(hMeas_AR);
+	unfold_copy->Setup(this->response(),hMeas);
+	unfold_copy->SetVerbose(this->verbose());
+	unfold_copy->SetNits(this->Nits());
+	if (witherror>=2){witherror=1;}
+	TH1* hReco= unfold_copy->Hreco(witherror);
+	if (chi2 && !hTrue){
+		cerr<<"Error: can't calculate chi^2 without a truth distribution"<<endl;
+	}
+	if (chi2 && hTrue) {*chi2=unfold_copy->Chi2(hTrue,witherror);}
+	return hReco;
+}
+
+
+TH1*
+RooUnfold::Add_Random(const TH1* hMeas_AR)
+{
+	//Adds a random number to the measured distribution before the unfolding//
+	TH1* hMeas2=   dynamic_cast<TH1*>(hMeas_AR->Clone ("Measured"));   hMeas2  ->SetTitle ("Measured");
+	for (Int_t i=0; i<hMeas_AR->GetNbinsX()+2 ; i++){
+      		Double_t err=hMeas_AR->GetBinError(i);
+      		Double_t new_x = hMeas_AR->GetBinContent(i) + gRandom->Gaus(0,err);
+      		hMeas2->SetBinContent(i,new_x);
+      		hMeas2->SetBinError(i,err);
+    }
+	return hMeas2;
+}

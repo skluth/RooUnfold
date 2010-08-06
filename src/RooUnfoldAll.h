@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.h,v 1.5 2010-08-04 16:24:35 fwx38934 Exp $
+//      $Id: RooUnfoldAll.h,v 1.6 2010-08-06 15:37:25 fwx38934 Exp $
 //
 // Description:
 //      Graph Drawing Class for use with RooUnfold.
@@ -22,27 +22,26 @@ class RooUnfoldAll : public TNamed {
 public:
   
   int iterations; // Number of iterations 
-  const RooUnfold* unfold; // Input unfolding object
-  RooUnfoldAll (int iterations,const RooUnfold* unfold);
+  RooUnfold* unfold; // Input unfolding object
+  const TH1* hTrue;
+  RooUnfoldAll (int iterations,RooUnfold* unfold,const TH1* Truth);
   virtual ~RooUnfoldAll();
-  TNtuple* Chi2(const TH1* hTrue=0,Int_t doerror=1); 
-  void Plotting();
+  TNtuple* Chi2(); 
+
   TH1* Spread();
   TH1* Unf_err();
-  TMatrixD True_err();
 
 protected:
+  void Plotting();
   TH1* h_err; // Output plot
   TH1* h_err_res; // Output plot
-  TMatrixD error_matrix; //Matrix of covariances
-  TNtuple* chi2;  // Output plot
+  TNtuple* hchi2;  // Output plot
   TH1* Add_Random(TH1* hMeas);  
   void All_hMeas();
   double xlo; // Minimum x-axis value 
   double xhi; // Maximum x-axis value
   int ntx; // Number of bins in true distribution
   const TH1* hMeas_const; // Measured Distribution
-  TH1* hReco; // Reconstructed Distribution
   
   
 public:

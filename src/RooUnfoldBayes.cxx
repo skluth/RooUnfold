@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.17 2010-08-04 14:53:04 fwx38934 Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.18 2010-08-06 15:37:25 fwx38934 Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -30,6 +30,7 @@
 using std::vector;
 using std::cerr;
 using std::endl;
+using std::cout;
 
 ClassImp (RooUnfoldBayes);
 
@@ -40,7 +41,7 @@ RooUnfoldBayes::RooUnfoldBayes (const RooUnfoldBayes& rhs)
   CopyData (rhs);
 }
 
-RooUnfoldBayes::RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, Int_t niter, Bool_t smoothit,
+RooUnfoldBayes::RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, Double_t niter, Bool_t smoothit,
                                 const char* name, const char* title)
   : RooUnfold (res, meas, name, title), _niter(niter), _smoothit(smoothit)
 {
@@ -205,8 +206,8 @@ RooUnfoldBayes::AD2M (const Array2D& ad, TMatrixD& m)
 
 void
 RooUnfoldBayes::Get_settings(){
-	_minparm=0;
-	_maxparm=_niter;
+	_minparm=1;
+	_maxparm=15;
 	_stepsizeparm=1;
 	_defaultparm=4;
 }

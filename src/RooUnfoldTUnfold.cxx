@@ -24,7 +24,7 @@ using std::sqrt;
 ClassImp (RooUnfoldTUnfold);
 
 
-RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm,
+RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas, Double_t kterm,
                             const char* name, const char* title)
   : RooUnfold (res, meas, name, title), _kterm(kterm)
 {
@@ -89,7 +89,7 @@ RooUnfoldTUnfold::Unfold()
   const TH2D* Hres=_res->Hresponse();
   if (_fail) return;
   TUnfold::ERegMode regmode=TUnfold::kRegModeNone;
-  switch (_kterm){
+  switch (int(_kterm+0.5)){
   	case 0:
   	regmode=TUnfold::kRegModeNone;
   	break;
@@ -105,8 +105,8 @@ RooUnfoldTUnfold::Unfold()
   	default:
   	regmode=TUnfold::kRegModeSize;
   }
-  TH2D* Hresc=CopyOverflow(Hres);
-  TH2D* Hres_flipped=Flip2D(Hresc);
+  //TH2D* Hresc=CopyOverflow(Hres);
+  TH2D* Hres_flipped=Flip2D(Hres/*c*/);
   _unf= new TUnfold(Hres_flipped,TUnfold::kHistMapOutputHoriz,regmode);
   Int_t nScan=30;
   // use automatic L-curve scan: start with taumin=taumax=0.0
@@ -125,8 +125,10 @@ RooUnfoldTUnfold::Unfold()
   _unf->SetInput(_meas,0.0);
 #endif
   _unf->SetInput(_meas);
+  //_unf->SetConstraint(TUnfold::kEConstraintArea);
   if (!tau_set){
   iBest=_unf->ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
+  cout <<"tau= "<<_unf->GetTau()<<endl;
   }
   else{
   	_unf->DoUnfold(_tau);
@@ -145,7 +147,7 @@ RooUnfoldTUnfold::Unfold()
 	  }
   }
   ematrix=_unf->GetEmatrix("ematrix","error matrix",0,0);
-  delete Hresc;
+  //delete Hresc;
   delete reco;
   delete Hres_flipped;
   _unfolded= true;
@@ -232,6 +234,6 @@ RooUnfoldTUnfold::Get_settings()
 {
 	_minparm=0;
 	_maxparm=2;
-	_stepsizeparm=5e-2;
-	_defaultparm=1;
+	_stepsizeparm=1e-2;
+	_defaultparm=2;
 }
