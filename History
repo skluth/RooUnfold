@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.77 2010-08-06 15:37:14 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.78 2010-08-06 15:45:05 adye Exp $
 ====================
+
+Tim Adye          6-Aug-2010 tja100806a
+  o Bayes and SVD constructors can use int regparm.
 
 Richard Claridge  6-Aug-2010 rgc100806a
   o Added RunToy method to RooUnfold
@@ -7,7 +10,6 @@ Richard Claridge  6-Aug-2010 rgc100806a
   o All processing in RooUnfoldAll now done in Plotting
   o Use RunToy for error analysis in RooUnfoldAll
   o Added parameters for drawing and for values in RooUnfoldParms
-
 
 Tim Adye          4-Aug-2010 tja100804a
   o GNUMakefile only make RooUnfoldTUnfold if ROOT has TUnfold.h.

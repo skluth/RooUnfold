@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.h,v 1.12 2010-08-06 15:37:25 fwx38934 Exp $
+//      $Id: RooUnfoldBayes.h,v 1.13 2010-08-06 15:45:07 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -38,7 +38,7 @@ public:
 
   // Special constructors
 
-  RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, Double_t niter= 4, Bool_t smoothit= false,
+  RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, Int_t niter= 4, Bool_t smoothit= false,
                   const char* name= 0, const char* title= 0);
 
   virtual void SetIterations (Int_t niter= 4)         { _niter=    niter;    }

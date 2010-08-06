@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.23 2010-08-06 15:37:25 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.24 2010-08-06 15:45:07 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -76,10 +76,10 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Do
       unfold= new RooUnfold         (res, meas); 
       break;
     case kBayes:
-      unfold= new RooUnfoldBayes    (res, meas, regparm);
+      unfold= new RooUnfoldBayes    (res, meas, Int_t(regparm+0.5));
       break;
     case kSVD:
-      unfold= new RooUnfoldSvd      (res, meas, regparm);
+      unfold= new RooUnfoldSvd      (res, meas, Int_t(regparm+0.5));
       break;
     case kBinByBin:
       unfold= new RooUnfoldBinByBin (res, meas);
