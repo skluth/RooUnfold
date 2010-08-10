@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.17 2010-08-06 15:37:25 fwx38934 Exp $
+//      $Id: RooUnfold.h,v 1.18 2010-08-10 14:19:08 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -25,7 +25,7 @@ public:
 
   enum Algorithm { kNone, kBayes, kSVD, kBinByBin, kTUnfold}; // Selection of unfolding algorithm.
 
-  static RooUnfold* New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Double_t regparm= 1,
+  static RooUnfold* New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Double_t regparm= -1e30,
                          const char* name= 0, const char* title= 0);
 
   // Standard methods
@@ -75,12 +75,12 @@ public:
   Double_t Get_stepsizeparm();
   Double_t Get_defaultparm();
   TH1* Runtoy(Int_t doerror=0,double* chi2=0,const TH1* hTrue=0);
-  
+  TMatrixD CutZeros(TMatrixD Ereco_copy);
   Double_t _minparm; //Minimum value to be used in RooUnfoldParms
   Double_t _maxparm; //Maximum value to be used in RooUnfoldParms
   Double_t _stepsizeparm; //StepSize value to be used in RooUnfoldParms
   Double_t _defaultparm; //Recommended value for regularisation parameter
-  
+  void Print(Option_t *opt="")const;
   protected:
 
   void Init();

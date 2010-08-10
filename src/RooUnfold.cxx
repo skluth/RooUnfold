@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.24 2010-08-06 15:45:07 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.25 2010-08-10 14:19:08 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -19,7 +19,14 @@ Also sets the errors on a reconstructed distribution (Hreco())</p>
 These can be set using their respective parameters.</p>
 <p> The calculation of chi squared can be done with a simple sum of the sum of the squares of the residuals/error,
  or using a covariance matrix which can be set either using the error matrix from the unfolding or using the spread of the reconstructed values. 
- The errors on the reconstructed distribution are calculated in the same way except that the simplest option is simply to have no errors. </p>  
+ The errors on the reconstructed distribution are calculated in the same way except that the simplest option is simply to have no errors. </p>
+<p>At present, the unfolding algorithms have the following problems:</p>
+<ul>
+<li> Bayes: Returns covariance matrices with conditions approximately that of the machine precision. This occasionally leads to very large chi squared values
+<li> SVD: Returns near singular covariance matrices, again leadning to very large chi squared values
+<li> TUnfold: Works very well, however, the latest version (15) will not handle plots with an additional underflow bin. As a result overflows must be turned off 
+if v15 of TUnfold is used. ROOT versions 5.26 or below use v13 and so should be safe to use overflows.
+</ul>      
 END_HTML */
 
 /////////////////////////////////////////////////////////////
@@ -30,6 +37,7 @@ END_HTML */
 #include <iomanip>
 #include <sstream>
 #include <cmath>
+#include <vector>
 
 #include "TMatrixD.h"
 #include "TNamed.h"
@@ -69,6 +77,7 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Do
 	1: Unfold via a Bayes method
 	2: Unfold using singlar value decomposition
 	3: Unfold bin by bin.
+	4: Unfold with TUnfold
 	*/
   RooUnfold* unfold;
   switch (alg) {
@@ -76,17 +85,17 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Do
       unfold= new RooUnfold         (res, meas); 
       break;
     case kBayes:
-      unfold= new RooUnfoldBayes    (res, meas, Int_t(regparm+0.5));
+      unfold= new RooUnfoldBayes    (res, meas);
       break;
     case kSVD:
-      unfold= new RooUnfoldSvd      (res, meas, Int_t(regparm+0.5));
+      unfold= new RooUnfoldSvd      (res, meas);
       break;
     case kBinByBin:
       unfold= new RooUnfoldBinByBin (res, meas);
       break;
 #ifndef NOTUNFOLD
     case kTUnfold:
-      unfold= new RooUnfoldTUnfold (res,meas,regparm);
+      unfold= new RooUnfoldTUnfold (res,meas);
       break;
 #endif
     default:
@@ -94,6 +103,9 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Do
       return 0;
   }
   if (name || title) unfold->SetNameTitle (name, title);
+  if (regparm != -1e30){
+  	unfold->SetRegParm(regparm);
+  }
   return unfold;
 }
 
@@ -138,14 +150,13 @@ RooUnfold::CopyData (const RooUnfold& rhs)
 void
 RooUnfold::Reset()
 {
-	//Calls Init()
   Init();
 }
 
 void
 RooUnfold::Init()
 {
-	//Sets al variables to 0
+	//Initialises all variables
   _res= 0;
   _meas= 0;
   _nm= _nt= 0;
@@ -205,7 +216,7 @@ RooUnfold::GetCov()
 void
 RooUnfold::Get_err_mat()
 {
-	//Get error matrix based on residuals
+	//Get error matrix based on residuals found using the Runtoy method. 
 	vector<double> bc_vec(_nt+2);
 	TMatrixD bc_mat(_nt+2,_nt+2);
   	_err_mat.ResizeTo(_nt+2,_nt+2);
@@ -254,19 +265,37 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 	  	Ereco_copy=Freco();
 	  	}
 		TMatrixD Ereco_copy2=Ereco_copy;
-	  	Double_t Ereco_det = Ereco_copy.Determinant();
-	  	TMatrixD reco_matrix_t=reco_matrix;
-	  	TMatrixD reco_matrix_copy=reco_matrix;
+		
+		//cutting out 0 elements	
+		TMatrixD Ereco_copy_cut=CutZeros(Ereco_copy);
+		TMatrixD reco_matrix_cut(Ereco_copy_cut.GetNrows(),1);
+		int v=0;
+		for (int i=0;i<Ereco_copy.GetNrows();i++){
+			if(Ereco_copy(i,i)==0){
+				v++;
+			}
+			else{
+				reco_matrix_cut(i-v,0)=reco_matrix(i,0);
+			}
+		}
+		int zeros;
+		for (int i=0; i<Ereco_copy_cut.GetNrows(); i++){
+			if (Ereco_copy (i,i) ==0){
+				zeros++;
+			}
+		}
+		Double_t Ereco_det=Ereco_copy_cut.Determinant();
+		TMatrixD reco_matrix_t=reco_matrix_cut;
 		reco_matrix_t.T();
 		if (fabs(Ereco_det)<1e-5 && _verbose>=1){
 			cerr << "Warning: Small Determinant of Covariance Matrix =" << Ereco_det << endl;
 			cerr << "Chi^2 may be invalid due to small determinant" << endl;
 		}
-		TDecompSVD svd(Ereco_copy);
+		TDecompSVD svd(Ereco_copy_cut);
 		Double_t cond=svd.Condition();
-				svd.MultiSolve(reco_matrix);
-		
-		TMatrixD chisq_nw = reco_matrix_t*reco_matrix;
+		cout<<"cond= "<<cond<<" det= "<<Ereco_det<<endl;
+		svd.MultiSolve(reco_matrix_cut);
+		TMatrixD chisq_nw = reco_matrix_t*reco_matrix_cut;
 		double cond_max=1e17;
 		if (cond>=cond_max && _verbose>=1){
 			cerr << "Warning, very large matrix condition= "<< cond<<" chi^2 may be inaccurate"<<endl;
@@ -358,6 +387,9 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Int_t withError)
         o << ' ' << setw(8) << ydiff;
         if (ydiffErr>0.0) {
           ndf++;
+	      Double_t ypull = ydiff/ydiffErr;
+    	  chi2 += ypull*ypull;
+    	   o << ' ' << setw(8) << ypull;
         }
       }
     }
@@ -426,6 +458,7 @@ RooUnfold::Hreco (Int_t withError)
       reco->SetBinError (j, sqrt (fabs (_cov(i,i))));
   	}
   	if (withError==2){
+
   		reco->SetBinError(j,sqrt(fabs(_err_mat(i,i))));
   	}
   }
@@ -443,33 +476,41 @@ RooUnfold::Get_settings(){
 
 Double_t
 RooUnfold::Get_minparm(){
+	//Get minimum regularisation parameter for unfolding method
 	return _minparm;
 }
 
 Double_t
 RooUnfold::Get_maxparm(){
+	//Get maximum regularisation parameter for unfolding method
 	return _maxparm;
 }
 
 Double_t
 RooUnfold::Get_stepsizeparm(){
+	//Get suggested step size for unfolding distribution
 	return _stepsizeparm;
 }
 
 Double_t
 RooUnfold::Get_defaultparm(){
+	//Get suggested regularisation parameter.
 	return _defaultparm;
 }
 
 TH1*
 RooUnfold::Runtoy(Int_t witherror,double* chi2, const TH1* hTrue){
+	/*
+	Returns unfolded distribution for one iteration of unfolding. Use multiple iterations to find residuals
+	Can also return chi squared if a truth distribution is available. 
+	 */
 	RooUnfold* unfold_copy = this->Clone("unfold_toy");
 	const TH1* hMeas_AR = this->Hmeasured();
 	TH1* hMeas=Add_Random(hMeas_AR);
 	unfold_copy->Setup(this->response(),hMeas);
 	unfold_copy->SetVerbose(this->verbose());
 	unfold_copy->SetNits(this->Nits());
-	if (witherror>=2){witherror=1;}
+	if (witherror>=2){witherror=0;}
 	TH1* hReco= unfold_copy->Hreco(witherror);
 	if (chi2 && !hTrue){
 		cerr<<"Error: can't calculate chi^2 without a truth distribution"<<endl;
@@ -491,4 +532,41 @@ RooUnfold::Add_Random(const TH1* hMeas_AR)
       		hMeas2->SetBinError(i,err);
     }
 	return hMeas2;
+}
+
+void 
+RooUnfold::Print(Option_t *opt)const
+{
+	TNamed::Print(opt);
+	cout <<"regularisation parameter = "<<this->GetRegParm()<<endl;
+}
+
+TMatrixD
+RooUnfold::CutZeros(TMatrixD Ereco_copy)
+{
+	vector<int> diags;
+		int missed=0;
+		for (int i=0; i<Ereco_copy.GetNrows(); i++){
+			if (Ereco_copy (i,i) ==0){
+				cout <<"diag should be:"<<i<<endl;
+				diags.push_back(i);
+				missed++;
+			}
+		}
+		int x=Ereco_copy.GetNrows()-missed;	
+		int y=Ereco_copy.GetNcols()-missed;
+		TMatrixD Ereco_copy_cut(x,y);
+		unsigned int v=0;
+		for (int i=0;i<Ereco_copy.GetNrows();i++){
+			if(v<diags.size() && diags[v]==i){
+				v++;
+			}
+			else{
+				for (int j=0; j<Ereco_copy_cut.GetNcols();j++){					
+					Ereco_copy_cut(i-v,j)=Ereco_copy(i,j+v);
+					}
+				}
+		}
+		Ereco_copy_cut.Print();
+	return Ereco_copy_cut;
 }

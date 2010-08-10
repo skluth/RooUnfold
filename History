@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.78 2010-08-06 15:45:05 adye Exp $
+History of RooUnfold     $Id: History,v 1.79 2010-08-10 14:18:47 fwx38934 Exp $
 ====================
+Richard Claridge  10-Aug-2010 rgc100810a
+  o Chi2 method removes 0 rows/cols before inversion
+  o Regparm now uses defaults set in constructors
 
 Tim Adye          6-Aug-2010 tja100806a
   o Bayes and SVD constructors can use int regparm.

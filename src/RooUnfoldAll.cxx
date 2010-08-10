@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.cxx,v 1.8 2010-08-06 15:37:25 fwx38934 Exp $
+//      $Id: RooUnfoldAll.cxx,v 1.9 2010-08-10 14:19:08 fwx38934 Exp $
 //
 // Description:
 //      Unfolding errors class
@@ -94,6 +94,7 @@ RooUnfoldAll::All_hMeas()
 TNtuple*
 RooUnfoldAll::Chi2()
 {   
+	//Returns TNtuple of chi squared values. 
 	hchi2->SetFillColor(4);
 	return hchi2;
 }
@@ -120,14 +121,11 @@ RooUnfoldAll::Unf_err(){
 void
 RooUnfoldAll::Plotting()
 {
-	//Does the math//
+	/*Gets the values for plotting. Uses the Runtoy method from RooUnfold to get plots to analyse for
+	spread and error on the unfolding. Can also give values for a chi squared plot if a truth distribution is known*/
 	if (!hTrue){
 		cerr <<"Error: no truth distribution"<<endl;
 	}
-	/*Gets Chi squared values and returns an NTuple which can then be plotted. Prints error warning if chi squared 
-values over 10^10 are returned. If Doerror=0 the chi squared value will come from a simple summation of the 
-residuals. Doerror=1 will use the covariance matrix that comes from the unfolding. Doerror=2 will use the 
-covariance matrix from True_err()*/
 	h_err = new TProfile ("h_err", "Unfolding errors",ntx,xlo,xhi);
 	double dx=(xhi-xlo)/ntx;
 	double max=1e10;

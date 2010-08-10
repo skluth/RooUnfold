@@ -105,8 +105,8 @@ RooUnfoldTUnfold::Unfold()
   	default:
   	regmode=TUnfold::kRegModeSize;
   }
-  //TH2D* Hresc=CopyOverflow(Hres);
-  TH2D* Hres_flipped=Flip2D(Hres/*c*/);
+  TH2D* Hresc=CopyOverflow(Hres);
+  TH2D* Hres_flipped=Flip2D(Hresc);
   _unf= new TUnfold(Hres_flipped,TUnfold::kHistMapOutputHoriz,regmode);
   Int_t nScan=30;
   // use automatic L-curve scan: start with taumin=taumax=0.0
@@ -147,7 +147,7 @@ RooUnfoldTUnfold::Unfold()
 	  }
   }
   ematrix=_unf->GetEmatrix("ematrix","error matrix",0,0);
-  //delete Hresc;
+  delete Hresc;
   delete reco;
   delete Hres_flipped;
   _unfolded= true;

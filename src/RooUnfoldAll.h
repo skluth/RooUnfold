@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.h,v 1.6 2010-08-06 15:37:25 fwx38934 Exp $
+//      $Id: RooUnfoldAll.h,v 1.7 2010-08-10 14:19:09 fwx38934 Exp $
 //
 // Description:
 //      Graph Drawing Class for use with RooUnfold.
@@ -35,9 +35,8 @@ protected:
   void Plotting();
   TH1* h_err; // Output plot
   TH1* h_err_res; // Output plot
-  TNtuple* hchi2;  // Output plot
-  TH1* Add_Random(TH1* hMeas);  
-  void All_hMeas();
+  TNtuple* hchi2;  // Output plot 
+  void All_hMeas(); //
   double xlo; // Minimum x-axis value 
   double xhi; // Maximum x-axis value
   int ntx; // Number of bins in true distribution

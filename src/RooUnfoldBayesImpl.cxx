@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayesImpl.cxx,v 1.17 2010-05-20 22:50:59 adye Exp $
+//      $Id: RooUnfoldBayesImpl.cxx,v 1.18 2010-08-10 14:19:09 fwx38934 Exp $
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the
@@ -534,16 +534,16 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
         nbarCi[i] += (_nEstj[j] * x);
         if (debug() && _Mij->Get(i,j)>0) {cout << "Mij " << i << " " << j << " " << _Mij->Get(i,j) << endl;}
       }
-      if (verbose()) cout << "nbarCi " << i << "\t" << nbarCi[i] << endl;
+      if (verbose()>=2) cout << "nbarCi " << i << "\t" << nbarCi[i] << endl;
       _nbartrue += nbarCi[i];
     }
 
     // new estimate of true distribution
     vector<Double_t> PbarCi(nbarCi);
-    if (verbose()) cout << "nbartrue " << _nbartrue << endl;
+    if (verbose()>=2) cout << "nbartrue " << _nbartrue << endl;
     for (UInt_t i = 0 ; i < nbarCi.size(); i++) {
       PbarCi[i] /= _nbartrue;
-      if (verbose()) cout << "i PbarCi P0C " << i
+      if (verbose()>=2) cout << "i PbarCi P0C " << i
                           << "\t" << PbarCi[i]*_nbartrue
                           << "\t" << P0C[i]*_nbartrue << endl;
     }
