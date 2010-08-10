@@ -106,7 +106,7 @@ RooUnfoldTUnfold::Unfold()
   	regmode=TUnfold::kRegModeSize;
   }
   TH2D* Hresc=CopyOverflow(Hres);
-  TH2D* Hres_flipped=Flip2D(Hresc);
+  TH2D* Hres_flipped=TransposeHist(Hresc);
   _unf= new TUnfold(Hres_flipped,TUnfold::kHistMapOutputHoriz,regmode);
   Int_t nScan=30;
   // use automatic L-curve scan: start with taumin=taumax=0.0
@@ -174,7 +174,7 @@ RooUnfoldTUnfold::GetCov()
 
 
 TH2D*
-RooUnfoldTUnfold::Flip2D(const TH2D* h)
+RooUnfoldTUnfold::TransposeHist(const TH2D* h)
 {
 	//Returns the transpose of a matrix expressed as a TH2D
 	//Inefficiencies are returned in the underflow bin
@@ -230,7 +230,7 @@ RooUnfoldTUnfold::OptimiseTau()
 }
 
 void
-RooUnfoldTUnfold::Get_settings()
+RooUnfoldTUnfold::GetSettings()
 {
 	_minparm=0;
 	_maxparm=2;

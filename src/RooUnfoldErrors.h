@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.h,v 1.7 2010-08-10 14:19:09 fwx38934 Exp $
+//      $Id: RooUnfoldErrors.h,v 1.1 2010-08-10 16:10:37 fwx38934 Exp $
 //
 // Description:
 //      Graph Drawing Class for use with RooUnfold.
@@ -9,34 +9,34 @@
 //
 //==============================================================================
 
-#ifndef ROOUNFOLDALL_H_
-#define ROOUNFOLDALL_H_
+#ifndef RooUnfoldErrors_H_
+#define RooUnfoldErrors_H_
 #include "TNamed.h"
 class TH1;
 class RooUnfold;
 class TNtuple;
 #include "TMatrixD.h"
 
-class RooUnfoldAll : public TNamed {
+class RooUnfoldErrors : public TNamed {
 
 public:
   
-  int iterations; // Number of iterations 
+  int toys; // Number of toys 
   RooUnfold* unfold; // Input unfolding object
   const TH1* hTrue;
-  RooUnfoldAll (int iterations,RooUnfold* unfold,const TH1* Truth);
-  virtual ~RooUnfoldAll();
+  RooUnfoldErrors (int NToys,RooUnfold* unfold,const TH1* Truth);
+  virtual ~RooUnfoldErrors();
   TNtuple* Chi2(); 
 
-  TH1* Spread();
-  TH1* Unf_err();
+  TH1* RMSResiduals();
+  TH1* UnfoldingError();
 
-protected:
-  void Plotting();
+private:
+  void CreatePlots();
   TH1* h_err; // Output plot
   TH1* h_err_res; // Output plot
   TNtuple* hchi2;  // Output plot 
-  void All_hMeas(); //
+  void GraphParameters(); //
   double xlo; // Minimum x-axis value 
   double xhi; // Maximum x-axis value
   int ntx; // Number of bins in true distribution
@@ -45,6 +45,6 @@ protected:
   
 public:
 
-  ClassDef (RooUnfoldAll, 0)
+  ClassDef (RooUnfoldErrors, 0)
 };
 #endif

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.25 2010-08-10 14:19:08 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.26 2010-08-10 16:10:37 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -47,9 +47,8 @@ END_HTML */
 #include "TVectorD.h"
 #include "TDecompSVD.h"
 #include "RooUnfoldResponse.h"
-#include "RooUnfoldAll.h"
+#include "RooUnfoldErrors.h"
 #include "TRandom.h"
-
 // Need subclasses just for RooUnfold::New()
 #include "RooUnfoldBayes.h"
 #include "RooUnfoldSvd.h"
@@ -163,7 +162,7 @@ RooUnfold::Init()
   _verbose= 1;
   _overflow= 0;
   _unfolded= _haveCov= _fail=_have_err_mat= false;
-  _Nits=50;
+  _NToys=50;
 }
 
 RooUnfold&
@@ -177,7 +176,7 @@ RooUnfold::Setup (const RooUnfoldResponse* res, const TH1* meas)
   _nt= _res->GetNbinsTruth();
   _overflow= _res->UseOverflowStatus() ? 1 : 0;
   SetNameTitleDefault();
-  Get_settings();
+  GetSettings();
   return *this;
 }
 
@@ -220,7 +219,7 @@ RooUnfold::Get_err_mat()
 	vector<double> bc_vec(_nt+2);
 	TMatrixD bc_mat(_nt+2,_nt+2);
   	_err_mat.ResizeTo(_nt+2,_nt+2);
-  	for (int k=0; k<_Nits; k++){
+  	for (int k=0; k<_NToys; k++){
   		TH1* res=this->Runtoy();
   		for (int i=0; i<_nt+2;i++){
   			Double_t res_bci=res->GetBinContent(i);
@@ -232,7 +231,7 @@ RooUnfold::Get_err_mat()
   	}
   	for (int i=0; i<_nt+2;i++){
   		for (int j=0; j<_nt+2; j++){
-  			_err_mat(i,j)=(bc_mat(i,j)-(bc_vec[i]*bc_vec[j])/_Nits)/_Nits;
+  			_err_mat(i,j)=(bc_mat(i,j)-(bc_vec[i]*bc_vec[j])/_NToys)/_NToys;
   		}
   	}
   	_have_err_mat=true;
@@ -293,7 +292,9 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 		}
 		TDecompSVD svd(Ereco_copy_cut);
 		Double_t cond=svd.Condition();
-		cout<<"cond= "<<cond<<" det= "<<Ereco_det<<endl;
+		if (_verbose>=1){
+			cout<<"For Covariance matrix condition= "<<cond<<" determinant= "<<Ereco_det<<endl;
+		}
 		svd.MultiSolve(reco_matrix_cut);
 		TMatrixD chisq_nw = reco_matrix_t*reco_matrix_cut;
 		double cond_max=1e17;
@@ -466,7 +467,7 @@ RooUnfold::Hreco (Int_t withError)
 }
 
 void
-RooUnfold::Get_settings(){
+RooUnfold::GetSettings(){
 	//Gets maximum and minimum parameters and step size
 	_minparm=0;
 	_maxparm=0;
@@ -475,25 +476,25 @@ RooUnfold::Get_settings(){
 }
 
 Double_t
-RooUnfold::Get_minparm(){
+RooUnfold::GetMinParm(){
 	//Get minimum regularisation parameter for unfolding method
 	return _minparm;
 }
 
 Double_t
-RooUnfold::Get_maxparm(){
+RooUnfold::GetMaxParm(){
 	//Get maximum regularisation parameter for unfolding method
 	return _maxparm;
 }
 
 Double_t
-RooUnfold::Get_stepsizeparm(){
+RooUnfold::GetStepSizeParm(){
 	//Get suggested step size for unfolding distribution
 	return _stepsizeparm;
 }
 
 Double_t
-RooUnfold::Get_defaultparm(){
+RooUnfold::GetDefaultParm(){
 	//Get suggested regularisation parameter.
 	return _defaultparm;
 }
@@ -501,7 +502,7 @@ RooUnfold::Get_defaultparm(){
 TH1*
 RooUnfold::Runtoy(Int_t witherror,double* chi2, const TH1* hTrue){
 	/*
-	Returns unfolded distribution for one iteration of unfolding. Use multiple iterations to find residuals
+	Returns unfolded distribution for one iteration of unfolding. Use multiple toys to find residuals
 	Can also return chi squared if a truth distribution is available. 
 	 */
 	RooUnfold* unfold_copy = this->Clone("unfold_toy");
@@ -509,7 +510,7 @@ RooUnfold::Runtoy(Int_t witherror,double* chi2, const TH1* hTrue){
 	TH1* hMeas=Add_Random(hMeas_AR);
 	unfold_copy->Setup(this->response(),hMeas);
 	unfold_copy->SetVerbose(this->verbose());
-	unfold_copy->SetNits(this->Nits());
+	unfold_copy->SetNToys(this->NToys());
 	if (witherror>=2){witherror=0;}
 	TH1* hReco= unfold_copy->Hreco(witherror);
 	if (chi2 && !hTrue){
@@ -539,6 +540,7 @@ RooUnfold::Print(Option_t *opt)const
 {
 	TNamed::Print(opt);
 	cout <<"regularisation parameter = "<<this->GetRegParm()<<endl;
+	cout <<"ntoys = "<<this->NToys()<<endl;
 }
 
 TMatrixD
@@ -567,6 +569,5 @@ RooUnfold::CutZeros(TMatrixD Ereco_copy)
 					}
 				}
 		}
-		Ereco_copy_cut.Print();
 	return Ereco_copy_cut;
 }

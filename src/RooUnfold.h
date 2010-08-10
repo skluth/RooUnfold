@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.18 2010-08-10 14:19:08 fwx38934 Exp $
+//      $Id: RooUnfold.h,v 1.19 2010-08-10 16:10:37 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -59,8 +59,8 @@ public:
 
   virtual Int_t                    verbose() const;
   virtual void SetVerbose (Int_t level);
-  virtual Int_t                    Nits() const; // Number of iterations
-  virtual void SetNits (Int_t iterations); // Set number of iterations
+  virtual Int_t                    NToys() const; // Number of toys
+  virtual void SetNToys (Int_t toys); // Set number of toys
 
   virtual void PrintTable (std::ostream& o, const TH1* hTrue= 0, Int_t withError= 1);
 
@@ -68,12 +68,12 @@ public:
 
   virtual void  SetRegParm (Double_t parm);
   virtual Double_t GetRegParm() const; // Get Regularisation Parameter
- virtual void Get_settings();
+ virtual void GetSettings();
   Double_t Chi2 (const TH1* hTrue,Int_t DoChi2=1);
-  Double_t Get_minparm();
-  Double_t Get_maxparm();
-  Double_t Get_stepsizeparm();
-  Double_t Get_defaultparm();
+  Double_t GetMinParm();
+  Double_t GetMaxParm();
+  Double_t GetStepSizeParm();
+  Double_t GetDefaultParm();
   TH1* Runtoy(Int_t doerror=0,double* chi2=0,const TH1* hTrue=0);
   TMatrixD CutZeros(TMatrixD Ereco_copy);
   Double_t _minparm; //Minimum value to be used in RooUnfoldParms
@@ -97,7 +97,7 @@ public:
   Int_t _nm;   // Total number of measured bins
   Int_t _nt;   // Total number of truth    bins
   Int_t _overflow;   // Use histogram under/overflows if 1 (set from RooUnfoldResponse)
-  Int_t _Nits; // Number of iterations to be used
+  Int_t _NToys; // Number of toys to be used
   mutable Bool_t _unfolded, _haveCov,_have_err_mat, _fail;
   const RooUnfoldResponse* _res;   // Response matrix (not owned)
   const TH1* _meas;                // Measured distribution (not owned)
@@ -120,7 +120,7 @@ inline RooUnfold::~RooUnfold() {}
 inline RooUnfold& RooUnfold::operator= (const RooUnfold& rhs) {Assign(rhs); return *this;}
 
 inline Int_t                    RooUnfold::verbose()   const { return _verbose; } // Controls amount of information to be printed
-inline Int_t                    RooUnfold::Nits()   const { return _Nits; } // Sets Number of iterations
+inline Int_t                    RooUnfold::NToys()   const { return _NToys; } // Sets Number of toys
 inline const RooUnfoldResponse* RooUnfold::response()  const { return _res;     } // Response object
 inline const TH1*               RooUnfold::Hmeasured() const { return _meas;    } // Measured Distribution
 inline TVectorD&                RooUnfold::Vreco()           { if (!_unfolded) Unfold(); return _rec; } // Vector or reconstructed points
@@ -128,7 +128,7 @@ inline TMatrixD&                RooUnfold::Ereco()           { if (!_haveCov)  G
 inline TMatrixD&                RooUnfold::Freco()           { if (!_have_err_mat)  Get_err_mat(); return _err_mat; } // Covariance matrix from residuals in reconstructed distribution 
 inline TObject*                 RooUnfold::Impl()            { return 0; };
 inline void  RooUnfold::SetVerbose (Int_t level)             { _verbose= level; } // Set verbose
-inline void  RooUnfold::SetNits (Int_t iterations)             { _Nits= iterations; } // Set iterations
+inline void  RooUnfold::SetNToys (Int_t toys)             { _NToys= toys; } // Set toys
 inline void  RooUnfold::SetRegParm (Double_t)                   {} // Set Regularisation parameter
 inline Double_t RooUnfold::GetRegParm() const                   {return -1;}
 

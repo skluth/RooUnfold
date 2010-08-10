@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldAll.cxx,v 1.9 2010-08-10 14:19:08 fwx38934 Exp $
+//      $Id: RooUnfoldErrors.cxx,v 1.1 2010-08-10 16:10:37 fwx38934 Exp $
 //
 // Description:
 //      Unfolding errors class
@@ -13,8 +13,8 @@
 /* BEGIN_HTML
 
 <p> A graph drawing class to view the errors associated with an unfolding technique</p>
-<p>Before these can be run, the RooUnfoldAll object must be created and the operation Plotting() run on the object in order to do the 
-maths needed to plot these graphs. The object requires the number of iterations over which the errors are calculated and a RooUnfold object.</p>
+<p>Before these can be run, the RooUnfoldErrors object must be created and the operation Plotting() run on the object in order to do the 
+maths needed to plot these graphs. The object requires the number of toys over which the errors are calculated and a RooUnfold object.</p>
 <p>For each iteration each bin in the measured distribution is added to a random number from a gaussian with a width based on the error in that bin. This is then unfolded and the results plotted for each bin. The rms in each bin is then used as the spread of the values in every bin. This gives errors that are slightly larger than those returned by RooUnfold, but are a better representation of the spread in the data.</p> 
 <p> If the true distribution is not known, the following can be returned:</p>
 <ul>
@@ -30,7 +30,7 @@ difficult to invert reliably. A warning will be displayed if this is the case. T
 END_HTML */
 /////////////////////////////////////////////////////////////////
 
-#include "RooUnfoldAll.h"
+#include "RooUnfoldErrors.h"
 
 #include <cfloat>
 #include <iostream>
@@ -54,21 +54,21 @@ using std::endl;
 using std::vector;
 using std::fabs;
 
-ClassImp (RooUnfoldAll);
+ClassImp (RooUnfoldErrors);
 
-RooUnfoldAll::RooUnfoldAll (int Nits,  RooUnfold* unfold_in, const TH1* Truth)
-:iterations(Nits),unfold(unfold_in),hTrue(Truth)
+RooUnfoldErrors::RooUnfoldErrors (int NToys,  RooUnfold* unfold_in, const TH1* Truth)
+:toys(NToys),unfold(unfold_in),hTrue(Truth)
 {
 	h_err=0;
     h_err_res=0;
     hchi2=0; 
-    All_hMeas(); 
-    Plotting();
+    GraphParameters(); 
+    CreatePlots();
 }
 
 
 
-RooUnfoldAll::~RooUnfoldAll()
+RooUnfoldErrors::~RooUnfoldErrors()
 {
 
   delete h_err;
@@ -77,12 +77,12 @@ RooUnfoldAll::~RooUnfoldAll()
 }
 
 void 
-RooUnfoldAll::All_hMeas()
+RooUnfoldErrors::GraphParameters()
 {
 	//Gets graph size parameters//
 	RooUnfold* u_c=unfold->Clone("clone");
 	u_c->SetVerbose(unfold->verbose());
-	u_c->SetNits(iterations);
+	u_c->SetNToys(toys);
 	TH1* HR=u_c->Hreco(0);
 	hMeas_const=unfold->Hmeasured();
 	ntx=HR->GetNbinsX();
@@ -92,7 +92,7 @@ RooUnfoldAll::All_hMeas()
 
 
 TNtuple*
-RooUnfoldAll::Chi2()
+RooUnfoldErrors::Chi2()
 {   
 	//Returns TNtuple of chi squared values. 
 	hchi2->SetFillColor(4);
@@ -100,7 +100,7 @@ RooUnfoldAll::Chi2()
 }
 
 TH1*
-RooUnfoldAll::Spread(){
+RooUnfoldErrors::RMSResiduals(){
 	//Returns a TH1D of the spread of the reconstructed points//
 	h_err_res->SetMarkerColor(2);
 	h_err_res->SetMarkerStyle(4);
@@ -109,7 +109,7 @@ RooUnfoldAll::Spread(){
 }
 
 TH1* 
-RooUnfoldAll::Unf_err(){
+RooUnfoldErrors::UnfoldingError(){
 	//Returns a TH1D of the errors from the unfolding// 
 	h_err->SetMarkerColor(4);
 	h_err->SetMarkerStyle(24);
@@ -119,7 +119,7 @@ RooUnfoldAll::Unf_err(){
 
 
 void
-RooUnfoldAll::Plotting()
+RooUnfoldErrors::CreatePlots()
 {
 	/*Gets the values for plotting. Uses the Runtoy method from RooUnfold to get plots to analyse for
 	spread and error on the unfolding. Can also give values for a chi squared plot if a truth distribution is known*/
@@ -141,7 +141,7 @@ RooUnfoldAll::Plotting()
     
     h_err_res = new TH1D ("h_err_res", "Spread",ntx,xlo,xhi); 
 	
-	for (int k=0; k<iterations;k++){	
+	for (int k=0; k<toys;k++){	
 		double chi2;
 		TH1* hReco_=unfold->Runtoy(1,&chi2,hTrue);
 		for (int i=0; i<ntx; i++) {    

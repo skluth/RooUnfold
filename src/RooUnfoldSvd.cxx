@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.14 2010-08-06 15:45:07 adye Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.15 2010-08-10 16:10:37 fwx38934 Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -36,9 +36,9 @@ RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldSvd& rhs)
   CopyData (rhs);
 }
 
-RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm, Int_t ntoys,
+RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm, Int_t ntoyssvd,
                             const char* name, const char* title)
-  : RooUnfold (res, meas, name, title), _kterm(kterm ? kterm : meas->GetNbinsX()/2), _ntoys(ntoys)
+  : RooUnfold (res, meas, name, title), _kterm(kterm ? kterm : meas->GetNbinsX()/2), _ntoyssvd(ntoyssvd)
 {
   Init();
 }
@@ -88,7 +88,7 @@ void
 RooUnfoldSvd::CopyData (const RooUnfoldSvd& rhs)
 {
   _kterm= rhs._kterm;
-  _ntoys= rhs._ntoys;
+  _ntoyssvd= rhs._ntoyssvd;
 }
 
 TObject*
@@ -166,9 +166,9 @@ RooUnfoldSvd::GetCov()
 
   //Get the covariance matrix for statistical uncertainties on measured spectrum
   _cov.ResizeTo (nt, nt);
-  _cov= _svd->GetCov (covMeas, _meas1d, _ntoys, _kterm);
+  _cov= _svd->GetCov (covMeas, _meas1d, _ntoyssvd, _kterm);
   //Get the covariance matrix for statistical uncertainties on signal MC
-  TMatrixD ucovTrain= _svd->GetMatStatCov (_ntoys, _kterm);
+  TMatrixD ucovTrain= _svd->GetMatStatCov (_ntoyssvd, _kterm);
   Double_t sf= (_truth1d->Integral() / _train1d->Integral()) * _meas1d->Integral();
   Double_t sf2= sf*sf;
   for (Int_t i= 0; i<nt; i++) {
@@ -214,7 +214,7 @@ RooUnfoldSvd::CopyOverflow2D (const TH1* h) const
 }
 
 void
-RooUnfoldSvd::Get_settings(){
+RooUnfoldSvd::GetSettings(){
 	_minparm=0;
 	_maxparm=_meas->GetNbinsX();
 	_stepsizeparm=1;

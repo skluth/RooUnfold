@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.h,v 1.12 2010-08-06 15:45:07 adye Exp $
+//      $Id: RooUnfoldSvd.h,v 1.13 2010-08-10 16:10:37 fwx38934 Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -36,17 +36,17 @@ public:
 
   // Special constructors
 
-  RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm= 0, Int_t ntoys= 1000,
+  RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm= 0, Int_t ntoyssvd= 1000,
                 const char* name= 0, const char* title= 0);
 
   void SetKterm (Int_t kterm) { _kterm= kterm; }
-  void SetNtoys (Int_t ntoys) { _ntoys= ntoys; }
+  void SetNtoysSVD (Int_t ntoyssvd) { _ntoyssvd= ntoyssvd; }
   Int_t GetKterm() const { return _kterm; }
-  Int_t GetNtoys() const { return _ntoys; }
+  Int_t GetNtoysSVD() const { return _ntoyssvd; }
 
   virtual void  SetRegParm (Double_t parm) { SetKterm(Int_t(parm+0.5)); }
   virtual Double_t GetRegParm() const { return GetKterm(); }
-  virtual void Get_settings();
+  virtual void GetSettings();
   virtual void Reset();
   virtual TObject* Impl();
 
@@ -64,7 +64,7 @@ protected:
   // instance variables
   TUnfHisto* _svd;
   Int_t _kterm;
-  Int_t _ntoys;
+  Int_t _ntoyssvd;
 
   TH1D *_meas1d, *_train1d, *_truth1d;
   TH2D *_reshist;

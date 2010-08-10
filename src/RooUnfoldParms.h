@@ -9,21 +9,20 @@ class TProfile;
 
 class RooUnfoldParms : public TNamed {
 	public:
-	RooUnfoldParms(const RooUnfold* unfold_in=0,Int_t err=1,Int_t its=500,const TH1* truth=0);
+	RooUnfoldParms(const RooUnfold* unfold_in=0,Int_t err=1,const TH1* truth=0);
 	virtual ~RooUnfoldParms();
 	TProfile* GetChi2();
-	TProfile* GetErr();
-	TProfile* GetRes();
-	TH1* GetRMSSpread();
+	TProfile* GetRMSError();
+	TProfile* GetMeanResiduals();
+	TH1* GetRMSResiduals();
 	const RooUnfold* unfold; // Input object from RooUnfold
 	Int_t doerror; // Set error calculation method
-	Int_t Nits; // Number of iterations
 	const TH1* hTrue; // Truth Distribution
-	void Set_Min(double min);
-	void Set_Max(double max);
-	void Set_Stepsize(double size);
+	void SetMinParm(double min);
+	void SetMaxParm(double max);
+	void SetStepSizeParm(double size);
 	
-	protected:
+	private:
 	bool _done_math;
 	TH1* hrms; // Output plot
 	TProfile* hch2; // Output plot

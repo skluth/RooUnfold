@@ -25,16 +25,16 @@ public:
 	virtual void SetRegParm(Double_t parm){FixTau(parm);}
 	Double_t GetTau() const { return _tau;    }
 	virtual Double_t GetRegParm() const { return GetTau(); }
-	virtual void Get_settings();
+	virtual void GetSettings();
 	
-protected:
+private:
   TH2D* ematrix; //matrix of errors
   void Init();
   virtual void Unfold();
   void GetCov();
   Double_t _kterm; //Regularisation parameter
   TUnfold* _unf; //TUnfold object
-  TH2D* Flip2D(const TH2D* Hres);
+  TH2D* TransposeHist(const TH2D* Hres);
   TH2D* CopyOverflow(const TH2D* h)const;
   Bool_t tau_set;
   Double_t _tau;

@@ -14,7 +14,7 @@
 #pragma link C++ class RooUnfoldBinByBin+;
 #pragma link C++ class RooUnfoldResponse-;
 #pragma link C++ class TUnfHisto;
-#pragma link C++ class RooUnfoldAll+;
+#pragma link C++ class RooUnfoldErrors+;
 #pragma link C++ class RooUnfoldParms+;
 #ifndef NOTUNFOLD
 #pragma link C++ class RooUnfoldTUnfold+;

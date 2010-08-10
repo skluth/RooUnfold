@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldParms.cxx,v 1.4 2010-08-10 14:19:09 fwx38934 Exp $
+//      $Id: RooUnfoldParms.cxx,v 1.5 2010-08-10 16:10:37 fwx38934 Exp $
 //
 // Description:
 //      Optimisation of regularisation parameter class
@@ -46,8 +46,8 @@ using std::vector;
 
 ClassImp (RooUnfoldParms);
 
-RooUnfoldParms::RooUnfoldParms(const RooUnfold* unfold_in,Int_t err,Int_t its,const TH1* truth)
-:unfold(unfold_in),doerror(err),Nits(its),hTrue(truth)
+RooUnfoldParms::RooUnfoldParms(const RooUnfold* unfold_in,Int_t err,const TH1* truth)
+:unfold(unfold_in),doerror(err),hTrue(truth)
 {
 	Init();
 }
@@ -63,11 +63,11 @@ RooUnfoldParms::Init()
 	_done_math=0;
 	RooUnfold* u_temp=unfold->Clone();
 	u_temp->SetVerbose(unfold->verbose());
-	u_temp->SetNits(Nits);
+	u_temp->SetNToys(unfold->NToys());
 	u_temp->Setup(unfold->response(),unfold->Hmeasured());
-	_maxparm=u_temp->Get_maxparm();
-	_minparm=u_temp->Get_minparm();
-	_stepsizeparm=u_temp->Get_stepsizeparm();
+	_maxparm=u_temp->GetMaxParm();
+	_minparm=u_temp->GetMinParm();
+	_stepsizeparm=u_temp->GetStepSizeParm();
 	delete u_temp;
 }
 
@@ -90,7 +90,7 @@ RooUnfoldParms::GetChi2()
 	return dynamic_cast<TProfile*>(hch2->Clone());
 }
 TProfile*
-RooUnfoldParms::GetErr()
+RooUnfoldParms::GetRMSError()
 {
 	//Returns TProfile of errors for each regularisation parameter//
 	if (!_done_math){DoMath();} 
@@ -100,7 +100,7 @@ RooUnfoldParms::GetErr()
 }
 
 TProfile*
-RooUnfoldParms::GetRes()
+RooUnfoldParms::GetMeanResiduals()
 {
 	/*Returns TProfile of RMS Residuals for each regularisation parameter.
 	 Requires a known truth distribution*/
@@ -111,7 +111,7 @@ RooUnfoldParms::GetRes()
 }
 
 TH1*
-RooUnfoldParms::GetRMSSpread()
+RooUnfoldParms::GetRMSResiduals()
 {
 	/*Returns TH1D of RMS spread of Residuals for each regularisation parameter.
 	 Requires a known truth distribution*/
@@ -129,7 +129,7 @@ RooUnfoldParms::DoMath()
 	
 	RooUnfold* u_temp = unfold->Clone("unfold_toy");
 	u_temp->SetVerbose(unfold->verbose());
-	u_temp->SetNits(Nits);
+	u_temp->SetNToys(unfold->NToys());
 	u_temp->Setup(unfold->response(),unfold->Hmeasured());
 	Int_t nobins=Int_t((_maxparm-_minparm)/_stepsizeparm);
 	vector<TH1D*> graph_vector;    
@@ -157,7 +157,7 @@ RooUnfoldParms::DoMath()
 		unf->Setup(unfold->response(),hMeas);
 	    unf->SetVerbose(unfold->verbose());
 	    unf->SetRegParm(k);
-	    unf->SetNits(Nits);
+	    unf->SetNToys(unfold->NToys());
 		Double_t sq_err_tot=0;
 		TH1* hReco=unf->Hreco(doerror);
 		bins=hReco->GetXaxis()->GetNbins(); 
@@ -200,21 +200,21 @@ RooUnfoldParms::DoMath()
 }
 
 void
-RooUnfoldParms::Set_Min(double min)
+RooUnfoldParms::SetMinParm(double min)
 {
 	//Sets minimum parameter
 	_minparm=min;
 }
 
 void
-RooUnfoldParms::Set_Max(double max)
+RooUnfoldParms::SetMaxParm(double max)
 {
 	//Sets maximum parameter
 	_maxparm=max;
 }
 
 void
-RooUnfoldParms::Set_Stepsize(double size)
+RooUnfoldParms::SetStepSizeParm(double size)
 {
 	//Sets step size.
 	_stepsizeparm=size;

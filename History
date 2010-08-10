@@ -1,5 +1,9 @@
-History of RooUnfold     $Id: History,v 1.79 2010-08-10 14:18:47 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.80 2010-08-10 16:10:10 fwx38934 Exp $
 ====================
+Richard Claridge  10-Aug-2010 rgc100810b
+  o RooUnfoldAll renamed to RooUnfoldErrors
+  o Various methods renamed to better reflect their function
+
 Richard Claridge  10-Aug-2010 rgc100810a
   o Chi2 method removes 0 rows/cols before inversion
   o Regparm now uses defaults set in constructors

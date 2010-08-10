@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.31 2010-08-10 14:18:55 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.32 2010-08-10 16:10:25 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -37,7 +37,7 @@
 #include "TLine.h"
 #include "TNtuple.h"
 #include "TProfile.h"
-#include "RooUnfoldAll.h"
+#include "RooUnfoldErrors.h"
 #include "RooUnfoldParms.h"
 #include "RooUnfoldResponse.h"
 #include "RooUnfold.h"
@@ -45,7 +45,6 @@
 #include "TPaveText.h"
 #include "TLatex.h"
 #endif
-
 #include "ArgVars.h"
 
 //==============================================================================
@@ -82,7 +81,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("xlo",     &xlo,        0.0, "X range minimum");
   args.Add ("xhi",     &xhi,       10.0, "X range maximum");
   args.Add ("regparm", &regparm,   -1e30, "regularisation parameter (default: Bayes niter=3, SVD kterm=ntx/2)", "");
-  args.Add ("ntoys",   &ntoys,     1000, "number of toys used to obtain SVD covariances");
+  args.Add ("ntoyssvd",   &ntoyssvd,     1000, "number of toys used to obtain SVD covariances");
   args.Add ("onepage", &onepage,      4, "number of pads per page");
   args.Add ("doerror", &doerror,     -1, "calculate errors (default=1 unless this will take a very long time)", "1");
   args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
@@ -102,13 +101,12 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("hpaper",  &hpaper,       0, "paper height", "");
   args.Add ("verbose", &verbose,      1, "debug level: 0=warnings, 1=verbose, 2=debug, 3=detailed");
   args.Add ("draw",    &dodraw,       1, "draw results");
-  args.Add ("iterations",&iterations,500,"number of iterations");
+  args.Add ("ntoys",&ntoys,-1,"number of toys (by default 500 if errors are to be plotted, 50 otherwise)");
   args.Add ("ploterrors",&ploterrors, 0, "plot error comparison and chi2 graph");
   args.Add ("plotparms",&plotparms, 0, "plot graphs using RooUnfoldParms");
-  args.Add ("minparm",&minparm, -1e30, "minimum value for RooUnfoldParms");
-  args.Add ("maxparm",&maxparm, -1e30, "maximum value for RooUnfoldParms");
-  args.Add ("stepsize",&stepsize, 0, "stepsize in RooUnfoldParms");
-  args.Add ("runs",&runs,50,"number of runs for covariance matrices");
+  args.Add ("minparm",&minparm, -1e30, "minimum value for RooUnfoldParms (default varies with unfolding method)");
+  args.Add ("maxparm",&maxparm, -1e30, "maximum value for RooUnfoldParms (default varies with unfolding method)");
+  args.Add ("stepsize",&stepsize, 0, "stepsize in RooUnfoldParms (default varies with unfolding method)");
   
 }
 
@@ -213,7 +211,7 @@ Int_t RooUnfoldTestHarness::RunTests()
       return 7;
     }
     //if (dodraw) Results(); 
-    if (iterations>0) {
+    if (ntoys>0) {
       if (dodraw) {
       if (!plotparms){
       TrainResults();
@@ -231,14 +229,14 @@ Int_t RooUnfoldTestHarness::RunTests()
       }
       if (ploterrors>=1){
       canvas->cd(++ipad);
-      RooUnfoldAll All(iterations,unfold,hTrue);
-      All.Spread()->Draw("P");
-      All.Unf_err()->Draw("P SAME");
+      RooUnfoldErrors All(ntoys,unfold,hTrue);
+      All.RMSResiduals()->Draw("P");
+      All.UnfoldingError()->Draw("P SAME");
       canvas->cd(++ipad);
       Double_t good_chi= All.Chi2()->Draw("chi2","abs(chi2)<1e10");
-      if (iterations-good_chi>0){
+      if (ntoys-good_chi>0){
       TString chi;
-      chi+=(iterations-good_chi);
+      chi+=(ntoys-good_chi);
       chi += (" bad #chi^{2}s");
       TPaveText* pave=new TPaveText;
       pave->SetFillColor(0);
@@ -253,26 +251,26 @@ Int_t RooUnfoldTestHarness::RunTests()
       }
       }
       if(plotparms>=1){      
-        RooUnfoldParms Parm(unfold,doerror,iterations,hTrue);
+        RooUnfoldParms Parm(unfold,doerror,hTrue);
         if (maxparm>minparm){
-        Parm.Set_Max(maxparm);
+        Parm.SetMaxParm(maxparm);
         }
         if (minparm!=-1e30)
         {
-        Parm.Set_Min(minparm);
+        Parm.SetMinParm(minparm);
         }
         if (stepsize>0)
         {
-        Parm.Set_Stepsize(stepsize);
+        Parm.SetStepSizeParm(stepsize);
         }
         canvas->cd(++ipad);
         Parm.GetChi2()->Draw("P");    
         canvas->cd(++ipad);
-        Parm.GetErr()->Draw("P");    
+        Parm.GetRMSError()->Draw("P");    
         canvas->cd(++ipad);
-        Parm.GetRes()->Draw("P"); 
+        Parm.GetMeanResiduals()->Draw("P"); 
         canvas->cd(++ipad);
-        Parm.GetRMSSpread()->Draw("P"); 
+        Parm.GetRMSResiduals()->Draw("P"); 
 		}
       }
     }
@@ -370,9 +368,17 @@ Int_t RooUnfoldTestHarness::Unfold ()
   }
   if (!unfold) return 0;
   unfold->SetVerbose (verbose);
-  unfold->SetNits(runs);
+  if (ntoys<0){
+  	if (ploterrors>=1){
+  		ntoys=500;
+  		}
+  	else{
+  		ntoys=50;
+  		}
+  	}
+  unfold->SetNToys(ntoys);
   
-  if (method == RooUnfold::kSVD) dynamic_cast<RooUnfoldSvd*>(unfold)->SetNtoys (ntoys);
+  if (method == RooUnfold::kSVD) dynamic_cast<RooUnfoldSvd*>(unfold)->SetNtoysSVD (ntoyssvd);
   if (verbose>=0) {cout << "Created "; unfold->Print();}
   hReco= unfold->Hreco(doerror);
   if (!hReco) return 0;
@@ -425,7 +431,7 @@ void RooUnfoldTestHarness::Results()
   if (verbose>=1){
   cout<<"Htrue integral="<<hTrue->Integral()<<" Hreco Integral= "<<hReco->Integral()<<" T/R= "<<hTrue->Integral()/hReco->Integral()<<endl;
   }
-  if (iterations > 0) return;
+  if (ntoys > 0) return;
 
   if (onepage>=2) canvas->cd(++ipad);
   if (!onepage || onepage >= 2) {
