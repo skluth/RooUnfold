@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldErrors.cxx,v 1.2 2010-08-11 19:27:37 adye Exp $
+//      $Id: RooUnfoldErrors.cxx,v 1.3 2010-08-11 20:06:05 adye Exp $
 //
 // Description:
 //      Unfolding errors class
@@ -154,6 +154,7 @@ RooUnfoldErrors::CreatePlots()
 	    		odd_ch++;
 	    	}
     	}
+	delete hReco_;
 	}    	
 	for (unsigned int i=0; i<graph_vector.size(); i++){
 		Double_t spr=(graph_vector[i]->GetRMS());

@@ -126,8 +126,13 @@ RooUnfoldTUnfold::Unfold()
   	default:
   	regmode=TUnfold::kRegModeSize;
   }
+
+  Bool_t oldstat= TH1::AddDirectoryStatus();
+  TH1::AddDirectory (kFALSE);
   TH2D* Hresc=CopyOverflow(Hres);
   TH2D* Hres_flipped=TransposeHist(Hresc);
+  TH1::AddDirectory (oldstat);
+
   _unf= new TUnfold(Hres_flipped,TUnfold::kHistMapOutputHoriz,regmode);
   Int_t nScan=30;
   // use automatic L-curve scan: start with taumin=taumax=0.0

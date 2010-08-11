@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.82 2010-08-11 19:43:23 adye Exp $
+History of RooUnfold     $Id: History,v 1.83 2010-08-11 20:06:03 adye Exp $
 ====================
+
+Tim Adye         11-Aug-2010 tja100811c
+  o Plug some memory leaks
 
 Tim Adye         11-Aug-2010 tja100811b
   o Do GetSettings for RooUnfoldBinByBin too.

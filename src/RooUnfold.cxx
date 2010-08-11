@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.27 2010-08-11 19:27:37 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.28 2010-08-11 20:06:05 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -518,7 +518,10 @@ RooUnfold::Runtoy(Int_t witherror,double* chi2, const TH1* hTrue) const{
 	 */
 	RooUnfold* unfold_copy = Clone("unfold_toy");
 	const TH1* hMeas_AR = Hmeasured();
+	Bool_t oldstat= TH1::AddDirectoryStatus();
+	TH1::AddDirectory (kFALSE);
 	TH1* hMeas=Add_Random(hMeas_AR);
+	TH1::AddDirectory (oldstat);
 	unfold_copy->SetMeasured(hMeas);
 	if (witherror>=2){witherror=0;}
 	TH1* hReco= unfold_copy->Hreco(witherror);
@@ -526,6 +529,7 @@ RooUnfold::Runtoy(Int_t witherror,double* chi2, const TH1* hTrue) const{
 		cerr<<"Error: can't calculate chi^2 without a truth distribution"<<endl;
 	}
 	if (chi2 && hTrue) {*chi2=unfold_copy->Chi2(hTrue,witherror);}
+	delete hMeas;
 	return hReco;
 }
 
@@ -533,17 +537,14 @@ RooUnfold::Runtoy(Int_t witherror,double* chi2, const TH1* hTrue) const{
 TH1*
 RooUnfold::Add_Random(const TH1* hMeas_AR)
 {
-	Bool_t oldstat= TH1::AddDirectoryStatus();
-	TH1::AddDirectory (kFALSE);
 	//Adds a random number to the measured distribution before the unfolding//
-	TH1* hMeas2=   dynamic_cast<TH1*>(hMeas_AR->Clone ("Measured"));   hMeas2  ->SetTitle ("Measured");
+	TH1* hMeas2=   dynamic_cast<TH1*>(hMeas_AR->Clone());
 	for (Int_t i=0; i<hMeas_AR->GetNbinsX()+2 ; i++){
       		Double_t err=hMeas_AR->GetBinError(i);
       		Double_t new_x = hMeas_AR->GetBinContent(i) + gRandom->Gaus(0,err);
       		hMeas2->SetBinContent(i,new_x);
       		hMeas2->SetBinError(i,err);
     }
-	TH1::AddDirectory (oldstat);
 	return hMeas2;
 }
 
