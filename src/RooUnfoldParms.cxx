@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldParms.cxx,v 1.6 2010-08-11 19:27:37 adye Exp $
+//      $Id: RooUnfoldParms.cxx,v 1.7 2010-08-11 20:18:30 adye Exp $
 //
 // Description:
 //      Optimisation of regularisation parameter class
@@ -32,6 +32,7 @@ return an rms. The chi squared values are calculated using the chi2() method in 
 #include <cfloat>
 #include <iostream>
 #include <cmath>
+#include <vector>
 
 #include "TROOT.h"
 #include "TStyle.h"
