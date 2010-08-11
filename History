@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.81 2010-08-11 19:27:35 adye Exp $
+History of RooUnfold     $Id: History,v 1.82 2010-08-11 19:43:23 adye Exp $
 ====================
+
+Tim Adye         11-Aug-2010 tja100811b
+  o Do GetSettings for RooUnfoldBinByBin too.
 
 Tim Adye         11-Aug-2010 tja100811a
   o New RooUnfold::SetResponse and SetMeasured methods allow the unfolding

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.h,v 1.7 2010-08-11 19:27:37 adye Exp $
+//      $Id: RooUnfoldBinByBin.h,v 1.8 2010-08-11 19:43:33 adye Exp $
 //
 // Description:
 //      Unfolding bin-by-bin. Just an interface to RooUnfoldBayesImpl.
@@ -35,6 +35,7 @@ public:
 
 protected:
 
+  void Init();
   virtual Int_t unfold (vector<Double_t>& causes);
   virtual Int_t getCovariance() const;
   virtual void GetSettings();
@@ -48,9 +49,10 @@ public:
 
 // Inline method definitions
 
-inline RooUnfoldBinByBin::RooUnfoldBinByBin()                                           : RooUnfoldBayes()           {}
-inline RooUnfoldBinByBin::RooUnfoldBinByBin (const char* name, const char* title)       : RooUnfoldBayes(name,title) {}
-inline RooUnfoldBinByBin::RooUnfoldBinByBin (const TString& name, const TString& title) : RooUnfoldBayes(name,title) {}
+inline void RooUnfoldBinByBin::Init() {GetSettings();}
+inline RooUnfoldBinByBin::RooUnfoldBinByBin()                                           : RooUnfoldBayes()           {Init();}
+inline RooUnfoldBinByBin::RooUnfoldBinByBin (const char* name, const char* title)       : RooUnfoldBayes(name,title) {Init();}
+inline RooUnfoldBinByBin::RooUnfoldBinByBin (const TString& name, const TString& title) : RooUnfoldBayes(name,title) {Init();}
 inline RooUnfoldBinByBin& RooUnfoldBinByBin::operator= (const RooUnfoldBinByBin& rhs) {Assign(rhs); return *this;}
 
 #endif
