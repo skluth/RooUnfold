@@ -23,6 +23,12 @@ using std::sqrt;
 
 ClassImp (RooUnfoldTUnfold);
 
+RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldTUnfold& rhs)
+  : RooUnfold (rhs)
+{
+  Init();
+  CopyData (rhs);
+}
 
 RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas, Double_t kterm,
                             const char* name, const char* title)
@@ -31,11 +37,9 @@ RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* mea
   Init();
 }
 
-RooUnfoldTUnfold::~RooUnfoldTUnfold()
+void
+RooUnfoldTUnfold::Destroy()
 {
-	//Destructor
-	Reset();
-	delete ematrix;
 	delete _unf;
 }
 
@@ -52,8 +56,25 @@ void
 RooUnfoldTUnfold::Reset()
 {
 	//Resets all values
+  Destroy();
   Init();
   RooUnfold::Reset();
+}
+
+
+void
+RooUnfoldTUnfold::Assign (const RooUnfoldTUnfold& rhs)
+{
+  RooUnfold::Assign (rhs);
+  CopyData (rhs);
+}
+
+void
+RooUnfoldTUnfold::CopyData (const RooUnfoldTUnfold& rhs)
+{
+  tau_set=rhs.tau_set;
+  _tau=rhs._tau;
+  _kterm=rhs._kterm;
 }
 
 
@@ -63,8 +84,8 @@ RooUnfoldTUnfold::Init()
 	//Sets error matrix
 	tau_set=false;
 	_tau=0;
-	ematrix=0;
 	_unf=0;
+  GetSettings();
 }
 
 TObject*
@@ -146,7 +167,6 @@ RooUnfoldTUnfold::Unfold()
 	  	_rec(i)=reco->GetBinContent(i+1);
 	  }
   }
-  ematrix=_unf->GetEmatrix("ematrix","error matrix",0,0);
   delete Hresc;
   delete reco;
   delete Hres_flipped;
@@ -162,6 +182,7 @@ RooUnfoldTUnfold::GetCov()
 	if (_overflow){nt+=2;}
 	if (!_unfolded) Unfold();
 	if (_fail) return;
+	TH2D* ematrix=_unf->GetEmatrix("ematrix","error matrix",0,0);
 	_cov.ResizeTo (nt,nt);
 	for (Int_t i= 0; i<nt; i++) {
 		for (Int_t j= 0; j<nt; j++) {

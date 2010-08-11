@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.19 2010-08-10 16:10:37 fwx38934 Exp $
+//      $Id: RooUnfold.h,v 1.20 2010-08-11 19:27:37 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -45,6 +45,8 @@ public:
   // Set up an existing object
 
   virtual RooUnfold& Setup (const RooUnfoldResponse* res, const TH1* meas);
+  virtual void SetMeasured (const TH1* meas);
+  virtual void SetResponse (const RooUnfoldResponse* res);
   virtual void Reset ();
 
   // Accessors
@@ -68,14 +70,13 @@ public:
 
   virtual void  SetRegParm (Double_t parm);
   virtual Double_t GetRegParm() const; // Get Regularisation Parameter
- virtual void GetSettings();
   Double_t Chi2 (const TH1* hTrue,Int_t DoChi2=1);
-  Double_t GetMinParm();
-  Double_t GetMaxParm();
-  Double_t GetStepSizeParm();
-  Double_t GetDefaultParm();
-  TH1* Runtoy(Int_t doerror=0,double* chi2=0,const TH1* hTrue=0);
-  TMatrixD CutZeros(TMatrixD Ereco_copy);
+  Double_t GetMinParm() const;
+  Double_t GetMaxParm() const;
+  Double_t GetStepSizeParm() const;
+  Double_t GetDefaultParm() const;
+  TH1* Runtoy(Int_t doerror=0,double* chi2=0,const TH1* hTrue=0) const;
+  static TMatrixD CutZeros(const TMatrixD& Ereco_copy);
   Double_t _minparm; //Minimum value to be used in RooUnfoldParms
   Double_t _maxparm; //Maximum value to be used in RooUnfoldParms
   Double_t _stepsizeparm; //StepSize value to be used in RooUnfoldParms
@@ -90,7 +91,8 @@ public:
   virtual void Get_err_mat(); // Get covariance matrix using errors from residuals on reconstructed distribution
   void Assign   (const RooUnfold& rhs); // implementation of assignment operator
   void CopyData (const RooUnfold& rhs);
-  TH1* Add_Random(const TH1* hMeas_AR);
+  static TH1* Add_Random(const TH1* hMeas_AR);
+  virtual void GetSettings();
   // instance variables
 
   Int_t _verbose;  // Debug print level
@@ -123,6 +125,7 @@ inline Int_t                    RooUnfold::verbose()   const { return _verbose; 
 inline Int_t                    RooUnfold::NToys()   const { return _NToys; } // Sets Number of toys
 inline const RooUnfoldResponse* RooUnfold::response()  const { return _res;     } // Response object
 inline const TH1*               RooUnfold::Hmeasured() const { return _meas;    } // Measured Distribution
+inline void RooUnfold::SetMeasured (const TH1* meas)         { _meas= meas; }
 inline TVectorD&                RooUnfold::Vreco()           { if (!_unfolded) Unfold(); return _rec; } // Vector or reconstructed points
 inline TMatrixD&                RooUnfold::Ereco()           { if (!_haveCov)  GetCov(); return _cov; } // Covariance matrix from measured distribution
 inline TMatrixD&                RooUnfold::Freco()           { if (!_have_err_mat)  Get_err_mat(); return _err_mat; } // Covariance matrix from residuals in reconstructed distribution 

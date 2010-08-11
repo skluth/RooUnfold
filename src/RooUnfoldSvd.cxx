@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.15 2010-08-10 16:10:37 fwx38934 Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.16 2010-08-11 19:27:37 adye Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -75,6 +75,7 @@ RooUnfoldSvd::Init()
   _svd= 0;
   _meas1d= _train1d= _truth1d= 0;
   _reshist= 0;
+  GetSettings();
 }
 
 void

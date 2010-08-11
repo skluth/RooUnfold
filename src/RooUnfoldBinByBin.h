@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.h,v 1.6 2010-01-26 00:53:17 adye Exp $
+//      $Id: RooUnfoldBinByBin.h,v 1.7 2010-08-11 19:27:37 adye Exp $
 //
 // Description:
 //      Unfolding bin-by-bin. Just an interface to RooUnfoldBayesImpl.
@@ -37,6 +37,7 @@ protected:
 
   virtual Int_t unfold (vector<Double_t>& causes);
   virtual Int_t getCovariance() const;
+  virtual void GetSettings();
 
   // instance variables
 

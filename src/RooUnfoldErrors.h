@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldErrors.h,v 1.1 2010-08-10 16:10:37 fwx38934 Exp $
+//      $Id: RooUnfoldErrors.h,v 1.2 2010-08-11 19:27:37 adye Exp $
 //
 // Description:
 //      Graph Drawing Class for use with RooUnfold.
@@ -40,7 +40,6 @@ private:
   double xlo; // Minimum x-axis value 
   double xhi; // Maximum x-axis value
   int ntx; // Number of bins in true distribution
-  const TH1* hMeas_const; // Measured Distribution
   
   
 public:

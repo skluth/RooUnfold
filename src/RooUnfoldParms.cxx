@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldParms.cxx,v 1.5 2010-08-10 16:10:37 fwx38934 Exp $
+//      $Id: RooUnfoldParms.cxx,v 1.6 2010-08-11 19:27:37 adye Exp $
 //
 // Description:
 //      Optimisation of regularisation parameter class
@@ -61,14 +61,9 @@ RooUnfoldParms::Init()
 	hres=0;  
 	hrms=0;
 	_done_math=0;
-	RooUnfold* u_temp=unfold->Clone();
-	u_temp->SetVerbose(unfold->verbose());
-	u_temp->SetNToys(unfold->NToys());
-	u_temp->Setup(unfold->response(),unfold->Hmeasured());
-	_maxparm=u_temp->GetMaxParm();
-	_minparm=u_temp->GetMinParm();
-	_stepsizeparm=u_temp->GetStepSizeParm();
-	delete u_temp;
+	_maxparm=unfold->GetMaxParm();
+	_minparm=unfold->GetMinParm();
+	_stepsizeparm=unfold->GetStepSizeParm();
 }
 
 RooUnfoldParms::~RooUnfoldParms()
@@ -127,10 +122,6 @@ RooUnfoldParms::DoMath()
 	//Loops over many regularisation parameters and creates plots.
 	//Uses minimum, maximum and step size parameters for range of the loop.
 	
-	RooUnfold* u_temp = unfold->Clone("unfold_toy");
-	u_temp->SetVerbose(unfold->verbose());
-	u_temp->SetNToys(unfold->NToys());
-	u_temp->Setup(unfold->response(),unfold->Hmeasured());
 	Int_t nobins=Int_t((_maxparm-_minparm)/_stepsizeparm);
 	vector<TH1D*> graph_vector;    
     for(Double_t a = _minparm; a<=_maxparm; a+=_stepsizeparm) {
@@ -148,16 +139,11 @@ RooUnfoldParms::DoMath()
 	hrms=new TH1D("hrms","rms of residuals",nobins,xlo,xhi);
     Int_t bins=0;
     Int_t gvl=0;
-    delete u_temp;
     
 	for (Double_t k=_minparm;k<=_maxparm;k+=_stepsizeparm)
 	{   
-		TH1* hMeas = dynamic_cast<TH1*>(unfold->Hmeasured()->Clone ("Measured"));
 		RooUnfold* unf = unfold->Clone("unfold_toy");
-		unf->Setup(unfold->response(),hMeas);
-	    unf->SetVerbose(unfold->verbose());
 	    unf->SetRegParm(k);
-	    unf->SetNToys(unfold->NToys());
 		Double_t sq_err_tot=0;
 		TH1* hReco=unf->Hreco(doerror);
 		bins=hReco->GetXaxis()->GetNbins(); 

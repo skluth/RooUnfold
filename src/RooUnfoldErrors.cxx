@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldErrors.cxx,v 1.1 2010-08-10 16:10:37 fwx38934 Exp $
+//      $Id: RooUnfoldErrors.cxx,v 1.2 2010-08-11 19:27:37 adye Exp $
 //
 // Description:
 //      Unfolding errors class
@@ -48,6 +48,7 @@ END_HTML */
 #include "TAxis.h"
 
 #include "RooUnfold.h"
+#include "RooUnfoldResponse.h"
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -80,11 +81,7 @@ void
 RooUnfoldErrors::GraphParameters()
 {
 	//Gets graph size parameters//
-	RooUnfold* u_c=unfold->Clone("clone");
-	u_c->SetVerbose(unfold->verbose());
-	u_c->SetNToys(toys);
-	TH1* HR=u_c->Hreco(0);
-	hMeas_const=unfold->Hmeasured();
+	const TH1* HR=unfold->response()->Htruth();
 	ntx=HR->GetNbinsX();
 	xlo=HR->GetXaxis()->GetXmin();
 	xhi=HR->GetXaxis()->GetXmax();

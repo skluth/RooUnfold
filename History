@@ -1,10 +1,21 @@
-History of RooUnfold     $Id: History,v 1.80 2010-08-10 16:10:10 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.81 2010-08-11 19:27:35 adye Exp $
 ====================
-Richard Claridge  10-Aug-2010 rgc100810b
+
+Tim Adye         11-Aug-2010 tja100811a
+  o New RooUnfold::SetResponse and SetMeasured methods allow the unfolding
+    inputs to be changed separately.
+  o Copying a RooUnfold object copies all parameters.
+  o Improve const and static method correctness.
+  o Make sure the correct GetSettings() is always used.
+  o Remove some unneccessary stuff from RooUnfoldErrors, RooUnfoldParms, and
+    RooUnfoldTUnfold.
+  o Add missing constructors to RooUnfoldTUnfold.
+
+Richard Claridge 10-Aug-2010 rgc100810b
   o RooUnfoldAll renamed to RooUnfoldErrors
   o Various methods renamed to better reflect their function
 
-Richard Claridge  10-Aug-2010 rgc100810a
+Richard Claridge 10-Aug-2010 rgc100810a
   o Chi2 method removes 0 rows/cols before inversion
   o Regparm now uses defaults set in constructors
 
