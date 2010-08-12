@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldErrors.cxx,v 1.3 2010-08-11 20:06:05 adye Exp $
+//      $Id: RooUnfoldErrors.cxx,v 1.4 2010-08-12 15:19:24 fwx38934 Exp $
 //
 // Description:
 //      Unfolding errors class
@@ -46,7 +46,7 @@ END_HTML */
 #include "TF1.h"
 #include "TNtuple.h"
 #include "TAxis.h"
-
+#include "RooUnfoldResponse.h"
 #include "RooUnfold.h"
 #include "RooUnfoldResponse.h"
 using std::cout;
@@ -123,8 +123,17 @@ RooUnfoldErrors::CreatePlots()
 	if (!hTrue){
 		cerr <<"Error: no truth distribution"<<endl;
 	}
-	h_err = new TProfile ("h_err", "Unfolding errors",ntx,xlo,xhi);
+	TH1* parms=unfold->Runtoy(1);
+	if (parms->GetDimension()!=1){
+		parms=RooUnfoldResponse::H2H1D (parms, ntx);
+		ntx=parms->GetNbinsX();
+		xhi=1;
+		xlo=0;
+	}
+	delete parms;
+	
 	double dx=(xhi-xlo)/ntx;
+	h_err = new TProfile ("h_err", "Unfolding errors",ntx,xlo,xhi);
 	double max=1e10;
 	int odd_ch=0;
     hchi2 = new TNtuple("chi2","chi2","chi2");
@@ -140,7 +149,14 @@ RooUnfoldErrors::CreatePlots()
 	
 	for (int k=0; k<toys;k++){	
 		double chi2;
-		TH1* hReco_=unfold->Runtoy(1,&chi2,hTrue);
+		TH1* hReco_;
+		TH1* hReco=unfold->Runtoy(1,&chi2,hTrue);
+		if (hReco->GetDimension()!=1){
+			hReco_=RooUnfoldResponse::H2H1D (hReco, ntx);
+		}
+		else{
+			hReco_=hReco;
+		}
 		for (int i=0; i<ntx; i++) {    
       		Double_t res= hReco_->GetBinContent(i);
      		graph_vector[i]->Fill(res); 
@@ -168,5 +184,6 @@ RooUnfoldErrors::CreatePlots()
     if (odd_ch){
     	cout <<"There are " << odd_ch << " bins over "<<max <<endl;
     }
+
 }
 

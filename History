@@ -1,5 +1,12 @@
-History of RooUnfold     $Id: History,v 1.84 2010-08-11 20:18:28 adye Exp $
+History of RooUnfold     $Id: History,v 1.85 2010-08-12 15:19:14 fwx38934 Exp $
 ====================
+
+Richard Claridge 12-Aug-2010 rgc100812a
+  o Modified biasing to be zero at end bins
+  o Added SetRegMethod to RooUnfoldTunfold
+  o Modified RooUnfoldParms & RooUnfoldErrors to handle 2 and 3D distributions
+  o Stopped RooUnfoldParms going into an infinite loop if stepsize=0
+
 
 Tim Adye         11-Aug-2010 tja100811d
   o Add missing include.

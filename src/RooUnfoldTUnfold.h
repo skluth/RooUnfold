@@ -20,7 +20,7 @@ public:
   virtual ~RooUnfoldTUnfold(); // destructor
   RooUnfoldTUnfold& operator= (const RooUnfoldTUnfold& rhs); // assignment operator
   virtual RooUnfoldTUnfold* Clone (const char* newname= 0) const;
-  RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas, Double_t kterm= 2,
+  RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas,Int_t reg=2, 
                 const char* name= 0, const char* title= 0);
 	void Reset();
 	
@@ -30,6 +30,8 @@ public:
 	virtual void SetRegParm(Double_t parm){FixTau(parm);}
 	Double_t GetTau() const { return _tau;    }
 	virtual Double_t GetRegParm() const { return GetTau(); }
+	void SetRegMethod (Int_t regmethod);
+	Int_t GetRegMethod() const {return _reg_method;}
 
 protected:
   void Init();
@@ -42,7 +44,7 @@ protected:
 
 	
 private:
-  Double_t _kterm; //Regularisation parameter
+  Int_t _reg_method; //Regularisation method 
   TUnfold* _unf; //TUnfold object
   TH2D* TransposeHist(const TH2D* Hres);
   TH2D* CopyOverflow(const TH2D* h)const;

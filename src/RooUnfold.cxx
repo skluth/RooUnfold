@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.28 2010-08-11 20:06:05 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.29 2010-08-12 15:19:24 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -68,7 +68,7 @@ using std::fabs;
 ClassImp (RooUnfold);
 
 RooUnfold*
-RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Double_t regparm,
+RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas,Double_t regparm,
                 const char* name, const char* title)
 {
 	/*Unfolds according to the value of the alg enum:
@@ -227,21 +227,24 @@ void
 RooUnfold::Get_err_mat()
 {
 	//Get error matrix based on residuals found using the Runtoy method. 
-	vector<double> bc_vec(_nt+2);
-	TMatrixD bc_mat(_nt+2,_nt+2);
-  	_err_mat.ResizeTo(_nt+2,_nt+2);
+	Int_t nt= _nt + (_overflow ? 2 : 0);
+	TH1* reco=this->Runtoy();
+    Int_t total= RooUnfoldResponse::GetBin (reco, nt-1, _overflow);
+	vector<double> bc_vec(total);
+	TMatrixD bc_mat(total,total);
+  	_err_mat.ResizeTo(total,total);
   	for (int k=0; k<_NToys; k++){
   		TH1* res=this->Runtoy();
-  		for (int i=0; i<_nt+2;i++){
+  		for (int i=0; i<total;i++){
   			Double_t res_bci=res->GetBinContent(i);
   			bc_vec[i]+=res_bci;
-  			for (int j=0; j<_nt+2; j++){
+  			for (int j=0; j<total; j++){
   			bc_mat(i,j)+=(res_bci*res->GetBinContent(j));
   			}
   		}
   	}
-  	for (int i=0; i<_nt+2;i++){
-  		for (int j=0; j<_nt+2; j++){
+  	for (unsigned int i=0; i<bc_vec.size();i++){
+  		for (unsigned int j=0; j<bc_vec.size(); j++){
   			_err_mat(i,j)=(bc_mat(i,j)-(bc_vec[i]*bc_vec[j])/_NToys)/_NToys;
   		}
   	}
@@ -258,7 +261,18 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 
 	const TH1* hReco=Hreco (DoChi2);
 	Int_t nt= _nt+(_overflow ? 2 : 0);
+    TMatrixD Ereco_copy;
 	if (DoChi2==1||DoChi2==2){
+		if (DoChi2==1){
+			Ereco_copy.ResizeTo(Ereco().GetNrows(),Ereco().GetNcols());
+	  		Ereco_copy=Ereco();
+	  		nt=Ereco().GetNrows();
+	  	}
+	  	if (DoChi2==2){
+	  		Ereco_copy.ResizeTo(Freco().GetNrows(),Freco().GetNcols());
+	  		Ereco_copy=Freco();
+	  		nt=Freco().GetNrows();
+	  	}
 		TMatrixD reco_matrix(nt,1);
 	  	for (Int_t i = 0 ; i < nt; i++) {
 	    	Int_t it= RooUnfoldResponse::GetBin (hReco, i, _overflow);
@@ -267,15 +281,7 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 	           	reco_matrix(i,0)    = hReco->GetBinContent(it) - hTrue->GetBinContent(it);
 	        }
 	  	}
-	  	TMatrixD Ereco_copy(nt,nt);
-	  	if (DoChi2==1){
-	  	Ereco_copy=Ereco();
-	  	}
-	  	if (DoChi2==2){
-	  	Ereco_copy=Freco();
-	  	}
 		TMatrixD Ereco_copy2=Ereco_copy;
-		
 		//cutting out 0 elements	
 		TMatrixD Ereco_copy_cut=CutZeros(Ereco_copy);
 		TMatrixD reco_matrix_cut(Ereco_copy_cut.GetNrows(),1);
@@ -474,6 +480,7 @@ RooUnfold::Hreco (Int_t withError)
   		reco->SetBinError(j,sqrt(fabs(_err_mat(i,i))));
   	}
   }
+  
   return reco;
 }
 
@@ -563,7 +570,6 @@ RooUnfold::CutZeros(const TMatrixD& Ereco_copy)
 		int missed=0;
 		for (int i=0; i<Ereco_copy.GetNrows(); i++){
 			if (Ereco_copy (i,i) ==0){
-				cout <<"diag should be:"<<i<<endl;
 				diags.push_back(i);
 				missed++;
 			}

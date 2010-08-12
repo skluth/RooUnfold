@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.32 2010-08-10 16:10:25 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.33 2010-08-12 15:19:20 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -42,6 +42,7 @@
 #include "RooUnfoldResponse.h"
 #include "RooUnfold.h"
 #include "RooUnfoldSvd.h"
+#include "RooUnfoldTUnfold.h"
 #include "TPaveText.h"
 #include "TLatex.h"
 #endif
@@ -107,6 +108,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("minparm",&minparm, -1e30, "minimum value for RooUnfoldParms (default varies with unfolding method)");
   args.Add ("maxparm",&maxparm, -1e30, "maximum value for RooUnfoldParms (default varies with unfolding method)");
   args.Add ("stepsize",&stepsize, 0, "stepsize in RooUnfoldParms (default varies with unfolding method)");
+  args.Add ("regmethod", &regmethod, 2, "regularisation method for TUnfold");
   
 }
 
@@ -145,7 +147,6 @@ void RooUnfoldTestHarness::SetupCanvas()
   TString psfile(GetName());
   psfile += ".ps";
   ps= new TPostScript (psfile, 112);
-
   bool grid= false;
   if (onepage==2) {
     gStyle->SetPadTopMargin(0.05);
@@ -379,6 +380,7 @@ Int_t RooUnfoldTestHarness::Unfold ()
   unfold->SetNToys(ntoys);
   
   if (method == RooUnfold::kSVD) dynamic_cast<RooUnfoldSvd*>(unfold)->SetNtoysSVD (ntoyssvd);
+  if (method == RooUnfold::kTUnfold) dynamic_cast<RooUnfoldTUnfold*>(unfold)->SetRegMethod(regmethod);
   if (verbose>=0) {cout << "Created "; unfold->Print();}
   hReco= unfold->Hreco(doerror);
   if (!hReco) return 0;
@@ -466,9 +468,7 @@ TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char*
   if (dosmear) {
     Double_t xwide = (5.0*smear) * (xhi-xlo) / Double_t(nt);  // 5*sigma
     xlo -= xwide;
-    if (bias>0.0) xlo -= bias;
     xhi += xwide;
-    if (bias<0.0) xhi -= bias;
     if (verbose >= 1) cout << "Generate values in range " << xlo << " to " << xhi << endl;
   }
   if (!RooUnfoldTestPdf (fpdf, nx, xlo, xhi, x, hPDF, mean, width, bkg, verbose)) return 0;
@@ -501,8 +501,17 @@ Double_t RooUnfoldTestHarness::Smear (Double_t x, Int_t nt, Double_t xlo, Double
   if (!dosmear) return x;   // bin-by-bin correction can't handle bias and smearing
 
   Double_t xsigma = (xhi-xlo) * smear / Double_t(nt);     // smear sigma
-
-  Double_t delta= xsigma <= 0.0 ? bias : gRandom->Gaus(bias, xsigma);     // bias and smear
+  
+  Double_t halfinterval=(xhi+xlo)/2;
+  Double_t bias_m;
+  if (x<=halfinterval){
+  bias_m=((x-xlo)/(halfinterval-xlo))*bias;
+  }
+  else{
+  bias_m=((xhi-x)/(xhi-halfinterval))*bias;
+  }
+  
+  Double_t delta= xsigma <= 0.0 ? bias_m : gRandom->Gaus(bias_m, xsigma);     // bias and smear
   if (verbose>=3) cout << "SMEAR " << x << " " << xsmear << " " << xsigma << endl;
   return x+delta;
 }

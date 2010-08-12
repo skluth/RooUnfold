@@ -30,9 +30,9 @@ RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldTUnfold& rhs)
   CopyData (rhs);
 }
 
-RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas, Double_t kterm,
+RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas, Int_t reg,
                             const char* name, const char* title)
-  : RooUnfold (res, meas, name, title), _kterm(kterm)
+  : RooUnfold (res, meas, name, title),_reg_method(reg)
 {
   Init();
 }
@@ -74,7 +74,6 @@ RooUnfoldTUnfold::CopyData (const RooUnfoldTUnfold& rhs)
 {
   tau_set=rhs.tau_set;
   _tau=rhs._tau;
-  _kterm=rhs._kterm;
 }
 
 
@@ -98,19 +97,12 @@ RooUnfoldTUnfold::Impl()
 void
 RooUnfoldTUnfold::Unfold()
 {
-	/* Does the unfolding
-	   The _kterm value decides the regularisation method.
-	 k=0: No regularisation
-	 k=1: Minimise x-x0
-	 k=2: Minimise 1st derivative of (x-x0)
-	 k=3: Minimise 2nd derivative of (x-x0)
-	 Uses TUnfold.ScanLCurve to do unfolding. 
-	 Creates covariance matrix. 
-	 */
+	/* Does the unfolding. Uses the optimal value of the unfolding parameter unless a value has already been set using FixTau*/
+	   
   const TH2D* Hres=_res->Hresponse();
   if (_fail) return;
   TUnfold::ERegMode regmode=TUnfold::kRegModeNone;
-  switch (int(_kterm+0.5)){
+  switch (_reg_method){
   	case 0:
   	regmode=TUnfold::kRegModeNone;
   	break;
@@ -124,7 +116,7 @@ RooUnfoldTUnfold::Unfold()
   	regmode=TUnfold::kRegModeCurvature;
   	break;
   	default:
-  	regmode=TUnfold::kRegModeSize;
+  	regmode=TUnfold::kRegModeDerivative;
   }
 
   Bool_t oldstat= TH1::AddDirectoryStatus();
@@ -248,6 +240,20 @@ RooUnfoldTUnfold::FixTau(Double_t tau)
 	tau_set=true;
 }
 
+void
+RooUnfoldTUnfold::SetRegMethod(Int_t regmethod)
+{
+	/*
+	Decides the regularisation method.
+	 k=0: No regularisation
+	 k=1: Minimise x-x0
+	 k=2: Minimise 1st derivative of (x-x0) (default)
+	 k=3: Minimise 2nd derivative of (x-x0)
+	 Uses TUnfold.ScanLCurve to do unfolding. 
+	 Creates covariance matrix. 
+	 */
+	_reg_method=regmethod;
+}
 
 void
 RooUnfoldTUnfold::OptimiseTau()
@@ -259,7 +265,7 @@ void
 RooUnfoldTUnfold::GetSettings()
 {
 	_minparm=0;
-	_maxparm=2;
+	_maxparm=1;
 	_stepsizeparm=1e-2;
 	_defaultparm=2;
 }

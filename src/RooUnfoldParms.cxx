@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldParms.cxx,v 1.7 2010-08-11 20:18:30 adye Exp $
+//      $Id: RooUnfoldParms.cxx,v 1.8 2010-08-12 15:19:24 fwx38934 Exp $
 //
 // Description:
 //      Optimisation of regularisation parameter class
@@ -40,6 +40,8 @@ return an rms. The chi squared values are calculated using the chi2() method in 
 #include "TProfile.h"
 #include "RooUnfold.h"
 #include "TRandom.h"
+#include "RooUnfoldResponse.h"
+#include "TLatex.h"
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -102,7 +104,6 @@ RooUnfoldParms::GetMeanResiduals()
 	 Requires a known truth distribution*/
 	 if (!_done_math){DoMath();} 
 	hres->SetMarkerStyle(4);
-	hres->SetMinimum(0);
 	return dynamic_cast<TProfile*>(hres->Clone());
 }
 
@@ -122,67 +123,90 @@ RooUnfoldParms::DoMath()
 {
 	//Loops over many regularisation parameters and creates plots.
 	//Uses minimum, maximum and step size parameters for range of the loop.
-	
 	Int_t nobins=Int_t((_maxparm-_minparm)/_stepsizeparm);
-	vector<TH1D*> graph_vector;    
-    for(Double_t a = _minparm; a<=_maxparm; a+=_stepsizeparm) {
-	TString graph_title("Residuals at k= ");
-    graph_title+=a;
-    TH1D* graph_name = new TH1D (graph_title,graph_title, 200,0,1000);
-    graph_vector.push_back(graph_name);
-    }
-    
-    Double_t xlo=_minparm;
+	Double_t xlo=_minparm;
 	Double_t xhi=_maxparm;
-	hch2=new TProfile("hch2","chi^2 vs regparm",nobins,xlo,xhi);
-	herr=new TProfile("herr","Error(squared) vs regparm",nobins,xlo,xhi);
-	hres=new TProfile("hres","mean residual vs regparm",nobins,xlo,xhi);
-	hrms=new TH1D("hrms","rms of residuals",nobins,xlo,xhi);
-    Int_t bins=0;
-    Int_t gvl=0;
-    
-	for (Double_t k=_minparm;k<=_maxparm;k+=_stepsizeparm)
-	{   
-		RooUnfold* unf = unfold->Clone("unfold_toy");
-	    unf->SetRegParm(k);
-		Double_t sq_err_tot=0;
-		TH1* hReco=unf->Hreco(doerror);
-		bins=hReco->GetXaxis()->GetNbins(); 
-		for (int i=0;i<bins;i++)
-		{
-			sq_err_tot+=hReco->GetBinError(i);
+	hch2=new TProfile("hch2","#chi^{2} vs regparm",nobins,xlo,xhi);
+	herr=new TProfile("herr","Mean error vs regparm",nobins,xlo,xhi);
+	hres=new TProfile("hres","Mean residual vs regparm",nobins,xlo,xhi);
+	hrms=new TH1D("hrms","RMS of residuals",nobins,xlo,xhi);
+	
+	if (_minparm>_maxparm || _stepsizeparm==0){
+		cerr<<"Error: Invalid inputs to RooUnfoldParms ";
+		if (_minparm>_maxparm){
+			cerr<<"minimum parameter > maximum parameter"<<endl;
 		}
-		herr->Fill(k,sqrt(sq_err_tot));
-		if (hTrue)
-		{	
-			Double_t rsqt=0;	
-			for (int i=0;i<bins;i++){
-				if (hReco->GetBinContent(i)!=0.0 || (hReco->GetBinError(i)>0.0)) 
-	    		{
-					Double_t res=hReco->GetBinContent(i) - hTrue->GetBinContent(i);
-					Double_t rsq=res*res;
-					rsqt+=rsq;
-					graph_vector[gvl]->Fill(res);
-	    		}
-			}
-			double chi2=unf->Chi2(hTrue,doerror);
-			if (chi2<=1e10){
-				hch2->Fill(k,chi2);
-			}
-		hres->Fill(k,(sqrt(rsqt/bins)));	
+		if (_stepsizeparm==0){
+			cerr<<"stepsize=0"<<endl;
 		}
-		gvl++;
-		delete unf;
+		hch2->Fill(0.,0.);
+		herr->Fill(0.,0.);
+		hres->Fill(0.,0.);
+		hrms->Fill(0);
 	}
-	Double_t bn=_minparm;
-	for (unsigned int i=0; i<graph_vector.size(); i++){
-		Double_t spr=(graph_vector[i]->GetRMS());
-    	hrms->Fill(bn,spr/sqrt(bins));
-    	bn+=_stepsizeparm;
+	
+	else{ 
+		vector<TH1D*> graph_vector;    
+	    for(Double_t a = _minparm; a<=_maxparm; a+=_stepsizeparm) {
+		TString graph_title("Residuals at k= ");
+	    graph_title+=a;
+	    TH1D* graph_name = new TH1D (graph_title,graph_title, 200,0,1000);
+	    graph_vector.push_back(graph_name);
+	    }
+	    Int_t gvl=0;
+	    Int_t _overflow=unfold->Overflow();
+		Int_t _nt = unfold->NBins();
+		Int_t nt= _nt + (_overflow ? 2 : 0);
+	
+		for (Double_t k=_minparm;k<=_maxparm;k+=_stepsizeparm)
+		{   
+			RooUnfold* unf = unfold->Clone("unfold_toy");
+		    unf->SetRegParm(k);
+			Double_t sq_err_tot=0;
+			TH1* hReco=unf->Hreco(doerror); 
+			for (Int_t i= 0; i < nt; i++)
+	  		{
+	    		Int_t j= RooUnfoldResponse::GetBin (hReco, i, _overflow);
+				//cout<<"for hreco error="<<hReco->GetBinError(j)<<" bin content= "<<hReco->GetBinContent(j)<<endl;
+				sq_err_tot+=hReco->GetBinError(j);
+			}
+			herr->Fill(k,sq_err_tot/nt);
+			if (hTrue)
+			{	
+				Double_t rsqt=0;	
+				Double_t res_tot=0;
+				for (int i=0;i<nt;i++){
+					Int_t j= RooUnfoldResponse::GetBin (hReco, i, _overflow);
+					if (hReco->GetBinContent(j)!=0.0 || (hReco->GetBinError(j)>0.0)) 
+		    		{
+						Double_t res=hReco->GetBinContent(j) - hTrue->GetBinContent(j);
+						//cout <<"res="<<res<<endl;
+						Double_t rsq=res*res;
+						rsqt+=rsq;
+						graph_vector[gvl]->Fill(res);
+						res_tot+=res;
+						hres->Fill(k,res);
+		    		}
+				}
+				double chi2=unf->Chi2(hTrue,doerror);
+				if (chi2<=1e10){
+					hch2->Fill(k,chi2);
+				}
+				
+			}
+			gvl++;
+			delete unf;
+		}
+		Double_t bn=_minparm;
+		for (int i=0; i<hres->GetNbinsX(); i++){
+			Double_t spr=hres->GetBinError(i);
+	    	hrms->Fill(bn,spr);
+	    	bn+=_stepsizeparm;
+		}
+	   	for (unsigned int i=0; i<graph_vector.size(); i++){
+	    	delete graph_vector[i];
+	    }
 	}
-   	for (unsigned int i=0; i<graph_vector.size(); i++){
-    	delete graph_vector[i];
-    }
     _done_math=true;
 }
 

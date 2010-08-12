@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.16 2010-07-08 17:00:22 adye Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.17 2010-08-12 15:19:20 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 2D toy MC.
@@ -200,16 +200,19 @@ void RooUnfoldTestHarness2D::Results()
   hTestPDFy->Draw("LSAME");
   hMeasY   ->Draw("SAME");
   if (hRecoY) hRecoY->Draw("SAME");
+  
   lTest->Draw();
   canvas->Update();
 
-  if (onepage>=2) canvas->cd(++ipad);
+  if (onepage>=2 && ploterrors==0 && plotparms==0) 
+  {canvas->cd(++ipad);
   hTrue->Draw();
-  canvas->Update();
+  canvas->Update();}
 
-  if (onepage>=2) canvas->cd(++ipad);
+  if (onepage>=2 && ploterrors==0 && plotparms==0) 
+  {canvas->cd(++ipad);
   hMeas->Draw();
-  canvas->Update();
+  canvas->Update();}
 
   if (!hReco) return;
 
@@ -238,9 +241,9 @@ void RooUnfoldTestHarness2D::Results()
     }
   }
 
-  if (onepage>=2) canvas->cd(++ipad);
+  if (onepage>=2 && ploterrors==0 && plotparms==0) {canvas->cd(++ipad);
   hPulls->Draw("COLZ");
-  canvas->Update();
+  canvas->Update();}
 
   if (onepage && onepage < 10) return;
 

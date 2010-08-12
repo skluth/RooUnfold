@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.20 2010-08-11 19:27:37 adye Exp $
+//      $Id: RooUnfold.h,v 1.21 2010-08-12 15:19:24 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -63,7 +63,8 @@ public:
   virtual void SetVerbose (Int_t level);
   virtual Int_t                    NToys() const; // Number of toys
   virtual void SetNToys (Int_t toys); // Set number of toys
-
+  virtual Int_t						NBins() const;
+  virtual Int_t						Overflow() const;
   virtual void PrintTable (std::ostream& o, const TH1* hTrue= 0, Int_t withError= 1);
 
   virtual TObject* Impl();
@@ -123,6 +124,8 @@ inline RooUnfold& RooUnfold::operator= (const RooUnfold& rhs) {Assign(rhs); retu
 
 inline Int_t                    RooUnfold::verbose()   const { return _verbose; } // Controls amount of information to be printed
 inline Int_t                    RooUnfold::NToys()   const { return _NToys; } // Sets Number of toys
+inline Int_t					RooUnfold::NBins() const{return _nt;}
+inline Int_t					RooUnfold::Overflow() const{return _overflow;}
 inline const RooUnfoldResponse* RooUnfold::response()  const { return _res;     } // Response object
 inline const TH1*               RooUnfold::Hmeasured() const { return _meas;    } // Measured Distribution
 inline void RooUnfold::SetMeasured (const TH1* meas)         { _meas= meas; }
