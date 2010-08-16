@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.29 2010-08-12 15:19:24 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.30 2010-08-16 15:59:33 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -53,6 +53,7 @@ END_HTML */
 #include "RooUnfoldBayes.h"
 #include "RooUnfoldSvd.h"
 #include "RooUnfoldBinByBin.h"
+#include "RooUnfoldInvert.h"
 #ifndef NOTUNFOLD
 #include "RooUnfoldTUnfold.h"
 #endif
@@ -77,6 +78,7 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas,Dou
 	2: Unfold using singlar value decomposition
 	3: Unfold bin by bin.
 	4: Unfold with TUnfold
+	5: Unfold using inversion of response matrix
 	*/
   RooUnfold* unfold;
   switch (alg) {
@@ -100,6 +102,9 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas,Dou
       cerr << "TUnfold library is not available" << endl;
       return 0;
 #endif
+	case kInvert:
+	unfold = new RooUnfoldInvert (res,meas);
+	break;
     default:
       cerr << "Unknown RooUnfold method " << Int_t(alg) << endl;
       return 0;

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.21 2010-08-12 15:19:24 fwx38934 Exp $
+//      $Id: RooUnfold.h,v 1.22 2010-08-16 15:59:33 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -23,7 +23,7 @@ class RooUnfold : public TNamed {
 
 public:
 
-  enum Algorithm { kNone, kBayes, kSVD, kBinByBin, kTUnfold}; // Selection of unfolding algorithm.
+  enum Algorithm { kNone, kBayes, kSVD, kBinByBin, kTUnfold,kInvert}; // Selection of unfolding algorithm.
 
   static RooUnfold* New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Double_t regparm= -1e30,
                          const char* name= 0, const char* title= 0);

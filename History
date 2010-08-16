@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.85 2010-08-12 15:19:14 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.86 2010-08-16 15:59:23 fwx38934 Exp $
 ====================
+
+Richard Claridge 16-Aug-2010 rgc100816a
+  o Added RooUnfoldInvert Class to unfold by inverting the response matrix.
 
 Richard Claridge 12-Aug-2010 rgc100812a
   o Modified biasing to be zero at end bins

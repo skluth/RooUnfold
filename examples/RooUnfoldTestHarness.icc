@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.33 2010-08-12 15:19:20 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.34 2010-08-16 15:59:28 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -211,7 +211,6 @@ Int_t RooUnfoldTestHarness::RunTests()
       if (dodraw) Results();
       return 7;
     }
-    //if (dodraw) Results(); 
     if (ntoys>0) {
       if (dodraw) {
       if (!plotparms){
