@@ -1,41 +1,143 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.cxx,v 1.8 2010-08-11 19:43:33 adye Exp $
+//      $Id: RooUnfoldBinByBin.cxx,v 1.9 2010-08-18 12:58:04 fwx38934 Exp $
 //
 // Description:
-//      Unfolding bin-by-bin. Just an interface to RooUnfoldBayesImpl.
-//      Note that we use 1D distributions in RooUnfoldBayesImpl, even if we are
-//      unfolding multi-dimensional distributions: RooUnfold already converted
-//      to 1D. Except for smoothing (which RooUnfoldBayesImpl doesn't implement)
-//      this is just a matter of bookkeeping.
+//      Unfolding class using the bin by bin method of conversion factors. This is
+//		different to the RooUnfoldBinByBinOld method in that does not need RooUnfoldBayes 
+//		in order to be able to do the unfolding. 
 //
-// Author: Tim Adye <T.J.Adye@rl.ac.uk>
+// Authors: Richard Claridge <richard.claridge@stfc.ac.uk> & Tim Adye <T.J.Adye@rl.ac.uk>
 //
 //==============================================================================
 
+//____________________________________________________________
+/* BEGIN_HTML
+<p> Uses the correction factor method to unfold the distribution by looking at each bin individually.</p>
+<p> This method cannot account for bin migration and as such cannot unfold reliably if a bias/smearing effects are applied.</p>
+END_HTML */
+
+/////////////////////////////////////////////////////////////
+
 #include "RooUnfoldBinByBin.h"
 
-#include <vector>
+#include <iostream>
+#include <iomanip>
+#include <cmath>
 
-#include "RooUnfoldBayes.h"
-#include "RooUnfoldBayesImpl.h"
+#include "TNamed.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TVectorD.h"
+#include "TMatrixD.h"
+#include "TUnfold.h"
+#include "TGraph.h"
 
-class TH1;
-class RooUnfoldResponse;
-using std::vector;
+#include "RooUnfoldResponse.h"
+
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::sqrt;
 
 ClassImp (RooUnfoldBinByBin);
 
 RooUnfoldBinByBin::RooUnfoldBinByBin (const RooUnfoldBinByBin& rhs)
-  : RooUnfoldBayes (rhs) {Init();}
+  : RooUnfold (rhs)
+{
+  
+}
 
-RooUnfoldBinByBin::RooUnfoldBinByBin (const RooUnfoldResponse* res, const TH1* meas, Bool_t smoothit,
-                                      const char* name, const char* title)
-  : RooUnfoldBayes(res, meas, 1, smoothit, name, title) {Init();}
+RooUnfoldBinByBin::RooUnfoldBinByBin (const RooUnfoldResponse* res, const TH1* meas, 
+                            const char* name, const char* title)
+  : RooUnfold (res, meas, name, title)
+{
+  
+}
 
-// Override RooUnfoldBayes routines.
-Int_t RooUnfoldBinByBin::unfold (vector<Double_t>& causes) { return _bayes->unfoldBinByBin (causes, _smoothit); }
-Int_t RooUnfoldBinByBin::getCovariance() const             { return _bayes->getCovarianceBinByBin();            }
+RooUnfoldBinByBin::~RooUnfoldBinByBin()
+{
+}
+
+RooUnfoldBinByBin*
+RooUnfoldBinByBin::Clone (const char* newname) const
+{
+	//Clones object
+  RooUnfoldBinByBin* unfold= new RooUnfoldBinByBin(*this);
+  if (newname && strlen(newname)) unfold->SetName(newname);
+  return unfold;
+}
+
+
+
+void
+RooUnfoldBinByBin::Unfold()
+{
+	const TH2D* Hres=_res->Hresponse();
+	HresXbins=Hres->GetNbinsX();
+  	if (_overflow){
+	  	HresXbins+=2;
+    }
+  	_rec.ResizeTo(HresXbins);
+  	double c;
+  	c_vector.ResizeTo(HresXbins);
+  	for (int i=0; i<HresXbins;i++){ 	
+		if(_overflow){
+			c=(_res->Htruth()->GetBinContent(i))/(_res->Hmeasured()->GetBinContent(i));
+  			if (_res->Hmeasured()->GetBinContent(i)==0){
+  				_rec(i)=0;
+  				c_vector(i)=0;
+  			}
+  			else{
+  				c_vector(i)=c;
+  				_rec(i)= _meas->GetBinContent(i)*c;
+  			}
+  		}
+  		else{
+  			//fiddling needed to exclude underflow bin (still included)
+  			c=(_res->Htruth()->GetBinContent(i+1))/(_res->Hmeasured()->GetBinContent(i+1));
+  			if (_res->Hmeasured()->GetBinContent(i+1)==0){
+  				_rec(i)=0;
+  				c_vector(i)=0;
+  			}
+  			else{
+  				c_vector(i)=c;
+  				_rec(i)= _meas->GetBinContent(i+1)*c;
+  			}
+  		}
+  	}
+  	_unfolded= true;
+  	_haveCov=  false;
+}
+
+void
+RooUnfoldBinByBin::GetCov()
+{
+	if(!_unfolded){Unfold();}
+	_cov.ResizeTo(HresXbins,HresXbins);
+	for (int i=0; i<HresXbins;i++){
+		if(_overflow){
+			double c=c_vector(i);
+			if (_res->Hmeasured()->GetBinContent(i)==0){
+				_cov(i,i)=0;
+			}
+			else{
+				_cov(i,i)=c*c*_meas->GetBinContent(i);
+			}
+		}
+		else{
+			double c=c_vector(i);
+			if (_res->Hmeasured()->GetBinContent(i+1)==0){
+				_cov(i,i)=0;
+			}
+			else{
+				_cov(i,i)=c*c*_meas->GetBinContent(i+1);
+			}
+		}
+			
+	}
+	_haveCov= true;
+}
 
 void
 RooUnfoldBinByBin::GetSettings(){

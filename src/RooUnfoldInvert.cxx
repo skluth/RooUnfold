@@ -1,4 +1,24 @@
+//=====================================================================-*-C++-*-
+// File and Version Information:
+//      $Id: RooUnfoldInvert.cxx,v 1.2 2010-08-18 12:58:04 fwx38934 Exp $
+//
+// Description:
+//      Unfolding class using inversion of the response matrix. This does not produce
+//		good results and is designed to illustrate the need for more sophisticated
+//		unfolding techniques
+//
+// Authors: Richard Claridge <richard.claridge@stfc.ac.uk> & Tim Adye <T.J.Adye@rl.ac.uk>
+//
+//==============================================================================
 
+//____________________________________________________________
+/* BEGIN_HTML
+<p>The simplest method of unfolding works by simply inverting the response matrix.</p> 
+<p>This is not accurate for small matrices and produces inaccurate unfolded distributions.</p>
+<p>The inversion method is included largely to illustrate the necessity of a more effective method of unfolding</p>
+END_HTML */
+
+/////////////////////////////////////////////////////////////
 
 #include "RooUnfoldInvert.h"
 
@@ -96,3 +116,10 @@ RooUnfoldInvert::GetCov()
 	_haveCov= true;
 }
 
+void
+RooUnfoldInvert::GetSettings(){
+	_minparm=0;
+	_maxparm=0;
+	_stepsizeparm=0;
+	_defaultparm=0;
+}

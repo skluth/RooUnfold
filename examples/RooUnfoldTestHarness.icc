@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.35 2010-08-17 21:08:22 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.36 2010-08-18 12:57:58 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -424,7 +424,7 @@ void RooUnfoldTestHarness::Results()
 
   if (!hReco) return;
   if (verbose>=1){
-  cout<<"Htrue integral="<<hTrue->Integral()<<" Hreco Integral= "<<hReco->Integral()<<" T/R= "<<hTrue->Integral()/hReco->Integral()<<endl;
+  cout<<"Integral of Truth Distribution="<<hTrue->Integral()<<" Integral of Reconstructed Distribution= "<<hReco->Integral()<<" T/R= "<<hTrue->Integral()/hReco->Integral()<<endl;
   }
   if (ntoys > 0) return;
 
@@ -607,8 +607,8 @@ void RooUnfoldTestHarness::Init()
 
 Int_t RooUnfoldTestHarness::CheckParms()
 {
-  if (dosmear==-1) dosmear= (method == RooUnfold::kBinByBin) ? 0 : 1;  // bin-by-bin can't handle smearing or bias
-
+  if (dosmear==-1 && method == RooUnfold::kBinByBin) {dosmear= 0;}  // bin-by-bin can't handle smearing or bias
+  if (dosmear==-1 && method == RooUnfold::kBinByBinOld){dosmear= 0;}  // bin-by-bin can't handle smearing or bias
   if (doerror==-1) {
     doerror= !(method==RooUnfold::kBayes && ntbins*nmbins > 160000);
     if (!doerror) {

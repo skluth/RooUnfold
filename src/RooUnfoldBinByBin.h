@@ -1,58 +1,45 @@
-//=====================================================================-*-C++-*-
-// File and Version Information:
-//      $Id: RooUnfoldBinByBin.h,v 1.8 2010-08-11 19:43:33 adye Exp $
-//
-// Description:
-//      Unfolding bin-by-bin. Just an interface to RooUnfoldBayesImpl.
-//
-// Author: Tim Adye <T.J.Adye@rl.ac.uk>
-//
-//==============================================================================
+#ifndef ROOUNFOLDBINBYBIN_H_
+#define ROOUNFOLDBINBYBIN_H_
 
-#ifndef ROOUNFOLDBINBYBIN_HH
-#define ROOUNFOLDBINBYBIN_HH
-
-#include "RooUnfoldBayes.h"
+#include "RooUnfold.h"
 
 class RooUnfoldResponse;
 class TH1;
+class TH1D;
+class TH2D;
 
-class RooUnfoldBinByBin : public RooUnfoldBayes {
+class RooUnfoldBinByBin : public RooUnfold {
 
 public:
 
-  // Standard methods
 
-  RooUnfoldBinByBin(); // default constructor
+ RooUnfoldBinByBin(); // default constructor
   RooUnfoldBinByBin (const char*    name, const char*    title); // named constructor
   RooUnfoldBinByBin (const TString& name, const TString& title); // named constructor
   RooUnfoldBinByBin (const RooUnfoldBinByBin& rhs); // copy constructor
+  virtual ~RooUnfoldBinByBin(); // destructor
   RooUnfoldBinByBin& operator= (const RooUnfoldBinByBin& rhs); // assignment operator
-
-  // Special constructors
-  RooUnfoldBinByBin (const RooUnfoldResponse* res, const TH1* meas, Bool_t smoothit= false,
-                     const char* name= 0, const char* title= 0);
+  virtual RooUnfoldBinByBin* Clone (const char* newname= 0) const;
+RooUnfoldBinByBin (const RooUnfoldResponse* res, const TH1* meas, const char* name=0, const char* title=0);
+  
 
 protected:
+virtual void Unfold();
+virtual void GetCov();
+virtual void GetSettings();
 
-  void Init();
-  virtual Int_t unfold (vector<Double_t>& causes);
-  virtual Int_t getCovariance() const;
-  virtual void GetSettings();
-
-  // instance variables
-
+private:
+  	int HresXbins;
+  	TVectorD c_vector;
 public:
 
-  ClassDef (RooUnfoldBinByBin, 0) // Bin-by-bin Unfolding
+  ClassDef (RooUnfoldBinByBin, 0) 
 };
 
-// Inline method definitions
-
-inline void RooUnfoldBinByBin::Init() {GetSettings();}
-inline RooUnfoldBinByBin::RooUnfoldBinByBin()                                           : RooUnfoldBayes()           {Init();}
-inline RooUnfoldBinByBin::RooUnfoldBinByBin (const char* name, const char* title)       : RooUnfoldBayes(name,title) {Init();}
-inline RooUnfoldBinByBin::RooUnfoldBinByBin (const TString& name, const TString& title) : RooUnfoldBayes(name,title) {Init();}
+inline RooUnfoldBinByBin::RooUnfoldBinByBin()                                           : RooUnfold()           {Init();}
+inline RooUnfoldBinByBin::RooUnfoldBinByBin (const char* name, const char* title)       : RooUnfold(name,title) {Init();}
+inline RooUnfoldBinByBin::RooUnfoldBinByBin (const TString& name, const TString& title) : RooUnfold(name,title) {Init();}
 inline RooUnfoldBinByBin& RooUnfoldBinByBin::operator= (const RooUnfoldBinByBin& rhs) {Assign(rhs); return *this;}
 
-#endif
+
+#endif /*ROOUNFOLDBINBYBIN_H_*/

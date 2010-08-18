@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.21 2010-08-11 19:27:37 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.22 2010-08-18 12:58:04 fwx38934 Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -12,6 +12,14 @@
 // Author: Tim Adye <T.J.Adye@rl.ac.uk>
 //
 //==============================================================================
+
+//____________________________________________________________
+/* BEGIN_HTML
+<p>Links to the RooUnfoldBayesImpl class which uses Bayesian to reconstruct the truth distribution.</p>
+<p>Returns covariance matrices with conditions approximately that of the machine precision. This occasionally leads to very large chi squared values</p>
+END_HTML */
+
+/////////////////////////////////////////////////////////////
 
 #include "RooUnfoldBayes.h"
 

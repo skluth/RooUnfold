@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.30 2010-08-16 15:59:33 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.31 2010-08-18 12:58:04 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -20,12 +20,24 @@ These can be set using their respective parameters.</p>
 <p> The calculation of chi squared can be done with a simple sum of the sum of the squares of the residuals/error,
  or using a covariance matrix which can be set either using the error matrix from the unfolding or using the spread of the reconstructed values. 
  The errors on the reconstructed distribution are calculated in the same way except that the simplest option is simply to have no errors. </p>
-<p>At present, the unfolding algorithms have the following problems:</p>
+<p>There are 6 schemes to do the unfolding, a breif description of the methods and their associated problems follows:</p>
 <ul>
-<li> Bayes: Returns covariance matrices with conditions approximately that of the machine precision. This occasionally leads to very large chi squared values
-<li> SVD: Returns near singular covariance matrices, again leadning to very large chi squared values
-<li> TUnfold: Works very well, however, the latest version (15) will not handle plots with an additional underflow bin. As a result overflows must be turned off 
-if v15 of TUnfold is used. ROOT versions 5.26 or below use v13 and so should be safe to use overflows.
+<li>RooUnfoldBayes: Uses the Bayes method of unfolding based on the method written by D'Agostini
+<ul>
+<li>Returns covariance matrices with conditions approximately that of the machine precision. This occasionally leads to very large chi squared values</ul>
+<li> RooUnfoldSVD: Uses singular value decomposition
+<ul><li>Returns near singular covariance matrices, again leading to very large chi squared values</ul>
+<li> RooUnfoldBinByBin: Unfolds using the method of correction factors.
+<ul><li>Is not able to handle bin migration caused by bias/smearing of the distribution</ul>
+<li> RooUnfoldTUnfold: Uses the unfolding method implemented in ROOT's TUnfold class  
+<ul><li>The latest version (15) will not handle plots with an additional underflow bin. As a result overflows must be turned off
+if v15 of TUnfold is used. ROOT versions 5.26 or below use v13 and so should be safe to use overflows.</ul>
+<li> RooUnfoldInvert: The simplest method of unfolding works by simply inverting the response matrix. 
+<ul><li>This is not accurate for small matrices and produces inaccurate unfolded distributions.
+<li>The inversion method is included largely to illustrate the necessity of a more effective method of unfolding</ul>
+<li> RooUnfoldBinByBinOld: Again uses the method of correction factors. Differs from RooUnfoldBinByBin in that it makes use of the full
+RooUnfoldBayes framework
+<ul><li>Is not able to handle bin migration caused by bias/smearing of the distribution</ul>
 </ul>      
 END_HTML */
 
@@ -52,8 +64,9 @@ END_HTML */
 // Need subclasses just for RooUnfold::New()
 #include "RooUnfoldBayes.h"
 #include "RooUnfoldSvd.h"
-#include "RooUnfoldBinByBin.h"
+#include "RooUnfoldBinByBinOld.h"
 #include "RooUnfoldInvert.h"
+#include "RooUnfoldBinByBin.h"
 #ifndef NOTUNFOLD
 #include "RooUnfoldTUnfold.h"
 #endif
@@ -79,6 +92,7 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas,Dou
 	3: Unfold bin by bin.
 	4: Unfold with TUnfold
 	5: Unfold using inversion of response matrix
+	6: Unfold bin by bin (old method)
 	*/
   RooUnfold* unfold;
   switch (alg) {
@@ -105,6 +119,9 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas,Dou
 	case kInvert:
 	unfold = new RooUnfoldInvert (res,meas);
 	break;
+	case kBinByBinOld:
+      unfold= new RooUnfoldBinByBinOld (res, meas);
+    break;
     default:
       cerr << "Unknown RooUnfold method " << Int_t(alg) << endl;
       return 0;
@@ -417,6 +434,7 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Int_t withError)
       }
     }
     o << endl;
+    
   }
   
   o << "====================================================================" << xwid << endl

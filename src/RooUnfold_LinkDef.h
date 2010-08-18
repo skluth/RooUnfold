@@ -11,6 +11,7 @@
 #pragma link C++ class RooUnfold+;
 #pragma link C++ class RooUnfoldBayes+;
 #pragma link C++ class RooUnfoldSvd+;
+#pragma link C++ class RooUnfoldBinByBinOld+;
 #pragma link C++ class RooUnfoldBinByBin+;
 #pragma link C++ class RooUnfoldResponse-;
 #pragma link C++ class TUnfHisto;

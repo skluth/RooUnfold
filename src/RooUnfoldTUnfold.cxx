@@ -1,4 +1,25 @@
+//=====================================================================-*-C++-*-
+// File and Version Information:
+//      $Id: RooUnfoldTUnfold.cxx,v 1.10 2010-08-18 12:58:04 fwx38934 Exp $
+//
+// Description:
+//      Unfolding class using TUnfold from ROOT to do the actual unfolding.
+//
+// Authors: Richard Claridge <richard.claridge@stfc.ac.uk> & Tim Adye <T.J.Adye@rl.ac.uk>
+//
+//==============================================================================
 
+//____________________________________________________________
+/* BEGIN_HTML
+<p>Unfolds using ROOT's TUnfold method.</p>
+<p>By default the optimum regularisation parameter (tau) is scanned by plotting log10(chi2 squared) against log10(tau). The 
+'kink' in tis curve is deemed the optimum tau value.</p>
+<p>For unfolding, inefficiencies are entered into the underflow bin of the distribution to be unfolded. However, latest version of TUnfold
+ (15) will not handle plots with an additional underflow bin. As a result overflows must be turned off if v15 of TUnfold is used. 
+ ROOT versions 5.26 or below use v13 and so should be safe to use overflows.</p>
+END_HTML */
+
+/////////////////////////////////////////////////////////////
 
 #include "RooUnfoldTUnfold.h"
 

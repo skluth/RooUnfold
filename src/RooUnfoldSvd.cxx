@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.16 2010-08-11 19:27:37 adye Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.17 2010-08-18 12:58:04 fwx38934 Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -8,6 +8,15 @@
 // Author: Tim Adye <T.J.Adye@rl.ac.uk>
 //
 //==============================================================================
+
+//____________________________________________________________
+/* BEGIN_HTML
+<p>Links to RooUnfHistoSvd class which unfolds using Singular Value Decomposition (SVD).</p>
+<p>Returns near singular covariance matrices, leading to very large chi squared values</p>
+<p>If full error handling is turned on this method is quite slow as it uses errors based on the spread in a large number of samples.</p> 
+END_HTML */
+
+/////////////////////////////////////////////////////////////
 
 #include "RooUnfoldSvd.h"
 

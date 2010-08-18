@@ -26,6 +26,7 @@ RooUnfoldInvert (const RooUnfoldResponse* res, const TH1* meas, const char* name
 protected:
 virtual void Unfold();
 virtual void GetCov();
+virtual void GetSettings();
 
 private:
   TMatrixD Hres_i;
