@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.31 2010-08-18 12:58:04 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.32 2010-08-19 12:31:07 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -35,9 +35,6 @@ if v15 of TUnfold is used. ROOT versions 5.26 or below use v13 and so should be 
 <li> RooUnfoldInvert: The simplest method of unfolding works by simply inverting the response matrix. 
 <ul><li>This is not accurate for small matrices and produces inaccurate unfolded distributions.
 <li>The inversion method is included largely to illustrate the necessity of a more effective method of unfolding</ul>
-<li> RooUnfoldBinByBinOld: Again uses the method of correction factors. Differs from RooUnfoldBinByBin in that it makes use of the full
-RooUnfoldBayes framework
-<ul><li>Is not able to handle bin migration caused by bias/smearing of the distribution</ul>
 </ul>      
 END_HTML */
 
@@ -64,7 +61,6 @@ END_HTML */
 // Need subclasses just for RooUnfold::New()
 #include "RooUnfoldBayes.h"
 #include "RooUnfoldSvd.h"
-#include "RooUnfoldBinByBinOld.h"
 #include "RooUnfoldInvert.h"
 #include "RooUnfoldBinByBin.h"
 #ifndef NOTUNFOLD
@@ -119,9 +115,6 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas,Dou
 	case kInvert:
 	unfold = new RooUnfoldInvert (res,meas);
 	break;
-	case kBinByBinOld:
-      unfold= new RooUnfoldBinByBinOld (res, meas);
-    break;
     default:
       cerr << "Unknown RooUnfold method " << Int_t(alg) << endl;
       return 0;
@@ -132,7 +125,6 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas,Dou
   }
   return unfold;
 }
-
 RooUnfold*
 RooUnfold::Clone (const char* newname) const
 {
@@ -382,7 +374,11 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Int_t withError)
     << setw(iwid) << ""      << setw(9) << "Train" << setw(9) << "Train"    << setw(9) << "Test"  << setw(9) << "Test"  << setw(9) << "Unfolded" << setw(9) << "Diff" << setw(9) << "Pull" << endl
     << setw(iwid) << "Bin"   << setw(9) << "Truth" << setw(9) << "Measured" << setw(9) << "Truth" << setw(9) << "Input" << setw(9) << "Output"   << endl
     << "====================================================================" << xwid << endl;
-
+  Double_t true_train_tot=0;
+  Double_t meas_train_tot=0;
+  Double_t true_test_tot=0;
+  Double_t meas_test_tot=0;
+  Double_t unf_tot=0;
   Double_t chi2= 0.0;
   Int_t ndf= 0, first= (_overflow ? 0 : 1);
   Int_t overflow= (_overflow ? 2 : 0), nt= _nt+overflow, nm= _nm+overflow;
@@ -400,8 +396,14 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Int_t withError)
     } else
       o << setw(iwid) << i+first;
     o << std::fixed << setprecision(0);
-    if (i<nt)
+    true_train_tot+=hTrainTrue->GetBinContent(it);
+    meas_train_tot+=hTrain->GetBinContent(im);
+    true_test_tot+=hTrue->GetBinContent(it);
+    meas_test_tot+=hMeas->GetBinContent(im);
+    unf_tot+=hReco->GetBinContent(it);
+    if (i<nt){
       o << ' ' << setw(8) << hTrainTrue->GetBinContent(it);
+    }
     else
       o << setw(9) << " ";
     if (i<nm)
@@ -439,15 +441,19 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Int_t withError)
   
   o << "====================================================================" << xwid << endl
     << setw(iwid) << "" << std::fixed << setprecision(0)
-    << ' ' << setw(8) << hTrainTrue->Integral()
-    << ' ' << setw(8) << hTrain->Integral();
+    << ' ' << setw(8) << true_train_tot
+    << ' ' << setw(8) << meas_train_tot;
   if (hTrue)
-    o << ' ' << setw(8) << hTrue->Integral();
+    o << ' ' << setw(8) << true_test_tot;
   else
     o << setw(9) << " ";
-  o << ' ' << setw(8) << hMeas->Integral() << setprecision(1)
-    << ' ' << setw(8) << hReco->Integral()
-    << endl
+  o << ' ' << setw(8) << meas_test_tot << setprecision(1)
+    << ' ' << setw(8) << unf_tot
+    << ' ' << setw(8) << unf_tot-true_test_tot;
+    if(hMeas->Integral()>0){
+    o<< ' ' << setw(8) <<(unf_tot-true_test_tot)/sqrt(meas_test_tot);
+    }
+    o<< endl
     << "====================================================================" << xwid << endl;
   o.copyfmt (fmt);
   Double_t chi_squ;

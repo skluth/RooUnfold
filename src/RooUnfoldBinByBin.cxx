@@ -1,11 +1,9 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.cxx,v 1.9 2010-08-18 12:58:04 fwx38934 Exp $
+//      $Id: RooUnfoldBinByBin.cxx,v 1.10 2010-08-19 12:31:07 fwx38934 Exp $
 //
 // Description:
-//      Unfolding class using the bin by bin method of conversion factors. This is
-//		different to the RooUnfoldBinByBinOld method in that does not need RooUnfoldBayes 
-//		in order to be able to do the unfolding. 
+//      Unfolding class using the bin by bin method of conversion factors. 
 //
 // Authors: Richard Claridge <richard.claridge@stfc.ac.uk> & Tim Adye <T.J.Adye@rl.ac.uk>
 //

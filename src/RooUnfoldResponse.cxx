@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.14 2010-08-04 14:53:04 fwx38934 Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.15 2010-08-19 12:31:07 fwx38934 Exp $
 //
 // Description:
 //      Response Matrix
@@ -212,7 +212,6 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2D* res
 void
 RooUnfoldResponse::ClearCache()
 {
-	//Sets all parameters to 0
   delete _vMes; _vMes= 0;
   delete _eMes; _eMes= 0;
   delete _vTru; _vTru= 0;
