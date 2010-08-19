@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.22 2010-08-18 12:58:04 fwx38934 Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.23 2010-08-19 16:23:34 fwx38934 Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -127,7 +127,7 @@ RooUnfoldBayes::Unfold()
   if (verbose() >= 2) Print();
 
   vector<Double_t> causes;
-  unfold (causes);
+  _bayes->unfold (causes, _niter, _smoothit);
 
   if (verbose() >= 2) Print();
 
@@ -143,7 +143,7 @@ RooUnfoldBayes::GetCov()
   if (!_unfolded) Unfold();
   Int_t nt= _nt + (_overflow ? 2 : 0);
   _cov.ResizeTo (nt, nt);
-  getCovariance();
+  _bayes->getVariance();  
   if (_bayes->error() != 0.0) {
     AD2M (_bayes->covariance(), _cov);
   } else {
@@ -153,10 +153,6 @@ RooUnfoldBayes::GetCov()
   }
   _haveCov= true;
 }
-
-// routines that can be overridden by RooUnfoldBinByBin.
-Int_t RooUnfoldBayes::unfold (vector<Double_t>& causes) { return _bayes->unfold (causes, _niter, _smoothit); }
-Int_t RooUnfoldBayes::getCovariance() const             { return _bayes->getCovariance();                    }
 
 void
 RooUnfoldBayes::Print(Option_t* option) const

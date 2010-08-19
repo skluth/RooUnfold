@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.h,v 1.15 2010-08-11 19:27:37 adye Exp $
+//      $Id: RooUnfoldBayes.h,v 1.16 2010-08-19 16:23:34 fwx38934 Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -63,8 +63,6 @@ protected:
   void Init();
   void Destroy();
   virtual void Unfold();
-  virtual Int_t unfold (vector<Double_t>& causes);
-  virtual Int_t getCovariance() const;
   virtual void GetCov();
   void Assign   (const RooUnfoldBayes& rhs); // implementation of assignment operator
   void CopyData (const RooUnfoldBayes& rhs);

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.36 2010-08-18 12:57:58 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.37 2010-08-19 16:23:29 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -293,14 +293,13 @@ Int_t RooUnfoldTestHarness::Train()
   hTrain= new TH1D ("train", "Training Measured", nmx, xlo, xhi);
   hTrain->SetLineColor(kRed);
   hResmat= new TH2D ("resmat", "Response Matrix", nmx, xlo, xhi, ntx, xlo, xhi);
-
   response->Setup (nmx, xlo, xhi, ntx, xlo, xhi);
   // or:  response->Setup (hTrain, hTrainTrue);
-
   for (Int_t i= 0; i<ntrain; i++) {
+
     Double_t xt= xtrue[i], xto= Overflow (xt, ntx, xlo, xhi);
     hTrainTrue->Fill (xto);
-    if (Eff (xt, xlo, xhi, effxlo, effxhi)) {
+    if (Eff (xt, xlo, xhi, effxlo, effxhi)) {    
       Double_t x= Smear (xt, ntx, xlo, xhi, xbias, xsmear), xo= Overflow (x, ntx, xlo, xhi);
       hTrain  ->Fill (xo);
       hResmat ->Fill (xo, xto);
@@ -308,9 +307,7 @@ Int_t RooUnfoldTestHarness::Train()
     } else
       response->Miss (xto);
   }
-
   // or:  response->Setup (hTrain, hTrainTrue, hResmat);
-
   return 1;
 }
 
@@ -423,9 +420,6 @@ void RooUnfoldTestHarness::Results()
   canvas->Update();
 
   if (!hReco) return;
-  if (verbose>=1){
-  cout<<"Integral of Truth Distribution="<<hTrue->Integral()<<" Integral of Reconstructed Distribution= "<<hReco->Integral()<<" T/R= "<<hTrue->Integral()/hReco->Integral()<<endl;
-  }
   if (ntoys > 0) return;
 
   if (onepage>=2) canvas->cd(++ipad);
@@ -476,13 +470,11 @@ TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char*
 bool RooUnfoldTestHarness::Eff (Double_t x, Double_t xlo, Double_t xhi, Double_t efflo, Double_t effhi) const
 {
   // Apply an efficiency function to the truth.
-  // Efficiency: 30% at x=xlo, 100% at x=xhi.
+  // Efficiency: 30% at x=xlo, 90% at x=xhi.
 
   Double_t xwidth =  (xhi-xlo);
-
   Double_t slope = (effhi-efflo) / xwidth;
   Double_t yeff= (efflo + slope * (x-xlo));  // efficiency
-
   // MC test: if random number < eff then accept
   return (gRandom->Rndm() < yeff);
 }
@@ -608,7 +600,6 @@ void RooUnfoldTestHarness::Init()
 Int_t RooUnfoldTestHarness::CheckParms()
 {
   if (dosmear==-1 && method == RooUnfold::kBinByBin) {dosmear= 0;}  // bin-by-bin can't handle smearing or bias
-  if (dosmear==-1 && method == RooUnfold::kBinByBinOld){dosmear= 0;}  // bin-by-bin can't handle smearing or bias
   if (doerror==-1) {
     doerror= !(method==RooUnfold::kBayes && ntbins*nmbins > 160000);
     if (!doerror) {

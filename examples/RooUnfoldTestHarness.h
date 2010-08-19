@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.27 2010-08-12 15:19:20 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.28 2010-08-19 16:23:29 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -56,7 +56,6 @@ public:
   TH2D               *hResmat;
   RooUnfoldResponse* response;
   RooUnfold*         unfold;
-
   // Constructors
   RooUnfoldTestHarness (const char* name= "RooUnfoldTest");
   RooUnfoldTestHarness (const char* name, const char* args);

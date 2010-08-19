@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.24 2010-08-19 12:31:07 fwx38934 Exp $
+//      $Id: RooUnfold.h,v 1.25 2010-08-19 16:23:34 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -57,7 +57,7 @@ public:
 
   virtual TVectorD&                Vreco();
   virtual TMatrixD&                Ereco();
-  virtual TMatrixD&                Freco();
+  virtual TMatrixD&                ErecoToy();
 
   virtual Int_t                    verbose() const;
   virtual void SetVerbose (Int_t level);
@@ -66,7 +66,6 @@ public:
   virtual Int_t						NBins() const;
   virtual Int_t						Overflow() const;
   virtual void PrintTable (std::ostream& o, const TH1* hTrue= 0, Int_t withError= 1);
-
   virtual TObject* Impl();
 
   virtual void  SetRegParm (Double_t parm);
@@ -131,7 +130,7 @@ inline const TH1*               RooUnfold::Hmeasured() const { return _meas;    
 inline void RooUnfold::SetMeasured (const TH1* meas)         { _meas= meas; }
 inline TVectorD&                RooUnfold::Vreco()           { if (!_unfolded) Unfold(); return _rec; } // Vector or reconstructed points
 inline TMatrixD&                RooUnfold::Ereco()           { if (!_haveCov)  GetCov(); return _cov; } // Covariance matrix from measured distribution
-inline TMatrixD&                RooUnfold::Freco()           { if (!_have_err_mat)  Get_err_mat(); return _err_mat; } // Covariance matrix from residuals in reconstructed distribution 
+inline TMatrixD&                RooUnfold::ErecoToy()           { if (!_have_err_mat)  Get_err_mat(); return _err_mat; } // Covariance matrix from residuals in reconstructed distribution 
 inline TObject*                 RooUnfold::Impl()            { return 0; };
 inline void  RooUnfold::SetVerbose (Int_t level)             { _verbose= level; } // Set verbose
 inline void  RooUnfold::SetNToys (Int_t toys)             { _NToys= toys; } // Set toys

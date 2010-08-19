@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.32 2010-08-19 12:31:07 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.33 2010-08-19 16:23:34 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -283,9 +283,9 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 	  		nt=Ereco().GetNrows();
 	  	}
 	  	if (DoChi2==2){
-	  		Ereco_copy.ResizeTo(Freco().GetNrows(),Freco().GetNcols());
-	  		Ereco_copy=Freco();
-	  		nt=Freco().GetNrows();
+	  		Ereco_copy.ResizeTo(ErecoToy().GetNrows(),ErecoToy().GetNcols());
+	  		Ereco_copy=ErecoToy();
+	  		nt=ErecoToy().GetNrows();
 	  	}
 		TMatrixD reco_matrix(nt,1);
 	  	for (Int_t i = 0 ; i < nt; i++) {
@@ -598,7 +598,11 @@ RooUnfold::CutZeros(const TMatrixD& Ereco_copy)
 	vector<int> diags;
 		int missed=0;
 		for (int i=0; i<Ereco_copy.GetNrows(); i++){
-			if (Ereco_copy (i,i) ==0){
+			double coltot=0;
+			for (int j=0;j<Ereco_copy.GetNrows();j++){
+				coltot+=Ereco_copy(i,j);
+			}
+			if (coltot==0){
 				diags.push_back(i);
 				missed++;
 			}

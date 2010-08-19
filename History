@@ -1,5 +1,14 @@
-History of RooUnfold     $Id: History,v 1.88 2010-08-18 12:57:53 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.89 2010-08-19 16:23:25 fwx38934 Exp $
 ====================
+
+Richard Claridge 19-Aug-2010 rgc100819b
+  o Added GetVariance method to RooUnfoldBayesImpl
+  o Removed virtual methods previously called by RooUnfoldBinByBinOld
+  o Renamed Freco to ErecoToy
+
+Richard Claridge 19-Aug-2010 rgc100819a
+  o Removed RooUnfoldBinByBinOld Class
+  o Added diff and pulls calculations for entire distribution to PrintTable method
 
 Richard Claridge 18-Aug-2010 rgc100818a
   o Renamed RooUnfoldBinByBin to RooUnfoldBinByBinOld

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayesImpl.h,v 1.7 2010-05-20 22:50:59 adye Exp $
+//      $Id: RooUnfoldBayesImpl.h,v 1.8 2010-08-19 16:23:34 fwx38934 Exp $
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the
@@ -132,6 +132,7 @@ private:
   Int_t unfoldBinByBin(vector<Double_t>& causes, Bool_t smoothit = false);
 
   Int_t getCovariance(Bool_t doUnfoldSystematic = false);
+  Int_t getVariance();
   Int_t getCovarianceBinByBin();
   Double_t getError(); // Estimated error on number of unfolded events
 
