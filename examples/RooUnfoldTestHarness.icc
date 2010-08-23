@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.37 2010-08-19 16:23:29 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.38 2010-08-23 11:02:46 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -84,7 +84,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("regparm", &regparm,   -1e30, "regularisation parameter (default: Bayes niter=3, SVD kterm=ntx/2)", "");
   args.Add ("ntoyssvd",   &ntoyssvd,     1000, "number of toys used to obtain SVD covariances");
   args.Add ("onepage", &onepage,      4, "number of pads per page");
-  args.Add ("doerror", &doerror,     -1, "calculate errors (default=1 unless this will take a very long time)", "1");
+  args.Add ("doerror", &doerror,     RooUnfold::kErrors, "calculate errors (default=1 unless this will take a very long time)", "1");
   args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
   args.Add ("mtrainx", &mtrainx,    5.0, "training signal PDF X mean");
   args.Add ("wtrainx", &wtrainx,    1.2, "training signal PDF X width");
@@ -251,7 +251,7 @@ Int_t RooUnfoldTestHarness::RunTests()
       }
       }
       if(plotparms>=1){      
-        RooUnfoldParms Parm(unfold,doerror,hTrue);
+        RooUnfoldParms Parm(unfold,(RooUnfold::ErrorTreatment)doerror,hTrue);
         if (maxparm>minparm){
         Parm.SetMaxParm(maxparm);
         }
@@ -372,9 +372,9 @@ Int_t RooUnfoldTestHarness::Unfold ()
   if (method == RooUnfold::kSVD) dynamic_cast<RooUnfoldSvd*>(unfold)->SetNtoysSVD (ntoyssvd);
   if (method == RooUnfold::kTUnfold) dynamic_cast<RooUnfoldTUnfold*>(unfold)->SetRegMethod(regmethod);
   if (verbose>=0) {cout << "Created "; unfold->Print();}
-  hReco= unfold->Hreco(doerror);
+  hReco= unfold->Hreco((RooUnfold::ErrorTreatment)doerror);
   if (!hReco) return 0;
-  if (verbose>=0) unfold->PrintTable (cout, hTrue, doerror);
+  if (verbose>=0) unfold->PrintTable (cout, hTrue, (RooUnfold::ErrorTreatment)doerror);
 
   // Calculate pulls and residuals
   hRes=   dynamic_cast<TH1*>(hReco->Clone ("res"));   hRes  ->SetTitle ("Residuals");

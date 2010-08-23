@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayesImpl.cxx,v 1.19 2010-08-19 16:23:34 fwx38934 Exp $
+//      $Id: RooUnfoldBayesImpl.cxx,v 1.20 2010-08-23 11:02:51 fwx38934 Exp $
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the
@@ -784,8 +784,6 @@ Int_t
 RooUnfoldBayesImpl::getVariance()
 {
 	const vector<Double_t>& effects= _nEstj;
-  // Create the covariance matrix
-  cout << "getCovariance (Diagonals only)"<<endl;
   vector<Double_t> dummy;
   Double_t nbartrue = getnbarCi(effects,dummy);
   for (Int_t k = 0 ; k < _nc ; k++) {

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.28 2010-08-19 16:23:29 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.29 2010-08-23 11:02:46 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -15,6 +15,7 @@
 
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include "TNamed.h"
+#include "RooUnfold.h"
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,0,0)
 #include "TVectorDfwd.h"
 #else

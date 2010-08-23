@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldErrors.cxx,v 1.4 2010-08-12 15:19:24 fwx38934 Exp $
+//      $Id: RooUnfoldErrors.cxx,v 1.5 2010-08-23 11:02:51 fwx38934 Exp $
 //
 // Description:
 //      Unfolding errors class
@@ -123,7 +123,7 @@ RooUnfoldErrors::CreatePlots()
 	if (!hTrue){
 		cerr <<"Error: no truth distribution"<<endl;
 	}
-	TH1* parms=unfold->Runtoy(1);
+	TH1* parms=unfold->Runtoy(RooUnfold::kCovariance);
 	if (parms->GetDimension()!=1){
 		parms=RooUnfoldResponse::H2H1D (parms, ntx);
 		ntx=parms->GetNbinsX();
@@ -150,7 +150,7 @@ RooUnfoldErrors::CreatePlots()
 	for (int k=0; k<toys;k++){	
 		double chi2;
 		TH1* hReco_;
-		TH1* hReco=unfold->Runtoy(1,&chi2,hTrue);
+		TH1* hReco=unfold->Runtoy(RooUnfold::kCovariance,&chi2,hTrue);
 		if (hReco->GetDimension()!=1){
 			hReco_=RooUnfoldResponse::H2H1D (hReco, ntx);
 		}

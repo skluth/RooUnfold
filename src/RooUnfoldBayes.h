@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.h,v 1.16 2010-08-19 16:23:34 fwx38934 Exp $
+//      $Id: RooUnfoldBayes.h,v 1.17 2010-08-23 11:02:51 fwx38934 Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -48,7 +48,6 @@ public:
 
   virtual void  SetRegParm (Double_t parm) { SetIterations(Int_t(parm+0.5)); }
   virtual Double_t GetRegParm() const { return GetIterations(); }
-
   virtual void Reset();
   virtual void Print (Option_t* option= "") const;
   virtual TObject* Impl();
@@ -64,6 +63,7 @@ protected:
   void Destroy();
   virtual void Unfold();
   virtual void GetCov();
+  virtual void GetErrors();
   void Assign   (const RooUnfoldBayes& rhs); // implementation of assignment operator
   void CopyData (const RooUnfoldBayes& rhs);
   virtual void GetSettings();

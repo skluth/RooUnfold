@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldParms.cxx,v 1.8 2010-08-12 15:19:24 fwx38934 Exp $
+//      $Id: RooUnfoldParms.cxx,v 1.9 2010-08-23 11:02:51 fwx38934 Exp $
 //
 // Description:
 //      Optimisation of regularisation parameter class
@@ -49,7 +49,7 @@ using std::vector;
 
 ClassImp (RooUnfoldParms);
 
-RooUnfoldParms::RooUnfoldParms(const RooUnfold* unfold_in,Int_t err,const TH1* truth)
+RooUnfoldParms::RooUnfoldParms(const RooUnfold* unfold_in,RooUnfold::ErrorTreatment err,const TH1* truth)
 :unfold(unfold_in),doerror(err),hTrue(truth)
 {
 	Init();

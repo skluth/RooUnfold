@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.23 2010-08-19 16:23:34 fwx38934 Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.24 2010-08-23 11:02:51 fwx38934 Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -138,12 +138,29 @@ RooUnfoldBayes::Unfold()
 }
 
 void
+RooUnfoldBayes::GetErrors()
+{
+  if (!_unfolded) Unfold();
+  Int_t nt= _nt + (_overflow ? 2 : 0);
+  _errors.ResizeTo (nt, nt);
+  _bayes->getVariance();  
+  if (_bayes->error() != 0.0) {
+    AD2M (_bayes->covariance(), _errors);
+  } else {
+    cerr << "Covariance matrix not calculated - fill errors with sqrt(N)" << endl;
+    for (Int_t i= 0; i < nt; i++)
+      _errors(i,i)= fabs (_rec(i));
+  }
+  _haveErrors= true;
+}
+
+void
 RooUnfoldBayes::GetCov()
 {
   if (!_unfolded) Unfold();
   Int_t nt= _nt + (_overflow ? 2 : 0);
   _cov.ResizeTo (nt, nt);
-  _bayes->getVariance();  
+  _bayes->getCovariance();  
   if (_bayes->error() != 0.0) {
     AD2M (_bayes->covariance(), _cov);
   } else {

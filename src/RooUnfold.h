@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.25 2010-08-19 16:23:34 fwx38934 Exp $
+//      $Id: RooUnfold.h,v 1.26 2010-08-23 11:02:50 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -24,7 +24,7 @@ class RooUnfold : public TNamed {
 public:
 
   enum Algorithm { kNone, kBayes, kSVD, kBinByBin, kTUnfold,kInvert}; // Selection of unfolding algorithm.
-
+  enum ErrorTreatment {kNoError, kErrors, kCovariance, kCovToy};
   static RooUnfold* New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Double_t regparm= -1e30,
                          const char* name= 0, const char* title= 0);
 
@@ -53,11 +53,12 @@ public:
 
   virtual const RooUnfoldResponse* response() const;
   virtual const TH1*               Hmeasured() const;
-  virtual TH1*                     Hreco (Int_t withError= 1);
+  virtual TH1*                     Hreco (ErrorTreatment withError=kErrors);
 
   virtual TVectorD&                Vreco();
   virtual TMatrixD&                Ereco();
   virtual TMatrixD&                ErecoToy();
+  virtual TMatrixD&				   ErecoDiags();
 
   virtual Int_t                    verbose() const;
   virtual void SetVerbose (Int_t level);
@@ -65,23 +66,24 @@ public:
   virtual void SetNToys (Int_t toys); // Set number of toys
   virtual Int_t						NBins() const;
   virtual Int_t						Overflow() const;
-  virtual void PrintTable (std::ostream& o, const TH1* hTrue= 0, Int_t withError= 1);
+  virtual void PrintTable (std::ostream& o, const TH1* hTrue= 0, ErrorTreatment=kNoError);
   virtual TObject* Impl();
 
   virtual void  SetRegParm (Double_t parm);
   virtual Double_t GetRegParm() const; // Get Regularisation Parameter
-  Double_t Chi2 (const TH1* hTrue,Int_t DoChi2=1);
+  Double_t Chi2 (const TH1* hTrue,ErrorTreatment DoChi2);
   Double_t GetMinParm() const;
   Double_t GetMaxParm() const;
   Double_t GetStepSizeParm() const;
   Double_t GetDefaultParm() const;
-  TH1* Runtoy(Int_t doerror=0,double* chi2=0,const TH1* hTrue=0) const;
+  TH1* Runtoy(ErrorTreatment doerror=kNoError,double* chi2=0,const TH1* hTrue=0) const;
   static TMatrixD CutZeros(const TMatrixD& Ereco_copy);
   Double_t _minparm; //Minimum value to be used in RooUnfoldParms
   Double_t _maxparm; //Maximum value to be used in RooUnfoldParms
   Double_t _stepsizeparm; //StepSize value to be used in RooUnfoldParms
   Double_t _defaultparm; //Recommended value for regularisation parameter
   void Print(Option_t *opt="")const;
+  int _um;
   protected:
 
   void Init();
@@ -89,6 +91,7 @@ public:
   virtual void GetCov(); // Get covariance matrix using errors on measured distribution
   virtual void SetNameTitleDefault(); 
   virtual void Get_err_mat(); // Get covariance matrix using errors from residuals on reconstructed distribution
+  virtual void GetErrors();
   void Assign   (const RooUnfold& rhs); // implementation of assignment operator
   void CopyData (const RooUnfold& rhs);
   static TH1* Add_Random(const TH1* hMeas_AR);
@@ -100,12 +103,14 @@ public:
   Int_t _nt;   // Total number of truth    bins
   Int_t _overflow;   // Use histogram under/overflows if 1 (set from RooUnfoldResponse)
   Int_t _NToys; // Number of toys to be used
-  mutable Bool_t _unfolded, _haveCov,_have_err_mat, _fail;
+  mutable Bool_t _unfolded, _haveCov,_have_err_mat, _fail, _haveErrors;
   const RooUnfoldResponse* _res;   // Response matrix (not owned)
   const TH1* _meas;                // Measured distribution (not owned)
   mutable TVectorD _rec;  // Reconstructed distribution
   mutable TMatrixD _cov;  // Reconstructed distribution covariance
   mutable TMatrixD _err_mat; // Error Matrix
+  mutable TMatrixD _errors;
+  
 private:
 
 public:
@@ -130,7 +135,8 @@ inline const TH1*               RooUnfold::Hmeasured() const { return _meas;    
 inline void RooUnfold::SetMeasured (const TH1* meas)         { _meas= meas; }
 inline TVectorD&                RooUnfold::Vreco()           { if (!_unfolded) Unfold(); return _rec; } // Vector or reconstructed points
 inline TMatrixD&                RooUnfold::Ereco()           { if (!_haveCov)  GetCov(); return _cov; } // Covariance matrix from measured distribution
-inline TMatrixD&                RooUnfold::ErecoToy()           { if (!_have_err_mat)  Get_err_mat(); return _err_mat; } // Covariance matrix from residuals in reconstructed distribution 
+inline TMatrixD&                RooUnfold::ErecoToy()           { if (!_have_err_mat)  Get_err_mat(); return _err_mat; } // Covariance matrix from residuals in reconstructed distribution
+inline TMatrixD&				RooUnfold::ErecoDiags() 	{ if (!_haveErrors)  GetErrors(); return _errors;}
 inline TObject*                 RooUnfold::Impl()            { return 0; };
 inline void  RooUnfold::SetVerbose (Int_t level)             { _verbose= level; } // Set verbose
 inline void  RooUnfold::SetNToys (Int_t toys)             { _NToys= toys; } // Set toys

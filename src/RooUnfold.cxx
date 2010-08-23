@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.33 2010-08-19 16:23:34 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.34 2010-08-23 11:02:50 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -180,7 +180,7 @@ RooUnfold::Init()
   _nm= _nt= 0;
   _verbose= 1;
   _overflow= 0;
-  _unfolded= _haveCov= _fail=_have_err_mat= false;
+  _unfolded= _haveCov= _fail=_have_err_mat=_haveErrors= false;
   _NToys=50;
   GetSettings();
 }
@@ -222,6 +222,22 @@ RooUnfold::Unfold()
 }
 
 void
+RooUnfold::GetErrors()
+{
+	//Creates matrix of diagonals of covariance matrices
+	//In bayes case uses diagonal matrix created by getvariance method. 
+	Int_t nt= _nt + (_overflow ? 2 : 0);
+	_errors.ResizeTo(nt,nt);
+	if (_um!=1){
+		GetCov();
+  		for (Int_t i= 0; i < nt; i++) {
+    		_errors(i,i)= _cov(i,i);
+  		}
+	}
+  _haveErrors= true;
+}
+
+void
 RooUnfold::GetCov()
 {
 	//Creates covariance matrix using bin error on measured distribution.
@@ -241,9 +257,7 @@ void
 RooUnfold::Get_err_mat()
 {
 	//Get error matrix based on residuals found using the Runtoy method. 
-	Int_t nt= _nt + (_overflow ? 2 : 0);
-	TH1* reco=this->Runtoy();
-    Int_t total= RooUnfoldResponse::GetBin (reco, nt-1, _overflow);
+	Int_t total= _nt + (_overflow ? 2 : 0);
 	vector<double> bc_vec(total);
 	TMatrixD bc_mat(total,total);
   	_err_mat.ResizeTo(total,total);
@@ -265,7 +279,7 @@ RooUnfold::Get_err_mat()
   	_have_err_mat=true;
 }
 
-Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
+Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
 {
 	/*Calculates Chi squared. Method depends on value of DoChi2
 	0: sum of (residuals/error)squared
@@ -276,13 +290,18 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 	const TH1* hReco=Hreco (DoChi2);
 	Int_t nt= _nt+(_overflow ? 2 : 0);
     TMatrixD Ereco_copy;
-	if (DoChi2==1||DoChi2==2){
-		if (DoChi2==1){
-			Ereco_copy.ResizeTo(Ereco().GetNrows(),Ereco().GetNcols());
+	if (DoChi2==kErrors||DoChi2==kCovariance||DoChi2==kCovToy){
+		if (DoChi2==kErrors){
+			Ereco_copy.ResizeTo(ErecoDiags().GetNrows(),ErecoDiags().GetNcols());
+	  		Ereco_copy=ErecoDiags();
+	  		nt=ErecoDiags().GetNrows();
+	  	}
+	  	if (DoChi2==kCovariance){
+	  		Ereco_copy.ResizeTo(Ereco().GetNrows(),Ereco().GetNcols());
 	  		Ereco_copy=Ereco();
 	  		nt=Ereco().GetNrows();
 	  	}
-	  	if (DoChi2==2){
+	  	if (DoChi2==kCovToy){
 	  		Ereco_copy.ResizeTo(ErecoToy().GetNrows(),ErecoToy().GetNcols());
 	  		Ereco_copy=ErecoToy();
 	  		nt=ErecoToy().GetNrows();
@@ -355,7 +374,7 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,Int_t DoChi2)
 
 
 void
-RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Int_t withError)
+RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment withError)
 {
 	//Prints data from truth, measured and reconstructed data for each bin. 
   const TH1* hReco=      Hreco (withError);
@@ -459,7 +478,7 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, Int_t withError)
   Double_t chi_squ;
   chi_squ = Chi2(hTrue,withError);
   o << "Chi^2/NDF=" << chi_squ << "/" << ndf;
-  if (withError) o << " (bin-by-bin Chi^2=" << chi2 << ")";
+  if (withError==kCovariance||withError==kCovToy) o << " (bin-by-bin Chi^2=" << chi2 << ")";
   o << endl;
   if (chi_squ<=0){
   	cerr << "Warning: Invalid Chi^2 Value" << endl;
@@ -481,31 +500,40 @@ RooUnfold::SetNameTitleDefault()
 }
 
 TH1*
-RooUnfold::Hreco (Int_t withError)
+RooUnfold::Hreco (ErrorTreatment withError)
 {
 	/*Creates reconstructed distribution. Error calculation varies by withError:
 	0: No errors
-	1: Errors from the square root of the covariance matrix given by the unfolding
-	2: Errors from the square root of the covariance matrix given by Get_err_mat()
+	1: Errors from the square root of the diagonals of the covariance matrix given by the unfolding
+	2: Errors from the square root of of the covariance matrix given by the unfolding
+	3: Errors from the square root of the covariance matrix given by Get_err_mat()
 	*/
-
   TH1* reco= (TH1*) _res->Htruth()->Clone(GetName());
   reco->Reset();
   reco->SetTitle (GetTitle());
   if (!_unfolded)             Unfold();
   if (_fail)                  return 0;
-  if (withError==1 && !_haveCov) GetCov();
-  if (!_haveCov) withError= 0;
-  if (!_have_err_mat && withError==2) Get_err_mat();
+  if (withError==kErrors && !_haveErrors){
+  	GetErrors();
+  	if (!_haveErrors) withError= kNoError;
+  }
+  if (withError==kCovariance && !_haveCov) {
+  	GetCov();
+  	if (!_haveCov) withError= kNoError;
+  }
+  
+  if (!_have_err_mat && withError==kCovToy) Get_err_mat();
   Int_t nt= _nt + (_overflow ? 2 : 0);
   for (Int_t i= 0; i < nt; i++) {
     Int_t j= RooUnfoldResponse::GetBin (reco, i, _overflow);
     reco->SetBinContent (j,             _rec(i));
-    if (withError==1){
-      reco->SetBinError (j, sqrt (fabs (_cov(i,i))));
+    if (withError==kErrors){
+      reco->SetBinError (j, sqrt (fabs (_errors(i,i))));  
   	}
-  	if (withError==2){
-
+  	if (withError==kCovariance){
+  		reco->SetBinError(j,sqrt(fabs(_cov(i,i))));
+  	}
+  	if (withError==kCovToy){
   		reco->SetBinError(j,sqrt(fabs(_err_mat(i,i))));
   	}
   }
@@ -547,7 +575,7 @@ RooUnfold::GetDefaultParm() const{
 }
 
 TH1*
-RooUnfold::Runtoy(Int_t witherror,double* chi2, const TH1* hTrue) const{
+RooUnfold::Runtoy(ErrorTreatment witherror,double* chi2, const TH1* hTrue) const{
 	/*
 	Returns unfolded distribution for one iteration of unfolding. Use multiple toys to find residuals
 	Can also return chi squared if a truth distribution is available. 
@@ -559,8 +587,13 @@ RooUnfold::Runtoy(Int_t witherror,double* chi2, const TH1* hTrue) const{
 	TH1* hMeas=Add_Random(hMeas_AR);
 	TH1::AddDirectory (oldstat);
 	unfold_copy->SetMeasured(hMeas);
-	if (witherror>=2){witherror=0;}
-	TH1* hReco= unfold_copy->Hreco(witherror);
+	TH1* hReco;
+	if (witherror==kCovToy){
+		hReco= unfold_copy->Hreco(kNoError);
+	}
+	else{
+		hReco= unfold_copy->Hreco(witherror);
+	}
 	if (chi2 && !hTrue){
 		cerr<<"Error: can't calculate chi^2 without a truth distribution"<<endl;
 	}
