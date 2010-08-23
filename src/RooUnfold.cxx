@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.36 2010-08-23 18:07:54 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.37 2010-08-23 21:38:13 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -242,17 +242,14 @@ RooUnfold::Unfold()
 void
 RooUnfold::GetErrors()
 {
-    //Creates matrix of diagonals of covariance matrices
-    //In bayes case uses diagonal matrix created by GetVariance method in RooUnfoldBayes. 
+    //Creates vector of diagonals of covariance matrices
     Int_t nt= _nt + (_overflow ? 2 : 0);
     _errors.ResizeTo(nt);
-    if (_um!=1){
-        GetCov();
-        for (Int_t i= 0; i < nt; i++) {
-            _errors(i)= _cov(i,i);
-        }
+    if (!_haveCov) GetCov();
+    for (Int_t i= 0; i < nt; i++) {
+      _errors(i)= _cov(i,i);
     }
-  _haveErrors= true;
+    _haveErrors= true;
 }
 
 void
@@ -301,7 +298,7 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
 {
     /*Calculates Chi squared. Method depends on value of DoChi2
     0: sum of (residuals/error)squared
-    1: use error matrix (diagonal) from unfolding
+    1: use errors propagated through the unfolding
     2: use covariance matrix returned from unfolding
     3: use covariance matrix returned from GetErrMat() 
     Returns warnings for small determinants of covariance matrices and if the condition is very large.
@@ -310,7 +307,7 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
     const TH1* hReco=Hreco (DoChi2);
     Int_t nt= _nt+(_overflow ? 2 : 0);
     TMatrixD Ereco_copy;
-    if (DoChi2==kErrors||DoChi2==kCovariance||DoChi2==kCovToy){
+    if (DoChi2==kCovariance||DoChi2==kCovToy){
         Ereco_copy.ResizeTo(Ereco(DoChi2).GetNrows(),Ereco(DoChi2).GetNcols());
         Ereco_copy=Ereco(DoChi2);
         nt=Ereco(DoChi2).GetNrows();
@@ -686,14 +683,14 @@ RooUnfold::Ereco(ErrorTreatment witherror)
         }
         break;
       case kErrors:
-        GetErrors();
+        if (!_haveErrors) GetErrors();
         Ereco_m.ResizeTo(_errors.GetNrows(),_errors.GetNrows());
         for (int i=0; i<_errors.GetNrows();i++){
             Ereco_m(i,i)=_errors(i);
         }
         break;
       case kCovariance:
-        GetCov();
+        if (!_haveCov) GetCov();
         Ereco_m.ResizeTo(_cov.GetNrows(),_cov.GetNcols());
         Ereco_m=_cov;
         break;
@@ -727,12 +724,12 @@ RooUnfold::ErecoV(ErrorTreatment witherror)
         }
         break;
       case kErrors:
-        GetErrors();
+        if (!_haveErrors) GetErrors();
         Ereco_m.ResizeTo(_errors.GetNrows());
         Ereco_m=_errors;
         break;
       case kCovariance:
-        GetCov();
+        if (!_haveCov) GetCov();
         Ereco_m.ResizeTo(_cov.GetNrows());
         for (int i=0; i<_cov.GetNrows(); i++){
             Ereco_m(i)=_cov(i,i);

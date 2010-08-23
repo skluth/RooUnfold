@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.28 2010-08-23 18:07:54 adye Exp $
+//      $Id: RooUnfold.h,v 1.29 2010-08-23 21:38:13 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -52,21 +52,21 @@ public:
   // Accessors
 
   virtual const RooUnfoldResponse* response() const;
-  virtual const TH1*               Hmeasured() const;
-  virtual TH1*                     Hreco (ErrorTreatment withError=kErrors);
+  virtual const TH1* Hmeasured() const;
+  virtual       TH1* Hreco (ErrorTreatment withError=kErrors);
 
-  virtual TVectorD&                Vreco();
-  virtual TMatrixD                Ereco(ErrorTreatment witherror);
-  virtual TVectorD                ErecoV(ErrorTreatment witherror);
+  virtual TVectorD&  Vreco();
+  virtual TMatrixD   Ereco(ErrorTreatment witherror);
+  virtual TVectorD   ErecoV(ErrorTreatment witherror);
 
-  virtual Int_t                    verbose() const;
-  virtual void SetVerbose (Int_t level);
-  virtual Int_t                    NToys() const; // Number of toys
-  virtual void SetNToys (Int_t toys); // Set number of toys
-  virtual Int_t                     NBins() const;
-  virtual Int_t                     Overflow() const;
-  virtual void PrintTable (std::ostream& o, const TH1* hTrue= 0, ErrorTreatment=kNoError);
-  virtual TObject* Impl();
+  virtual Int_t      verbose() const;
+  virtual void       SetVerbose (Int_t level);
+  virtual Int_t      NToys() const;         // Number of toys
+  virtual void       SetNToys (Int_t toys); // Set number of toys
+  virtual Int_t      NBins() const;
+  virtual Int_t      Overflow() const;
+  virtual void       PrintTable (std::ostream& o, const TH1* hTrue= 0, ErrorTreatment=kNoError);
+  virtual TObject*   Impl();
   virtual void  SetRegParm (Double_t parm);
   virtual Double_t GetRegParm() const; // Get Regularisation Parameter
   Double_t Chi2 (const TH1* hTrue,ErrorTreatment DoChi2);
@@ -75,14 +75,9 @@ public:
   Double_t GetStepSizeParm() const;
   Double_t GetDefaultParm() const;
   TH1* Runtoy(ErrorTreatment doerror=kNoError,double* chi2=0,const TH1* hTrue=0) const;
-  Double_t _minparm; //Minimum value to be used in RooUnfoldParms
-  Double_t _maxparm; //Maximum value to be used in RooUnfoldParms
-  Double_t _stepsizeparm; //StepSize value to be used in RooUnfoldParms
-  Double_t _defaultparm; //Recommended value for regularisation parameter
   void Print(Option_t *opt="")const;
-  int _um;
-  protected:
 
+protected:
   void Init();
   virtual void Unfold(); 
   virtual void GetCov(); // Get covariance matrix using errors on measured distribution
@@ -93,8 +88,13 @@ public:
   void CopyData (const RooUnfold& rhs);
   static TH1* Add_Random(const TH1* hMeas_AR);
   virtual void GetSettings();
-  // instance variables
   static TMatrixD CutZeros(const TMatrixD& Ereco_copy);
+
+  // instance variables
+  Double_t _minparm; //Minimum value to be used in RooUnfoldParms
+  Double_t _maxparm; //Maximum value to be used in RooUnfoldParms
+  Double_t _stepsizeparm; //StepSize value to be used in RooUnfoldParms
+  Double_t _defaultparm; //Recommended value for regularisation parameter
   Int_t _verbose;  // Debug print level
   Int_t _nm;   // Total number of measured bins
   Int_t _nt;   // Total number of truth    bins

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.29 2010-08-23 11:02:46 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.30 2010-08-23 21:38:11 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -21,6 +21,10 @@
 #else
 class TVectorD;
 #endif
+#endif
+
+#if ((defined(__CINT__) && !defined(__MAKECINT__)) || defined(MAKEBUILD)) && !defined(NOTUNFOLD)
+#define USE_TUNFOLD_H 1   // can include TUnfold.h (don't know for ACLiC)
 #endif
 
 #ifdef __CINT__

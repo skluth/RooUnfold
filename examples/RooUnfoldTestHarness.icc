@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.39 2010-08-23 18:07:52 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.40 2010-08-23 21:38:11 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -42,7 +42,9 @@
 #include "RooUnfoldResponse.h"
 #include "RooUnfold.h"
 #include "RooUnfoldSvd.h"
+#ifdef USE_TUNFOLD_H
 #include "RooUnfoldTUnfold.h"
+#endif
 #include "TPaveText.h"
 #include "TLatex.h"
 #endif
@@ -83,7 +85,9 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("xhi",     &xhi,       10.0, "X range maximum");
   args.Add ("regparm", &regparm,  -1e30, "regularisation parameter (default: Bayes niter=3, SVD kterm=ntx/2)", "");
   args.Add ("ntoyssvd",&ntoyssvd,  1000, "number of toys used to obtain SVD covariances");
-  args.Add ("regmethod",&regmethod,   2, "TUnfold regularisation method (0=none, 1=size, 2=derivative, 3=curvature, 4=mixed)");
+#ifdef USE_TUNFOLD_H
+  args.Add ("regmethod",&regmethod,   2, "TUnfold regularisation method (0=none, 1=size, 2=derivative, 3=curvature)");
+#endif
   args.Add ("onepage", &onepage,      4, "number of pads per page");
   args.Add ("doerror", &doerror, RooUnfold::kErrors, "error treatment (0=none, 1=error propagation, 2=covariance propagation, 3=toy MC)");
   args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
@@ -367,8 +371,10 @@ Int_t RooUnfoldTestHarness::Unfold ()
     }
   unfold->SetNToys(ntoys);
   
-  if (method == RooUnfold::kSVD) dynamic_cast<RooUnfoldSvd*>(unfold)->SetNtoysSVD (ntoyssvd);
-  if (method == RooUnfold::kTUnfold) dynamic_cast<RooUnfoldTUnfold*>(unfold)->SetRegMethod(regmethod);
+  if (method == RooUnfold::kSVD)     (dynamic_cast<RooUnfoldSvd*    >(unfold))->SetNtoysSVD(ntoyssvd);
+#ifdef USE_TUNFOLD_H
+  if (method == RooUnfold::kTUnfold) (dynamic_cast<RooUnfoldTUnfold*>(unfold))->SetRegMethod((TUnfold::ERegMode)regmethod);
+#endif
   if (verbose>=0) {cout << "Created "; unfold->Print();}
   hReco= unfold->Hreco((RooUnfold::ErrorTreatment)doerror);
   if (!hReco) return 0;

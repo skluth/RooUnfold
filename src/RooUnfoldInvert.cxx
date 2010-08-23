@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldInvert.cxx,v 1.3 2010-08-23 18:07:54 adye Exp $
+//      $Id: RooUnfoldInvert.cxx,v 1.4 2010-08-23 21:38:13 adye Exp $
 //
 // Description:
 //      Unfolding class using inversion of the response matrix. This does not produce
@@ -23,16 +23,11 @@ END_HTML */
 #include "RooUnfoldInvert.h"
 
 #include <iostream>
-#include <iomanip>
-#include <cmath>
 
-#include "TNamed.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
-#include "TUnfold.h"
-#include "TGraph.h"
 #include "TDecompSVD.h"
 
 #include "RooUnfoldResponse.h"
@@ -40,7 +35,6 @@ END_HTML */
 using std::cout;
 using std::cerr;
 using std::endl;
-using std::sqrt;
 
 ClassImp (RooUnfoldInvert);
 

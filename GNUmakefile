@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id: GNUmakefile,v 1.22 2010-08-04 22:05:26 adye Exp $
+#      $Id: GNUmakefile,v 1.23 2010-08-23 21:38:09 adye Exp $
 #
 # Description:
 #      Makefile for the RooUnfold package
@@ -93,6 +93,7 @@ LDFLAGS      += $(EXTRALDFLAGS)
 PACKAGE       = RooUnfold
 OBJDIR        = $(WORKDIR)obj/
 DEPDIR        = $(WORKDIR)dep/
+CPPFLAGS     += -DMAKEBUILD
 
 ifeq ($(HAVE_TUNFOLD),)
 ifneq ($(wildcard $(ROOTINCDIR)/TUnfold.h),)

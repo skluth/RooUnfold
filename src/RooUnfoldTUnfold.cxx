@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTUnfold.cxx,v 1.12 2010-08-23 18:07:54 adye Exp $
+//      $Id: RooUnfoldTUnfold.cxx,v 1.13 2010-08-23 21:38:13 adye Exp $
 //
 // Description:
 //      Unfolding class using TUnfold from ROOT to do the actual unfolding.
@@ -26,10 +26,7 @@ END_HTML */
 #include "RooUnfoldTUnfold.h"
 
 #include <iostream>
-#include <iomanip>
-#include <cmath>
 
-#include "TNamed.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TVectorD.h"
@@ -42,7 +39,6 @@ END_HTML */
 using std::cout;
 using std::cerr;
 using std::endl;
-using std::sqrt;
 
 ClassImp (RooUnfoldTUnfold);
 
@@ -53,7 +49,7 @@ RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldTUnfold& rhs)
   CopyData (rhs);
 }
 
-RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas, Int_t reg,
+RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas, TUnfold::ERegMode reg,
                             const char* name, const char* title)
   : RooUnfold (res, meas, name, title),_reg_method(reg)
 {
@@ -124,31 +120,13 @@ RooUnfoldTUnfold::Unfold()
        
   const TH2D* Hres=_res->Hresponse();
   if (_fail) return;
-  TUnfold::ERegMode regmode=TUnfold::kRegModeNone;
-  switch (_reg_method){
-    case 0:
-      regmode=TUnfold::kRegModeNone;
-      break;
-    case 1:
-      regmode=TUnfold::kRegModeSize;
-      break;
-    case 2:
-      regmode=TUnfold::kRegModeDerivative;
-      break;
-    case 3:
-      regmode=TUnfold::kRegModeCurvature;
-      break;
-    default:
-      regmode=TUnfold::kRegModeDerivative;
-  }
-
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
   TH2D* Hresc=CopyOverflow(Hres);
   TH2D* Hres_flipped=TransposeHist(Hresc);
   TH1::AddDirectory (oldstat);
 
-  _unf= new TUnfold(Hres_flipped,TUnfold::kHistMapOutputHoriz,regmode);
+  _unf= new TUnfold(Hres_flipped,TUnfold::kHistMapOutputHoriz,_reg_method);
   Int_t nScan=30;
   // use automatic L-curve scan: start with taumin=taumax=0.0
   Double_t tauMin=0.0;
@@ -264,16 +242,17 @@ RooUnfoldTUnfold::FixTau(Double_t tau)
 }
 
 void
-RooUnfoldTUnfold::SetRegMethod(Int_t regmethod)
+RooUnfoldTUnfold::SetRegMethod(TUnfold::ERegMode regmethod)
 {
     /*
     Decides the regularisation method.
-     k=0: No regularisation
-     k=1: Minimise x-x0
-     k=2: Minimise 1st derivative of (x-x0) (default)
-     k=3: Minimise 2nd derivative of (x-x0)
-     Uses TUnfold.ScanLCurve to do unfolding. 
-     Creates covariance matrix. 
+
+      regemthod setting             regularisation
+      ===========================   ==============
+      TUnfold::kRegModeNone         none
+      TUnfold::kRegModeSize         minimize the size of (x-x0)
+      TUnfold::kRegModeDerivative   minimize the 1st derivative of (x-x0)
+      TUnfold::kRegModeCurvature    minimize the 2nd derivative of (x-x0)
      */
     _reg_method=regmethod;
 }

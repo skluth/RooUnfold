@@ -1,5 +1,18 @@
-History of RooUnfold     $Id: History,v 1.92 2010-08-23 18:07:50 adye Exp $
+History of RooUnfold     $Id: History,v 1.93 2010-08-23 21:38:09 adye Exp $
 ====================
+
+Tim Adye         23-Aug-2010 tja100823b
+  o RooUnfoldTestHarness only includes RooUnfoldTUnfold.h (to allow setting of
+    regmode) if we are sure TUnfold.h is available.
+  o RooUnfoldTUnfold uses TUnfold::ERegMode enum, rather than defining its own
+    settings.
+  o Don't call GetCov or GetErrors if it's already been done.
+  o RooUnfold::Chi2 uses Hreco bin errors if kErrors.
+  o Remove spurious RooUnfold::_um.
+  o RooUnfold parameters moved from public to protected.
+  o Removed some unneccessary includes.
+  o Improved a few routine descriptions.
+  o RooUnfoldTest uses TClass::GetDict to check if libRooUnfold already loaded.
 
 Tim Adye         23-Aug-2010 tja100823a
   o Improve RooUnfoldTest help text

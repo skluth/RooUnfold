@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.cxx,v 1.12 2010-08-23 18:07:54 adye Exp $
+//      $Id: RooUnfoldBinByBin.cxx,v 1.13 2010-08-23 21:38:13 adye Exp $
 //
 // Description:
 //      Unfolding class using the bin by bin method of conversion factors. 
@@ -21,24 +21,10 @@ END_HTML */
 
 #include "RooUnfoldBinByBin.h"
 
-#include <iostream>
-#include <iomanip>
-#include <cmath>
-
-#include "TNamed.h"
 #include "TH1.h"
 #include "TH2.h"
-#include "TVectorD.h"
-#include "TMatrixD.h"
-#include "TUnfold.h"
-#include "TGraph.h"
 
 #include "RooUnfoldResponse.h"
-
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::sqrt;
 
 ClassImp (RooUnfoldBinByBin);
 
