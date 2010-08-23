@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.24 2010-08-23 11:02:51 fwx38934 Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.25 2010-08-23 15:33:54 fwx38934 Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -15,8 +15,13 @@
 
 //____________________________________________________________
 /* BEGIN_HTML
-<p>Links to the RooUnfoldBayesImpl class which uses Bayesian to reconstruct the truth distribution.</p>
-<p>Returns covariance matrices with conditions approximately that of the machine precision. This occasionally leads to very large chi squared values</p>
+<p>Links to the RooUnfoldBayesImpl class which uses Bayesian unfolding to reconstruct the truth distribution.</p>
+<p>Works for 2 and 3 dimensional distributions
+<p>Returned errors can be either as a diagonal matrix or as a full matrix of covariances
+<p>Regularisation parameter sets the number of iterations used in the unfolding (default=4)
+<p>Is able to account for bin migration and smearing
+<p>Can unfold if test and measured distributions have different binning. 
+<p>Returns covariance matrices with conditions approximately that of the machine precision. This occasionally leads to very large chi squared values
 END_HTML */
 
 /////////////////////////////////////////////////////////////
@@ -142,14 +147,14 @@ RooUnfoldBayes::GetErrors()
 {
   if (!_unfolded) Unfold();
   Int_t nt= _nt + (_overflow ? 2 : 0);
-  _errors.ResizeTo (nt, nt);
+  _errors.ResizeTo (nt);
   _bayes->getVariance();  
   if (_bayes->error() != 0.0) {
-    AD2M (_bayes->covariance(), _errors);
+    AD2V (_bayes->covariance(), _errors);
   } else {
     cerr << "Covariance matrix not calculated - fill errors with sqrt(N)" << endl;
     for (Int_t i= 0; i < nt; i++)
-      _errors(i,i)= fabs (_rec(i));
+      _errors(i)= fabs (_rec(i));
   }
   _haveErrors= true;
 }
@@ -223,6 +228,15 @@ RooUnfoldBayes::AD2M (const Array2D& ad, TMatrixD& m)
   for (Int_t i= 0; i < nm; i++)
     for (Int_t j= 0; j < nt; j++)
       m(i,j)= ad.Get(j,i);
+  return m;
+}
+
+TVectorD&
+RooUnfoldBayes::AD2V (const Array2D& ad, TVectorD& m)
+{
+  Int_t nm= m.GetNrows();
+  for (Int_t i= 0; i < nm; i++)
+      m(i)= ad.Get(i,i);
   return m;
 }
 

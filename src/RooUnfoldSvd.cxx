@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.17 2010-08-18 12:58:04 fwx38934 Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.18 2010-08-23 15:33:55 fwx38934 Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -12,8 +12,13 @@
 //____________________________________________________________
 /* BEGIN_HTML
 <p>Links to RooUnfHistoSvd class which unfolds using Singular Value Decomposition (SVD).</p>
-<p>Returns near singular covariance matrices, leading to very large chi squared values</p>
-<p>If full error handling is turned on this method is quite slow as it uses errors based on the spread in a large number of samples.</p> 
+<p>Regularisation parameter defines the level at which values are deemed to be due to statistical fluctuations and are cut out. (Default= number of bins/2)
+<p>Returns errors as a full matrix of covariances
+<p>Error processing is much the same as with the kCovToy setting with 1000 toys. This is quite slow but can be switched off.
+<p>Can only handle 1 dimensional distributions
+<p>True and measured distributions must have the same binning
+<p>Can account for both smearing and biasing
+<p>Returns near singular covariance matrices, again leading to very large chi squared values
 END_HTML */
 
 /////////////////////////////////////////////////////////////

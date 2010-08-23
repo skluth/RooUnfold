@@ -1,5 +1,11 @@
-History of RooUnfold     $Id: History,v 1.90 2010-08-23 11:02:42 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.91 2010-08-23 15:33:48 fwx38934 Exp $
 ====================
+
+Richard Claridge 23-Aug-2010 rgc100823b
+  o Converted Ereco method to a switch over the error calculation methods
+  o Removed ErecoToy and ErecoDiags methods
+  o Added ErecoV method to RooUnfold
+  o Improved documentation
 
 Richard Claridge 23-Aug-2010 rgc100823a
   o Converted doerror parameter to enum

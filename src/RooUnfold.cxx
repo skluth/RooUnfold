@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.34 2010-08-23 11:02:50 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.35 2010-08-23 15:33:53 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -11,31 +11,52 @@
 
 //____________________________________________________________
 /* BEGIN_HTML
-<p> Main class for unfolding of distributions.</p>
-<p> Permits the use of several different unfolding techniques which can be initiated using the Algorithm parameter, 
-returns a table of values for each bin giving the true, measured and reconstructed values of a distribution and a chi squared value. 
-Also sets the errors on a reconstructed distribution (Hreco())</p>
-<p> The errors in both chi squared and in the reconstructed distribution can both be calculated in one of 3 ways. 
-These can be set using their respective parameters.</p>
-<p> The calculation of chi squared can be done with a simple sum of the sum of the squares of the residuals/error,
- or using a covariance matrix which can be set either using the error matrix from the unfolding or using the spread of the reconstructed values. 
- The errors on the reconstructed distribution are calculated in the same way except that the simplest option is simply to have no errors. </p>
-<p>There are 6 schemes to do the unfolding, a breif description of the methods and their associated problems follows:</p>
+<p>A base class for several unfolding methods.
+<p>The unfolding method can either use the constructors for individual unfolding algorithms or the New() method, specifiying the algorithm to be used.
+<p>The resultant distribution can be displayed as a plot (Hreco) or as a bin by bin breakdown of the true, measured and reconstructed values (PrintTable)
+<p>A covariance matrix can be returned using the Ereco() method. A vector of its diagonals can be returned with the ErecoV() method.
+<p>A summary of the unfolding algorithms which inherit from this class is below: 
 <ul>
-<li>RooUnfoldBayes: Uses the Bayes method of unfolding based on the method written by D'Agostini
+<li>RooUnfoldBayes: Uses the Bayes method of unfolding based on the method written by D'Agostini (<a href="http://www.slac.stanford.edu/spires/find/hep/www?j=NUIMA,A362,487">NIM A 362 (1995) 487</a>).
 <ul>
-<li>Returns covariance matrices with conditions approximately that of the machine precision. This occasionally leads to very large chi squared values</ul>
-<li> RooUnfoldSVD: Uses singular value decomposition
-<ul><li>Returns near singular covariance matrices, again leading to very large chi squared values</ul>
+<li>Works for 1, 2 and 3 dimensional distributions
+<li>Returned errors can be either as a diagonal matrix or as a full matrix of covariances
+<li>Regularisation parameter sets the number of iterations used in the unfolding (default=4)
+<li>Is able to account for bin migration and smearing
+<li>Can unfold if test and measured distributions have different binning. 
+<li>Returns covariance matrices with conditions approximately that of the machine precision. This occasionally leads to very large chi squared values
+</ul>
+<li> RooUnfoldSVD: Uses the singular value decomposition method of Hocker and Kartvelishvili (<a href="http://arxiv.org/abs/hep-ph/9509307">NIM A 372 (1996) 469</a>)
+<ul>
+<li>Regularisation parameter defines the level at which values are deemed to be due to statistical fluctuations and are cut out. (Default= number of bins/2)
+<li>Returns errors as a full matrix of covariances
+<li>Error processing is much the same as with the kCovToy setting with 1000 toys. This is quite slow but can be switched off.
+<li>Can only handle 1 dimensional distributions
+<li>True and measured distributions must have the same binning
+<li>Can account for both smearing and biasing
+<li>Returns near singular covariance matrices, again leading to very large chi squared values
+</ul>
 <li> RooUnfoldBinByBin: Unfolds using the method of correction factors.
-<ul><li>Is not able to handle bin migration caused by bias/smearing of the distribution</ul>
-<li> RooUnfoldTUnfold: Uses the unfolding method implemented in ROOT's TUnfold class  
-<ul><li>The latest version (15) will not handle plots with an additional underflow bin. As a result overflows must be turned off
-if v15 of TUnfold is used. ROOT versions 5.26 or below use v13 and so should be safe to use overflows.</ul>
+<ul>
+<li>Returns errors as a diagonal matrix. 
+<li>Is not able to handle bin migration caused by bias/smearing of the distribution
+<li>Can only handle 1 dimensional distributions
+<li>True and measured distributions must have the same binning
+</ul>
+<li> RooUnfoldTUnfold: Uses the unfolding method implemented in ROOT's <a href="http://root.cern.ch/root/html/TUnfold.html">TUnfold</a> class
+<ul>
+<li>Only able to reconstruct 1 dimensional distributions
+<li>Can account for bin migration and smearing
+<li>Errors come as a full covariance matrix. 
+<li>Will sometimes warn of "unlinked" bins. These are bins with 0 entries and do not effect the results of the unfolding
+<li>Regularisation parameter can be either optimised internally by plotting log10(chi2 squared) against log10(tau). The 'kink' in this curve is deemed the optimum tau value. This value can also be set manually (FixTau)
+<li>The latest version (TUnfold v15) requires that RooUnfoldResponse::SetOverflow=0. ROOT versions 5.26 or below use v13 and so should be safe to use overflows
+</ul>
 <li> RooUnfoldInvert: The simplest method of unfolding works by simply inverting the response matrix. 
-<ul><li>This is not accurate for small matrices and produces inaccurate unfolded distributions.
+<ul>
+<li>For small statistics, this method does not produce useful results. 
 <li>The inversion method is included largely to illustrate the necessity of a more effective method of unfolding</ul>
-</ul>      
+</ul>     
 END_HTML */
 
 /////////////////////////////////////////////////////////////
@@ -88,7 +109,6 @@ RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas,Dou
 	3: Unfold bin by bin.
 	4: Unfold with TUnfold
 	5: Unfold using inversion of response matrix
-	6: Unfold bin by bin (old method)
 	*/
   RooUnfold* unfold;
   switch (alg) {
@@ -174,7 +194,6 @@ RooUnfold::Reset()
 void
 RooUnfold::Init()
 {
-	//Initialises all variables
   _res= 0;
   _meas= 0;
   _nm= _nt= 0;
@@ -188,7 +207,6 @@ RooUnfold::Init()
 RooUnfold&
 RooUnfold::Setup (const RooUnfoldResponse* res, const TH1* meas)
 {
-	//Sets parameters
   Reset();
   SetResponse (res);
   SetMeasured (meas);
@@ -198,7 +216,6 @@ RooUnfold::Setup (const RooUnfoldResponse* res, const TH1* meas)
 void
 RooUnfold::SetResponse (const RooUnfoldResponse* res)
 {
-	//Sets response matrix
   _res= res;
   _nm= _res->GetNbinsMeasured();
   _nt= _res->GetNbinsTruth();
@@ -225,13 +242,13 @@ void
 RooUnfold::GetErrors()
 {
 	//Creates matrix of diagonals of covariance matrices
-	//In bayes case uses diagonal matrix created by getvariance method. 
+	//In bayes case uses diagonal matrix created by GetVariance method in RooUnfoldBayes. 
 	Int_t nt= _nt + (_overflow ? 2 : 0);
-	_errors.ResizeTo(nt,nt);
+	_errors.ResizeTo(nt);
 	if (_um!=1){
 		GetCov();
   		for (Int_t i= 0; i < nt; i++) {
-    		_errors(i,i)= _cov(i,i);
+    		_errors(i)= _cov(i,i);
   		}
 	}
   _haveErrors= true;
@@ -254,7 +271,7 @@ RooUnfold::GetCov()
 }
 
 void
-RooUnfold::Get_err_mat()
+RooUnfold::GetErrMat()
 {
 	//Get error matrix based on residuals found using the Runtoy method. 
 	Int_t total= _nt + (_overflow ? 2 : 0);
@@ -283,29 +300,20 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
 {
 	/*Calculates Chi squared. Method depends on value of DoChi2
 	0: sum of (residuals/error)squared
-	1: use covariance matrix returned from unfolding
-	2: use covariance matrix returned from Get_err_mat() 
-	Returns warnings for small determinants of covariance matrices and if the condition is very large.*/
+	1: use error matrix (diagonal) from unfolding
+	2: use covariance matrix returned from unfolding
+	3: use covariance matrix returned from GetErrMat() 
+	Returns warnings for small determinants of covariance matrices and if the condition is very large.
+	If a matrix has to be inverted also removes rows/cols with all their elements equal to 0*/
 
 	const TH1* hReco=Hreco (DoChi2);
 	Int_t nt= _nt+(_overflow ? 2 : 0);
     TMatrixD Ereco_copy;
 	if (DoChi2==kErrors||DoChi2==kCovariance||DoChi2==kCovToy){
-		if (DoChi2==kErrors){
-			Ereco_copy.ResizeTo(ErecoDiags().GetNrows(),ErecoDiags().GetNcols());
-	  		Ereco_copy=ErecoDiags();
-	  		nt=ErecoDiags().GetNrows();
-	  	}
-	  	if (DoChi2==kCovariance){
-	  		Ereco_copy.ResizeTo(Ereco().GetNrows(),Ereco().GetNcols());
-	  		Ereco_copy=Ereco();
-	  		nt=Ereco().GetNrows();
-	  	}
-	  	if (DoChi2==kCovToy){
-	  		Ereco_copy.ResizeTo(ErecoToy().GetNrows(),ErecoToy().GetNcols());
-	  		Ereco_copy=ErecoToy();
-	  		nt=ErecoToy().GetNrows();
-	  	}
+		Ereco_copy.ResizeTo(Ereco(DoChi2).GetNrows(),Ereco(DoChi2).GetNcols());
+	  	Ereco_copy=Ereco(DoChi2);
+	  	nt=Ereco(DoChi2).GetNrows();
+	  	
 		TMatrixD reco_matrix(nt,1);
 	  	for (Int_t i = 0 ; i < nt; i++) {
 	    	Int_t it= RooUnfoldResponse::GetBin (hReco, i, _overflow);
@@ -506,7 +514,7 @@ RooUnfold::Hreco (ErrorTreatment withError)
 	0: No errors
 	1: Errors from the square root of the diagonals of the covariance matrix given by the unfolding
 	2: Errors from the square root of of the covariance matrix given by the unfolding
-	3: Errors from the square root of the covariance matrix given by Get_err_mat()
+	3: Errors from the square root of the covariance matrix given by GetErrMat()
 	*/
   TH1* reco= (TH1*) _res->Htruth()->Clone(GetName());
   reco->Reset();
@@ -522,13 +530,13 @@ RooUnfold::Hreco (ErrorTreatment withError)
   	if (!_haveCov) withError= kNoError;
   }
   
-  if (!_have_err_mat && withError==kCovToy) Get_err_mat();
+  if (!_have_err_mat && withError==kCovToy) GetErrMat();
   Int_t nt= _nt + (_overflow ? 2 : 0);
   for (Int_t i= 0; i < nt; i++) {
     Int_t j= RooUnfoldResponse::GetBin (reco, i, _overflow);
     reco->SetBinContent (j,             _rec(i));
     if (withError==kErrors){
-      reco->SetBinError (j, sqrt (fabs (_errors(i,i))));  
+      reco->SetBinError (j, sqrt (fabs (_errors(i))));  
   	}
   	if (withError==kCovariance){
   		reco->SetBinError(j,sqrt(fabs(_cov(i,i))));
@@ -628,6 +636,7 @@ RooUnfold::Print(Option_t *opt)const
 TMatrixD
 RooUnfold::CutZeros(const TMatrixD& Ereco_copy)
 {
+	//Removes row & column if all their elements are 0. 
 	vector<int> diags;
 		int missed=0;
 		for (int i=0; i<Ereco_copy.GetNrows(); i++){
@@ -655,4 +664,88 @@ RooUnfold::CutZeros(const TMatrixD& Ereco_copy)
 				}
 		}
 	return Ereco_copy_cut;
+}
+
+TMatrixD
+RooUnfold::Ereco(ErrorTreatment witherror)
+{
+	/*Returns covariance matrices for error calculation of type witherror
+	0: Errors are the square root of the bin content
+	1: Errors from the diagonals of the covariance matrix given by the unfolding
+	2: Errors from the covariance matrix given by the unfolding
+	3: Errors from the covariance matrix given by GetErrMat()
+	*/
+	TMatrixD Ereco_m;
+	switch(witherror){
+		case kNoError:
+		TH1* HR=Hreco(kNoError);
+		Ereco_m.ResizeTo(HR->GetNbinsX(),HR->GetNbinsX());
+		for (int i=0; i<HR->GetNbinsX(); i++){
+			Ereco_m(i,i)=HR->GetBinError(i);
+		}
+		break;
+		case kErrors:
+		GetErrors();
+		Ereco_m.ResizeTo(_errors.GetNrows(),_errors.GetNrows());
+		for (int i=0; i<_errors.GetNrows();i++){
+			Ereco_m(i,i)=_errors(i);
+		}
+		break;
+		case kCovariance:
+		GetCov();
+		Ereco_m.ResizeTo(_cov.GetNrows(),_cov.GetNcols());
+		Ereco_m=_cov;
+		break;
+		case kCovToy:
+		GetErrMat();
+		Ereco_m.ResizeTo(_err_mat.GetNrows(),_err_mat.GetNcols());
+		Ereco_m=_err_mat;
+		break;
+		default:
+		cerr<<"Error, unrecognised error method= "<<witherror<<endl;
+	}
+	return Ereco_m;
+}
+
+TVectorD
+RooUnfold::ErecoV(ErrorTreatment witherror)
+{
+	/*Returns vectors of the diagonals of the covariance matrices for error calculation of type witherror
+	0: Errors are the square root of the bin content
+	1: Errors from the diagonals of the covariance matrix given by the unfolding
+	2: Errors from the covariance matrix given by the unfolding
+	3: Errors from the covariance matrix given by GetErrMat()
+	*/
+	TVectorD Ereco_m;
+	switch(witherror){
+		case kNoError:
+		TH1* HR=Hreco(kNoError);
+		Ereco_m.ResizeTo(HR->GetNbinsX());
+		for (int i=0; i<HR->GetNbinsX(); i++){
+			Ereco_m(i)=HR->GetBinError(i);
+		}
+		break;
+		case kErrors:
+		GetErrors();
+		Ereco_m.ResizeTo(_errors.GetNrows());
+		Ereco_m=_errors;
+		break;
+		case kCovariance:
+		GetCov();
+		Ereco_m.ResizeTo(_cov.GetNrows());
+		for (int i=0; i<_cov.GetNrows(); i++){
+			Ereco_m(i)=_cov(i,i);
+		}
+		break;
+		case kCovToy:
+		GetErrMat();
+		Ereco_m.ResizeTo(_err_mat.GetNrows(),_err_mat.GetNcols());
+		for (int i=0; i<_err_mat.GetNrows(); i++){
+			Ereco_m(i)=_err_mat(i,i);
+		}
+		break;
+		default:
+		cerr<<"Error, unrecognised error method= "<<witherror<<endl;
+	}
+	return Ereco_m;
 }

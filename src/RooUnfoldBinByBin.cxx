@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.cxx,v 1.10 2010-08-19 12:31:07 fwx38934 Exp $
+//      $Id: RooUnfoldBinByBin.cxx,v 1.11 2010-08-23 15:33:54 fwx38934 Exp $
 //
 // Description:
 //      Unfolding class using the bin by bin method of conversion factors. 
@@ -13,6 +13,8 @@
 /* BEGIN_HTML
 <p> Uses the correction factor method to unfold the distribution by looking at each bin individually.</p>
 <p> This method cannot account for bin migration and as such cannot unfold reliably if a bias/smearing effects are applied.</p>
+<p>Can only handle 1 dimensional distributions
+<p>True and measured distributions must have the same binning
 END_HTML */
 
 /////////////////////////////////////////////////////////////

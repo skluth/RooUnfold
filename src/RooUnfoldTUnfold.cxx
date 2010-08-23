@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTUnfold.cxx,v 1.10 2010-08-18 12:58:04 fwx38934 Exp $
+//      $Id: RooUnfoldTUnfold.cxx,v 1.11 2010-08-23 15:33:55 fwx38934 Exp $
 //
 // Description:
 //      Unfolding class using TUnfold from ROOT to do the actual unfolding.
@@ -11,12 +11,14 @@
 
 //____________________________________________________________
 /* BEGIN_HTML
-<p>Unfolds using ROOT's TUnfold method.</p>
-<p>By default the optimum regularisation parameter (tau) is scanned by plotting log10(chi2 squared) against log10(tau). The 
-'kink' in tis curve is deemed the optimum tau value.</p>
-<p>For unfolding, inefficiencies are entered into the underflow bin of the distribution to be unfolded. However, latest version of TUnfold
- (15) will not handle plots with an additional underflow bin. As a result overflows must be turned off if v15 of TUnfold is used. 
- ROOT versions 5.26 or below use v13 and so should be safe to use overflows.</p>
+<p>Uses the unfolding method implemented in ROOT's <a href="http://root.cern.ch/root/html/TUnfold.html">TUnfold</a> class
+<p>Only able to reconstruct 1 dimensional distributions
+<p>Can account for bin migration and smearing
+<p>Errors come as a full covariance matrix. 
+<p>Will sometimes warn of "unlinked" bins. These are bins with 0 entries and do not effect the results of the unfolding
+<p>Regularisation parameter can be either optimised internally by plotting log10(chi2 squared) against log10(tau). The 'kink' in this curve is deemed the optimum tau value. This value can also be set manually (FixTau)
+<p>The latest version (15) will not handle plots with an additional underflow bin. As a result overflows must be turned off
+if v15 of TUnfold is used. ROOT versions 5.26 or below use v13 and so should be safe to use overflows.</ul>
 END_HTML */
 
 /////////////////////////////////////////////////////////////
