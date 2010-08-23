@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.38 2010-08-23 11:02:46 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.39 2010-08-23 18:07:52 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -81,10 +81,11 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("ntrain",  &ntrain,  100000, "#events to use for training");
   args.Add ("xlo",     &xlo,        0.0, "X range minimum");
   args.Add ("xhi",     &xhi,       10.0, "X range maximum");
-  args.Add ("regparm", &regparm,   -1e30, "regularisation parameter (default: Bayes niter=3, SVD kterm=ntx/2)", "");
-  args.Add ("ntoyssvd",   &ntoyssvd,     1000, "number of toys used to obtain SVD covariances");
+  args.Add ("regparm", &regparm,  -1e30, "regularisation parameter (default: Bayes niter=3, SVD kterm=ntx/2)", "");
+  args.Add ("ntoyssvd",&ntoyssvd,  1000, "number of toys used to obtain SVD covariances");
+  args.Add ("regmethod",&regmethod,   2, "TUnfold regularisation method (0=none, 1=size, 2=derivative, 3=curvature, 4=mixed)");
   args.Add ("onepage", &onepage,      4, "number of pads per page");
-  args.Add ("doerror", &doerror,     RooUnfold::kErrors, "calculate errors (default=1 unless this will take a very long time)", "1");
+  args.Add ("doerror", &doerror, RooUnfold::kErrors, "error treatment (0=none, 1=error propagation, 2=covariance propagation, 3=toy MC)");
   args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
   args.Add ("mtrainx", &mtrainx,    5.0, "training signal PDF X mean");
   args.Add ("wtrainx", &wtrainx,    1.2, "training signal PDF X width");
@@ -102,14 +103,12 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("hpaper",  &hpaper,       0, "paper height", "");
   args.Add ("verbose", &verbose,      1, "debug level: 0=warnings, 1=verbose, 2=debug, 3=detailed");
   args.Add ("draw",    &dodraw,       1, "draw results");
-  args.Add ("ntoys",&ntoys,-1,"number of toys (by default 500 if errors are to be plotted, 50 otherwise)");
-  args.Add ("ploterrors",&ploterrors, 0, "plot error comparison and chi2 graph");
-  args.Add ("plotparms",&plotparms, 0, "plot graphs using RooUnfoldParms");
-  args.Add ("minparm",&minparm, -1e30, "minimum value for RooUnfoldParms (default varies with unfolding method)");
-  args.Add ("maxparm",&maxparm, -1e30, "maximum value for RooUnfoldParms (default varies with unfolding method)");
-  args.Add ("stepsize",&stepsize, 0, "stepsize in RooUnfoldParms (default varies with unfolding method)");
-  args.Add ("regmethod", &regmethod, 2, "regularisation method for TUnfold");
-  
+  args.Add ("ntoys",   &ntoys,       -1, "number of toys for error calculation (doerror=3) or plots (ploterrors=1, default ntoys=500)", "50");
+  args.Add ("ploterrors",&ploterrors, 0, "plot error comparison and chi2?");
+  args.Add ("plotparms",&plotparms,   0, "plot errors for different regularisation parameters?");
+  args.Add ("minparm", &minparm,  -1e30, "minimum value in regparm scan (with plotparms=1)", "");
+  args.Add ("maxparm", &maxparm,  -1e30, "maximum value in regparm scan (with plotparms=1)", "");
+  args.Add ("stepsize",&stepsize,     0, "step size in regparm scan (with plotparms=1)", "");
 }
 
 //==============================================================================
@@ -166,9 +165,8 @@ void RooUnfoldTestHarness::SetupCanvas()
     if (grid) canvas->SetGrid();
     canvas->Divide(2,(onepage+1)/2);
   } else if (onepage>=3) {
-	    canvas->Divide(1,onepage);
-		    //}
-	}
+    canvas->Divide(1,onepage);
+    }
   else if (grid)
     canvas->SetGrid(1);
   ipad= 0;
@@ -271,7 +269,7 @@ Int_t RooUnfoldTestHarness::RunTests()
         Parm.GetMeanResiduals()->Draw("P"); 
         canvas->cd(++ipad);
         Parm.GetRMSResiduals()->Draw("P"); 
-		}
+        }
       }
     }
   }
@@ -360,13 +358,13 @@ Int_t RooUnfoldTestHarness::Unfold ()
   if (!unfold) return 0;
   unfold->SetVerbose (verbose);
   if (ntoys<0){
-  	if (ploterrors>=1){
-  		ntoys=500;
-  		}
-  	else{
-  		ntoys=50;
-  		}
-  	}
+    if (ploterrors>=1){
+        ntoys=500;
+        }
+    else{
+        ntoys=50;
+        }
+    }
   unfold->SetNToys(ntoys);
   
   if (method == RooUnfold::kSVD) dynamic_cast<RooUnfoldSvd*>(unfold)->SetNtoysSVD (ntoyssvd);

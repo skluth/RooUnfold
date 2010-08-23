@@ -1,11 +1,11 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldInvert.cxx,v 1.2 2010-08-18 12:58:04 fwx38934 Exp $
+//      $Id: RooUnfoldInvert.cxx,v 1.3 2010-08-23 18:07:54 adye Exp $
 //
 // Description:
 //      Unfolding class using inversion of the response matrix. This does not produce
-//		good results and is designed to illustrate the need for more sophisticated
-//		unfolding techniques
+//      good results and is designed to illustrate the need for more sophisticated
+//      unfolding techniques
 //
 // Authors: Richard Claridge <richard.claridge@stfc.ac.uk> & Tim Adye <T.J.Adye@rl.ac.uk>
 //
@@ -71,7 +71,7 @@ RooUnfoldInvert::~RooUnfoldInvert()
 void
 RooUnfoldInvert::Unfold()
 {
-	   
+       
   const TH2D* Hres=_res->Hresponse();
   const TH1* Hmeas=_meas;
   int HresXbins=Hres->GetNbinsX();
@@ -82,16 +82,16 @@ RooUnfoldInvert::Unfold()
   if (_overflow){Hres_m=RooUnfoldResponse::H2M(Hres,HresXbins,HresYbins,_res->Htruth(),1);}
   else {Hres_m=RooUnfoldResponse::H2M(Hres,HresXbins,HresYbins,_res->Htruth(),0);}
   if (_overflow){
-  	HresXbins+=2;
-  	HresYbins+=2;
-  	HmeasXbins+=2;
+    HresXbins+=2;
+    HresYbins+=2;
+    HmeasXbins+=2;
   }
   TVectorD* Hmeas_mp=RooUnfoldResponse::H2V(Hmeas,HmeasXbins);
   Hmeas_m.ResizeTo(HmeasXbins);
   Hmeas_m=(*Hmeas_mp);
   TDecompSVD svd(*Hres_m);
   if (svd.Condition()<0){
-  	cerr <<"Error: bad condition= "<<svd.Condition()<<endl;
+    cerr <<"Error: bad condition= "<<svd.Condition()<<endl;
   }
   Hres_i.ResizeTo(HresYbins,HresXbins);
   Hres_i=svd.Invert();
@@ -104,22 +104,22 @@ RooUnfoldInvert::Unfold()
 void
 RooUnfoldInvert::GetCov()
 {
-	if (!_unfolded){Unfold();}
-	_cov.ResizeTo(Hres_i.GetNrows(),Hres_i.GetNcols());
-	for (int i=0;i<Hres_i.GetNrows();i++){
-		for (int j=0;j<Hres_i.GetNrows();j++){
-			for (int k=0; k<Hres_i.GetNcols();k++){
-				_cov(i,j)+=(Hres_i(i,k)*Hres_i(j,k)*Hmeas_m(k));
-			}
-		}
-	}
-	_haveCov= true;
+    if (!_unfolded){Unfold();}
+    _cov.ResizeTo(Hres_i.GetNrows(),Hres_i.GetNcols());
+    for (int i=0;i<Hres_i.GetNrows();i++){
+        for (int j=0;j<Hres_i.GetNrows();j++){
+            for (int k=0; k<Hres_i.GetNcols();k++){
+                _cov(i,j)+=(Hres_i(i,k)*Hres_i(j,k)*Hmeas_m(k));
+            }
+        }
+    }
+    _haveCov= true;
 }
 
 void
 RooUnfoldInvert::GetSettings(){
-	_minparm=0;
-	_maxparm=0;
-	_stepsizeparm=0;
-	_defaultparm=0;
+    _minparm=0;
+    _maxparm=0;
+    _stepsizeparm=0;
+    _defaultparm=0;
 }

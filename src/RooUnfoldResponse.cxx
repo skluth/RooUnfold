@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.15 2010-08-19 12:31:07 fwx38934 Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.16 2010-08-23 18:07:54 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -91,7 +91,7 @@ RooUnfoldResponse::operator= (const RooUnfoldResponse& rhs)
 RooUnfoldResponse&
 RooUnfoldResponse::Reset()
 {
-	//Deletes all previous information. Sets parameters to 0
+    //Deletes all previous information. Sets parameters to 0
   ClearCache();
   delete _mes;
   delete _tru;
@@ -102,7 +102,7 @@ RooUnfoldResponse::Reset()
 RooUnfoldResponse&
 RooUnfoldResponse::Init()
 {
-	//Initialises all variables
+    //Initialises all variables
   _overflow= 0;
   return Setup();
 }
@@ -110,7 +110,7 @@ RooUnfoldResponse::Init()
 RooUnfoldResponse&
 RooUnfoldResponse::Setup()
 {
-	//Sets all variables to 0
+    //Sets all variables to 0
   _tru= _mes= 0;
   _res= 0;
   _vMes= _eMes= _vTru= _eTru= 0;
@@ -123,7 +123,7 @@ RooUnfoldResponse::Setup()
 RooUnfoldResponse&
 RooUnfoldResponse::Setup (const RooUnfoldResponse& rhs)
 {
-	//Sets up object according to a previous occurrence 
+    //Sets up object according to a previous occurrence 
   _overflow= rhs._overflow;
   return Setup (rhs.Hmeasured(), rhs.Htruth(), rhs.Hresponse());
 }
@@ -131,7 +131,7 @@ RooUnfoldResponse::Setup (const RooUnfoldResponse& rhs)
 RooUnfoldResponse&
 RooUnfoldResponse::Setup (Int_t nm, Double_t mlo, Double_t mhi, Int_t nt, Double_t tlo, Double_t thi)
 {
-	//Sets up object using inputted data. Creates truth and measured histograms and a TH2D of the residuals
+    //Sets up object using inputted data. Creates truth and measured histograms and a TH2D of the residuals
   Reset();
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
@@ -149,7 +149,7 @@ RooUnfoldResponse::Setup (Int_t nm, Double_t mlo, Double_t mhi, Int_t nt, Double
 void
 RooUnfoldResponse::ReplaceAxis (TObject* hist, TAxis* dest, const TAxis* source)
 {
-	//Replaces an axis with that of a different histogram
+    //Replaces an axis with that of a different histogram
   source->Copy (*dest);
   dest->SetParent (hist);
 }
@@ -157,8 +157,8 @@ RooUnfoldResponse::ReplaceAxis (TObject* hist, TAxis* dest, const TAxis* source)
 RooUnfoldResponse&
 RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
 {
-	//Sets up truth and mesured distributions using those inputted to RooUnfoldResponse
-	//Creates TH2D of errors. 	
+    //Sets up truth and mesured distributions using those inputted to RooUnfoldResponse
+    //Creates TH2D of errors.   
   Reset();
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
@@ -185,7 +185,7 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
 RooUnfoldResponse&
 RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2D* response)
 {
-	//Reads in measured and truth distribution as well as error matrix. 
+    //Reads in measured and truth distribution as well as error matrix. 
   Reset();
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
@@ -224,7 +224,7 @@ RooUnfoldResponse::ClearCache()
 Int_t
 RooUnfoldResponse::Fill (Double_t xr, Double_t xt, Double_t w)
 {
-	//Fills true and measured distributions for 1-dimensional true and measured distributions
+    //Fills true and measured distributions for 1-dimensional true and measured distributions
   assert (_mes != 0 && _tru != 0);
   assert (_mdim==1 && _tdim==1);
   if (_cached) ClearCache();
@@ -236,7 +236,7 @@ RooUnfoldResponse::Fill (Double_t xr, Double_t xt, Double_t w)
 Int_t
 RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t xt, Double_t yt, Double_t w)
 {
-	//Fills true and measured distributions for 2-dimensional true and measured distributions
+    //Fills true and measured distributions for 2-dimensional true and measured distributions
   assert (_mes != 0 && _tru != 0);
   assert (_mdim==2 && _tdim==2);
   if (_cached) ClearCache();
@@ -248,7 +248,7 @@ RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t xt, Double_t yt, Dou
 Int_t
 RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t zr, Double_t xt, Double_t yt, Double_t zt, Double_t w)
 {
-	//Fills true and measured distributions for 3-dimensional true and measured distributions
+    //Fills true and measured distributions for 3-dimensional true and measured distributions
   assert (_mes != 0 && _tru != 0);
   assert (_mdim==3 && _tdim==3);
   if (_cached) ClearCache();
@@ -260,7 +260,7 @@ RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t zr, Double_t xt, Dou
 Int_t
 RooUnfoldResponse::FindBin(const TH1* h, Double_t x, Double_t y)
 {
-	//Finds a specific bin in a distribution
+    //Finds a specific bin in a distribution
   Int_t nx=   h->GetNbinsX();
   Int_t ny=   h->GetNbinsY();
   Int_t binx= h->GetXaxis()->FindBin(x) - 1;
@@ -275,7 +275,7 @@ RooUnfoldResponse::FindBin(const TH1* h, Double_t x, Double_t y)
 Int_t
 RooUnfoldResponse::FindBin(const TH1* h, Double_t x, Double_t y, Double_t z)
 {
-	//Finds a specific bin in a distribution
+    //Finds a specific bin in a distribution
   Int_t nx=   h->GetNbinsX();
   Int_t ny=   h->GetNbinsY();
   Int_t nz=   h->GetNbinsZ();
@@ -294,7 +294,7 @@ RooUnfoldResponse::FindBin(const TH1* h, Double_t x, Double_t y, Double_t z)
 Int_t
 RooUnfoldResponse::GetBinDim (const TH1* h, Int_t i)
 {
-	//Gets dimension of a bin.
+    //Gets dimension of a bin.
   Int_t nx= h->GetNbinsX();
   if (h->GetDimension() == 2) {
 //  cout << i << " -> " << "(" << i%nx+1 << "," << i/nx+1 << ")" << endl;
@@ -311,7 +311,7 @@ RooUnfoldResponse::GetBinDim (const TH1* h, Int_t i)
 Int_t
 RooUnfoldResponse::Miss1D (Double_t xt, Double_t w)
 {
-	//Fill a 1-D bin with 0
+    //Fill a 1-D bin with 0
   assert (_tru != 0);
   assert (_mdim==1 && _tdim==1);
   if (_cached) ClearCache();
@@ -321,7 +321,7 @@ RooUnfoldResponse::Miss1D (Double_t xt, Double_t w)
 Int_t
 RooUnfoldResponse::Miss2D (Double_t xt, Double_t yt, Double_t w)
 {
-	//Fill a 2-D bin with 0
+    //Fill a 2-D bin with 0
   assert (_tru != 0);
   assert (_mdim==2 && _tdim==2);
   if (_cached) ClearCache();
@@ -331,7 +331,7 @@ RooUnfoldResponse::Miss2D (Double_t xt, Double_t yt, Double_t w)
 Int_t
 RooUnfoldResponse::Miss (Double_t xt, Double_t yt, Double_t zt, Double_t w)
 {
-	//Fill a 3-D bin with 0
+    //Fill a 3-D bin with 0
   assert (_tru != 0);
   assert (_mdim==3 && _tdim==3);
   if (_cached) ClearCache();
@@ -354,7 +354,7 @@ RooUnfoldResponse::H2H1D(const TH1* h, Int_t nb)
 TVectorD*
 RooUnfoldResponse::H2V  (const TH1* h, Int_t nb, Bool_t overflow)
 {
-	//Returns TVectorD of the bin contents of the input histogram
+    //Returns TVectorD of the bin contents of the input histogram
   Int_t first= overflow ? 0 : 1;
   if (overflow) nb += 2;
   TVectorD* v= new TVectorD (nb);
@@ -368,7 +368,7 @@ RooUnfoldResponse::H2V  (const TH1* h, Int_t nb, Bool_t overflow)
 void
 RooUnfoldResponse::V2H (const TVectorD& v, TH1* h, Int_t nb, Bool_t overflow)
 {
-	//Sets the bin content of the histogram as that element of the input vector
+    //Sets the bin content of the histogram as that element of the input vector
   Int_t first= overflow ? 0 : 1;
   if (overflow) nb += 2;
   for (Int_t i= 0; i < nb; i++) {
@@ -379,7 +379,7 @@ RooUnfoldResponse::V2H (const TVectorD& v, TH1* h, Int_t nb, Bool_t overflow)
 TVectorD*
 RooUnfoldResponse::H2VE (const TH1* h, Int_t nb, Bool_t overflow)
 {
-	//Returns TVectorD of bin errors for input histogram
+    //Returns TVectorD of bin errors for input histogram
   Int_t first= overflow ? 0 : 1;
   if (overflow) nb += 2;
   TVectorD* v= new TVectorD (nb);
@@ -393,7 +393,7 @@ RooUnfoldResponse::H2VE (const TH1* h, Int_t nb, Bool_t overflow)
 TMatrixD*
 RooUnfoldResponse::H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm, Bool_t overflow)
 {
-	//Returns Matrix of values of bins in a 2D input histogram 
+    //Returns Matrix of values of bins in a 2D input histogram 
   Int_t first= overflow ? 0 : 1;
   if (overflow) {
     nx += 2;
@@ -419,7 +419,7 @@ RooUnfoldResponse::H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm, Boo
 TMatrixD*
 RooUnfoldResponse::H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm, Bool_t overflow)
 {
-	//Returns matrix of bin errors for a 2D histogram. 
+    //Returns matrix of bin errors for a 2D histogram. 
   Int_t first= overflow ? 0 : 1;
   if (overflow) {
     nx += 2;
@@ -448,7 +448,7 @@ RooUnfoldResponse::H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm, Boo
 TH1*
 RooUnfoldResponse::ApplyToTruth (const TH1* truth, const char* name) const
 {
-	// Apply the response matrix to the truth
+    // Apply the response matrix to the truth
 // Errors not set, since we assume original truth has no errors
   if (!Htruth()) return 0;  // Needed for checking binning if nothing else
 
@@ -484,7 +484,7 @@ RooUnfoldResponse::ApplyToTruth (const TH1* truth, const char* name) const
 void
 RooUnfoldResponse::SetNameTitleDefault (const char* defname, const char* deftitle)
 {
-	//Set name and titles
+    //Set name and titles
   const char* s= GetName();
   if (s[0] == '\0') {
     if (_res) s= _res->GetName();

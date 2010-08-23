@@ -29,8 +29,8 @@ virtual void GetCov();
 virtual void GetSettings();
 
 private:
-  	int HresXbins;
-  	TVectorD c_vector;
+    int HresXbins;
+    TVectorD c_vector;
 public:
 
   ClassDef (RooUnfoldBinByBin, 0) 

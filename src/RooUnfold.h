@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.27 2010-08-23 15:33:54 fwx38934 Exp $
+//      $Id: RooUnfold.h,v 1.28 2010-08-23 18:07:54 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -57,14 +57,14 @@ public:
 
   virtual TVectorD&                Vreco();
   virtual TMatrixD                Ereco(ErrorTreatment witherror);
-  virtual TVectorD				  ErecoV(ErrorTreatment witherror);
+  virtual TVectorD                ErecoV(ErrorTreatment witherror);
 
   virtual Int_t                    verbose() const;
   virtual void SetVerbose (Int_t level);
   virtual Int_t                    NToys() const; // Number of toys
   virtual void SetNToys (Int_t toys); // Set number of toys
-  virtual Int_t						NBins() const;
-  virtual Int_t						Overflow() const;
+  virtual Int_t                     NBins() const;
+  virtual Int_t                     Overflow() const;
   virtual void PrintTable (std::ostream& o, const TH1* hTrue= 0, ErrorTreatment=kNoError);
   virtual TObject* Impl();
   virtual void  SetRegParm (Double_t parm);
@@ -125,8 +125,8 @@ inline RooUnfold& RooUnfold::operator= (const RooUnfold& rhs) {Assign(rhs); retu
 
 inline Int_t                    RooUnfold::verbose()   const { return _verbose; } // Controls amount of information to be printed
 inline Int_t                    RooUnfold::NToys()   const { return _NToys; } // Sets Number of toys
-inline Int_t					RooUnfold::NBins() const{return _nt;}
-inline Int_t					RooUnfold::Overflow() const{return _overflow;}
+inline Int_t                    RooUnfold::NBins() const{return _nt;}
+inline Int_t                    RooUnfold::Overflow() const{return _overflow;}
 inline const RooUnfoldResponse* RooUnfold::response()  const { return _res;     } // Response object
 inline const TH1*               RooUnfold::Hmeasured() const { return _meas;    } // Measured Distribution
 inline void RooUnfold::SetMeasured (const TH1* meas)         { _meas= meas; }

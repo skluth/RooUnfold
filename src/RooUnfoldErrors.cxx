@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldErrors.cxx,v 1.5 2010-08-23 11:02:51 fwx38934 Exp $
+//      $Id: RooUnfoldErrors.cxx,v 1.6 2010-08-23 18:07:54 adye Exp $
 //
 // Description:
 //      Unfolding errors class
@@ -60,7 +60,7 @@ ClassImp (RooUnfoldErrors);
 RooUnfoldErrors::RooUnfoldErrors (int NToys,  RooUnfold* unfold_in, const TH1* Truth)
 :toys(NToys),unfold(unfold_in),hTrue(Truth)
 {
-	h_err=0;
+    h_err=0;
     h_err_res=0;
     hchi2=0; 
     GraphParameters(); 
@@ -80,109 +80,109 @@ RooUnfoldErrors::~RooUnfoldErrors()
 void 
 RooUnfoldErrors::GraphParameters()
 {
-	//Gets graph size parameters//
-	const TH1* HR=unfold->response()->Htruth();
-	ntx=HR->GetNbinsX();
-	xlo=HR->GetXaxis()->GetXmin();
-	xhi=HR->GetXaxis()->GetXmax();
+    //Gets graph size parameters//
+    const TH1* HR=unfold->response()->Htruth();
+    ntx=HR->GetNbinsX();
+    xlo=HR->GetXaxis()->GetXmin();
+    xhi=HR->GetXaxis()->GetXmax();
 }
 
 
 TNtuple*
 RooUnfoldErrors::Chi2()
 {   
-	//Returns TNtuple of chi squared values. 
-	hchi2->SetFillColor(4);
-	return hchi2;
+    //Returns TNtuple of chi squared values. 
+    hchi2->SetFillColor(4);
+    return hchi2;
 }
 
 TH1*
 RooUnfoldErrors::RMSResiduals(){
-	//Returns a TH1D of the spread of the reconstructed points//
-	h_err_res->SetMarkerColor(2);
-	h_err_res->SetMarkerStyle(4);
-	h_err_res->SetMinimum(0);
-	return dynamic_cast<TH1D*>(h_err_res->Clone());
+    //Returns a TH1D of the spread of the reconstructed points//
+    h_err_res->SetMarkerColor(2);
+    h_err_res->SetMarkerStyle(4);
+    h_err_res->SetMinimum(0);
+    return dynamic_cast<TH1D*>(h_err_res->Clone());
 }
 
 TH1* 
 RooUnfoldErrors::UnfoldingError(){
-	//Returns a TH1D of the errors from the unfolding// 
-	h_err->SetMarkerColor(4);
-	h_err->SetMarkerStyle(24);
-	h_err->SetMinimum(0);
-	return dynamic_cast<TH1D*>(h_err->Clone());
+    //Returns a TH1D of the errors from the unfolding// 
+    h_err->SetMarkerColor(4);
+    h_err->SetMarkerStyle(24);
+    h_err->SetMinimum(0);
+    return dynamic_cast<TH1D*>(h_err->Clone());
 }
 
 
 void
 RooUnfoldErrors::CreatePlots()
 {
-	/*Gets the values for plotting. Uses the Runtoy method from RooUnfold to get plots to analyse for
-	spread and error on the unfolding. Can also give values for a chi squared plot if a truth distribution is known*/
-	if (!hTrue){
-		cerr <<"Error: no truth distribution"<<endl;
-	}
-	TH1* parms=unfold->Runtoy(RooUnfold::kCovariance);
-	if (parms->GetDimension()!=1){
-		parms=RooUnfoldResponse::H2H1D (parms, ntx);
-		ntx=parms->GetNbinsX();
-		xhi=1;
-		xlo=0;
-	}
-	delete parms;
-	
-	double dx=(xhi-xlo)/ntx;
-	h_err = new TProfile ("h_err", "Unfolding errors",ntx,xlo,xhi);
-	double max=1e10;
-	int odd_ch=0;
+    /*Gets the values for plotting. Uses the Runtoy method from RooUnfold to get plots to analyse for
+    spread and error on the unfolding. Can also give values for a chi squared plot if a truth distribution is known*/
+    if (!hTrue){
+        cerr <<"Error: no truth distribution"<<endl;
+    }
+    TH1* parms=unfold->Runtoy(RooUnfold::kCovariance);
+    if (parms->GetDimension()!=1){
+        parms=RooUnfoldResponse::H2H1D (parms, ntx);
+        ntx=parms->GetNbinsX();
+        xhi=1;
+        xlo=0;
+    }
+    delete parms;
+    
+    double dx=(xhi-xlo)/ntx;
+    h_err = new TProfile ("h_err", "Unfolding errors",ntx,xlo,xhi);
+    double max=1e10;
+    int odd_ch=0;
     hchi2 = new TNtuple("chi2","chi2","chi2");
     vector<TH1D*> graph_vector;
     for (int a=0; a<ntx; a++) {
-	TString graph_title("Residuals at Bin ");
+    TString graph_title("Residuals at Bin ");
     graph_title+=a;
     TH1D* graph_name = new TH1D (graph_title,graph_title, 200,0,1000);
     graph_vector.push_back(graph_name);
     }
     
     h_err_res = new TH1D ("h_err_res", "Spread",ntx,xlo,xhi); 
-	
-	for (int k=0; k<toys;k++){	
-		double chi2;
-		TH1* hReco_;
-		TH1* hReco=unfold->Runtoy(RooUnfold::kCovariance,&chi2,hTrue);
-		if (hReco->GetDimension()!=1){
-			hReco_=RooUnfoldResponse::H2H1D (hReco, ntx);
-		}
-		else{
-			hReco_=hReco;
-		}
-		for (int i=0; i<ntx; i++) {    
-      		Double_t res= hReco_->GetBinContent(i);
-     		graph_vector[i]->Fill(res); 
-     		Double_t u_error=hReco_->GetBinError(i); 
-    		h_err->Fill(i*dx,u_error);
-        	} 
-    	if (hTrue){
-		   	hchi2->Fill(chi2);
-	    	if (TMath::Abs(chi2)>=max && unfold->verbose()>=1){
-	    		cerr<<"Large |chi^2| value: "<< chi2 << endl;
-	    		odd_ch++;
-	    	}
-    	}
-	delete hReco_;
-	}    	
-	for (unsigned int i=0; i<graph_vector.size(); i++){
-		Double_t spr=(graph_vector[i]->GetRMS());
-    	h_err_res->SetBinContent(i,spr);
+    
+    for (int k=0; k<toys;k++){  
+        double chi2;
+        TH1* hReco_;
+        TH1* hReco=unfold->Runtoy(RooUnfold::kCovariance,&chi2,hTrue);
+        if (hReco->GetDimension()!=1){
+            hReco_=RooUnfoldResponse::H2H1D (hReco, ntx);
+        }
+        else{
+            hReco_=hReco;
+        }
+        for (int i=0; i<ntx; i++) {    
+            Double_t res= hReco_->GetBinContent(i);
+            graph_vector[i]->Fill(res); 
+            Double_t u_error=hReco_->GetBinError(i); 
+            h_err->Fill(i*dx,u_error);
+            } 
+        if (hTrue){
+            hchi2->Fill(chi2);
+            if (TMath::Abs(chi2)>=max && unfold->verbose()>=1){
+                cerr<<"Large |chi^2| value: "<< chi2 << endl;
+                odd_ch++;
+            }
+        }
+    delete hReco_;
+    }       
+    for (unsigned int i=0; i<graph_vector.size(); i++){
+        Double_t spr=(graph_vector[i]->GetRMS());
+        h_err_res->SetBinContent(i,spr);
     }
     
     for (unsigned int i=0; i<graph_vector.size(); i++){
-		delete graph_vector[i];
+        delete graph_vector[i];
     }
     
     if (odd_ch){
-    	cout <<"There are " << odd_ch << " bins over "<<max <<endl;
+        cout <<"There are " << odd_ch << " bins over "<<max <<endl;
     }
 
 }

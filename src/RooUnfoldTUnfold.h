@@ -22,16 +22,16 @@ public:
   virtual RooUnfoldTUnfold* Clone (const char* newname= 0) const;
   RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas,Int_t reg=2, 
                 const char* name= 0, const char* title= 0);
-	void Reset();
-	
-	TObject* Impl();
-	void FixTau(Double_t tau);
-	void OptimiseTau();
-	virtual void SetRegParm(Double_t parm){FixTau(parm);}
-	Double_t GetTau() const { return _tau;    }
-	virtual Double_t GetRegParm() const { return GetTau(); }
-	void SetRegMethod (Int_t regmethod);
-	Int_t GetRegMethod() const {return _reg_method;}
+    void Reset();
+    
+    TObject* Impl();
+    void FixTau(Double_t tau);
+    void OptimiseTau();
+    virtual void SetRegParm(Double_t parm){FixTau(parm);}
+    Double_t GetTau() const { return _tau;    }
+    virtual Double_t GetRegParm() const { return GetTau(); }
+    void SetRegMethod (Int_t regmethod);
+    Int_t GetRegMethod() const {return _reg_method;}
 
 protected:
   void Init();
@@ -42,7 +42,7 @@ protected:
   void CopyData (const RooUnfoldTUnfold& rhs);
   virtual void GetSettings();
 
-	
+    
 private:
   Int_t _reg_method; //Regularisation method 
   TUnfold* _unf; //TUnfold object

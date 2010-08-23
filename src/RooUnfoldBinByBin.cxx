@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.cxx,v 1.11 2010-08-23 15:33:54 fwx38934 Exp $
+//      $Id: RooUnfoldBinByBin.cxx,v 1.12 2010-08-23 18:07:54 adye Exp $
 //
 // Description:
 //      Unfolding class using the bin by bin method of conversion factors. 
@@ -62,7 +62,7 @@ RooUnfoldBinByBin::~RooUnfoldBinByBin()
 RooUnfoldBinByBin*
 RooUnfoldBinByBin::Clone (const char* newname) const
 {
-	//Clones object
+    //Clones object
   RooUnfoldBinByBin* unfold= new RooUnfoldBinByBin(*this);
   if (newname && strlen(newname)) unfold->SetName(newname);
   return unfold;
@@ -73,76 +73,76 @@ RooUnfoldBinByBin::Clone (const char* newname) const
 void
 RooUnfoldBinByBin::Unfold()
 {
-	const TH2D* Hres=_res->Hresponse();
-	HresXbins=Hres->GetNbinsX();
-  	if (_overflow){
-	  	HresXbins+=2;
+    const TH2D* Hres=_res->Hresponse();
+    HresXbins=Hres->GetNbinsX();
+    if (_overflow){
+        HresXbins+=2;
     }
-  	_rec.ResizeTo(HresXbins);
-  	double c;
-  	c_vector.ResizeTo(HresXbins);
-  	for (int i=0; i<HresXbins;i++){ 	
-		if(_overflow){
-			c=(_res->Htruth()->GetBinContent(i))/(_res->Hmeasured()->GetBinContent(i));
-  			if (_res->Hmeasured()->GetBinContent(i)==0){
-  				_rec(i)=0;
-  				c_vector(i)=0;
-  			}
-  			else{
-  				c_vector(i)=c;
-  				_rec(i)= _meas->GetBinContent(i)*c;
-  			}
-  		}
-  		else{
-  			//fiddling needed to exclude underflow bin (still included)
-  			c=(_res->Htruth()->GetBinContent(i+1))/(_res->Hmeasured()->GetBinContent(i+1));
-  			if (_res->Hmeasured()->GetBinContent(i+1)==0){
-  				_rec(i)=0;
-  				c_vector(i)=0;
-  			}
-  			else{
-  				c_vector(i)=c;
-  				_rec(i)= _meas->GetBinContent(i+1)*c;
-  			}
-  		}
-  	}
-  	_unfolded= true;
-  	_haveCov=  false;
+    _rec.ResizeTo(HresXbins);
+    double c;
+    c_vector.ResizeTo(HresXbins);
+    for (int i=0; i<HresXbins;i++){     
+        if(_overflow){
+            c=(_res->Htruth()->GetBinContent(i))/(_res->Hmeasured()->GetBinContent(i));
+            if (_res->Hmeasured()->GetBinContent(i)==0){
+                _rec(i)=0;
+                c_vector(i)=0;
+            }
+            else{
+                c_vector(i)=c;
+                _rec(i)= _meas->GetBinContent(i)*c;
+            }
+        }
+        else{
+            //fiddling needed to exclude underflow bin (still included)
+            c=(_res->Htruth()->GetBinContent(i+1))/(_res->Hmeasured()->GetBinContent(i+1));
+            if (_res->Hmeasured()->GetBinContent(i+1)==0){
+                _rec(i)=0;
+                c_vector(i)=0;
+            }
+            else{
+                c_vector(i)=c;
+                _rec(i)= _meas->GetBinContent(i+1)*c;
+            }
+        }
+    }
+    _unfolded= true;
+    _haveCov=  false;
 }
 
 void
 RooUnfoldBinByBin::GetCov()
 {
-	if(!_unfolded){Unfold();}
-	_cov.ResizeTo(HresXbins,HresXbins);
-	for (int i=0; i<HresXbins;i++){
-		if(_overflow){
-			double c=c_vector(i);
-			if (_res->Hmeasured()->GetBinContent(i)==0){
-				_cov(i,i)=0;
-			}
-			else{
-				_cov(i,i)=c*c*_meas->GetBinContent(i);
-			}
-		}
-		else{
-			double c=c_vector(i);
-			if (_res->Hmeasured()->GetBinContent(i+1)==0){
-				_cov(i,i)=0;
-			}
-			else{
-				_cov(i,i)=c*c*_meas->GetBinContent(i+1);
-			}
-		}
-			
-	}
-	_haveCov= true;
+    if(!_unfolded){Unfold();}
+    _cov.ResizeTo(HresXbins,HresXbins);
+    for (int i=0; i<HresXbins;i++){
+        if(_overflow){
+            double c=c_vector(i);
+            if (_res->Hmeasured()->GetBinContent(i)==0){
+                _cov(i,i)=0;
+            }
+            else{
+                _cov(i,i)=c*c*_meas->GetBinContent(i);
+            }
+        }
+        else{
+            double c=c_vector(i);
+            if (_res->Hmeasured()->GetBinContent(i+1)==0){
+                _cov(i,i)=0;
+            }
+            else{
+                _cov(i,i)=c*c*_meas->GetBinContent(i+1);
+            }
+        }
+            
+    }
+    _haveCov= true;
 }
 
 void
 RooUnfoldBinByBin::GetSettings(){
-	_minparm=0;
-	_maxparm=0;
-	_stepsizeparm=0;
-	_defaultparm=0;
+    _minparm=0;
+    _maxparm=0;
+    _stepsizeparm=0;
+    _defaultparm=0;
 }
