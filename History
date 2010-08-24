@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.93 2010-08-23 21:38:09 adye Exp $
+History of RooUnfold     $Id: History,v 1.94 2010-08-24 16:12:32 adye Exp $
 ====================
+
+Tim Adye         24-May-2010 V01-00-00
+  o Tag a new release: 1.0.0
 
 Tim Adye         23-Aug-2010 tja100823b
   o RooUnfoldTestHarness only includes RooUnfoldTUnfold.h (to allow setting of
