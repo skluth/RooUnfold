@@ -1,9 +1,10 @@
-RooUnfold             $Id: README,v 1.6 2008-08-28 21:04:58 adye Exp $
+RooUnfold             $Id: README,v 1.7 2010-08-24 19:56:51 adye Exp $
 =========
 
 RooUnfold is a framework for unfolding (AKA "deconvolution" or "unsmearing").
-It currently implements three methods: iterative (Bayes),
-singular value decomposition (SVD), and bin-by-bin (simple correction factors).
+It currently implements several methods: iterative (Bayes),
+singular value decomposition (SVD), unregularised matrix inversion,
+bin-by-bin (simple correction factors), and an interface to ROOT's TUnfold.
 It can be used from the ROOT prompt, or linked against the ROOT libraries.
 RooUnfold requires ROOT 4 or later.
 
@@ -28,8 +29,7 @@ Running
 RooUnfoldExample.cxx makes a simple test of RooUnfold.
 
   % root
-  root [0] gSystem->Load("libRooUnfold")
-  root [1] .L examples/RooUnfoldExample.cxx
-  root [2] RooUnfoldExample()
+  root [0] .L examples/RooUnfoldExample.cxx
+  root [1] RooUnfoldExample()
 
 See the web page for more examples and documentation.
