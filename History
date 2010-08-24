@@ -1,8 +1,7 @@
-History of RooUnfold     $Id: History,v 1.97 2010-08-24 21:42:34 adye Exp $
+History of RooUnfold     $Id: History,v 1.98 2010-08-24 23:14:11 adye Exp $
 ====================
 
-Tim Adye         24-May-2010 V01-00-00
-  o Tag a new release: 1.0.0
+Tim Adye         24-May-2010 tja100824a
   o Update README.
   o RooUnfoldTest doerrors default is now 2 (calculate covariance matrix),
     except for Bayes with more than 225*225 bins, when it uses 1.
