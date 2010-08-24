@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTUnfold.cxx,v 1.13 2010-08-23 21:38:13 adye Exp $
+//      $Id: RooUnfoldTUnfold.cxx,v 1.14 2010-08-24 21:42:36 adye Exp $
 //
 // Description:
 //      Unfolding class using TUnfold from ROOT to do the actual unfolding.
@@ -17,7 +17,7 @@
 <p>Errors come as a full covariance matrix. 
 <p>Will sometimes warn of "unlinked" bins. These are bins with 0 entries and do not effect the results of the unfolding
 <p>Regularisation parameter can be either optimised internally by plotting log10(chi2 squared) against log10(tau). The 'kink' in this curve is deemed the optimum tau value. This value can also be set manually (FixTau)
-<p>The latest version (15) will not handle plots with an additional underflow bin. As a result overflows must be turned off
+<p>The latest version (TUnfold 15 in ROOT 2.27.04) will not handle plots with an additional underflow bin. As a result overflows must be turned off
 if v15 of TUnfold is used. ROOT versions 5.26 or below use v13 and so should be safe to use overflows.</ul>
 END_HTML */
 
@@ -93,6 +93,7 @@ RooUnfoldTUnfold::CopyData (const RooUnfoldTUnfold& rhs)
 {
   tau_set=rhs.tau_set;
   _tau=rhs._tau;
+  _reg_method=rhs._reg_method;
 }
 
 
@@ -137,17 +138,17 @@ RooUnfoldTUnfold::Unfold()
   // this method scans the parameter tau and finds the kink in the L curve
   // finally, the unfolding is done for the best choice of tau
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,23,0)  /* TUnfold v6 (included in ROOT 5.22) didn't have setInput return value */
-  if(_unf->SetInput(_meas,0.0)>=10000) {
+  if(_unf->SetInput(_meas)>=10000) {
     cerr<<"Unfolding result may be wrong\n";
   }
 #else
-  _unf->SetInput(_meas,0.0);
-#endif
   _unf->SetInput(_meas);
+#endif
   //_unf->SetConstraint(TUnfold::kEConstraintArea);
   if (!tau_set){
-  iBest=_unf->ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
-  cout <<"tau= "<<_unf->GetTau()<<endl;
+    iBest=_unf->ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
+    _tau=_unf->GetTau();  // save value, even if we don't use it unless tau_set
+    cout <<"tau= "<<_tau<<endl;
   }
   else{
     _unf->DoUnfold(_tau);

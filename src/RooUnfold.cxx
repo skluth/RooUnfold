@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.38 2010-08-24 21:11:47 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.39 2010-08-24 21:42:36 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -488,9 +488,7 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment withErr
     << "====================================================================" << xwid << endl;
   o.copyfmt (fmt);
   Double_t chi_squ = chi2;
-  if ((withError==kErrors && HaveErrors(kCovariance)) ||  // some methods get covariance when calculating errors
-       withError==kCovariance ||
-       withError==kCovToy) {
+  if (withError==kCovariance || withError==kCovToy) {
     chi_squ = Chi2(hTrue,withError);
     o << "Chi^2/NDF=" << chi_squ << "/" << ndf << " (bin-by-bin Chi^2=" << chi2 << ")";
   } else {

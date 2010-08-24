@@ -38,11 +38,10 @@ protected:
   void Destroy();
   virtual void Unfold();
   virtual void GetCov();
+  virtual void GetSettings();
   void Assign   (const RooUnfoldTUnfold& rhs); // implementation of assignment operator
   void CopyData (const RooUnfoldTUnfold& rhs);
-  virtual void GetSettings();
 
-    
 private:
   TUnfold::ERegMode _reg_method; //Regularisation method 
   TUnfold* _unf; //TUnfold object
