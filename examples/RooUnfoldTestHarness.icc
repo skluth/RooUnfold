@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.40 2010-08-23 21:38:11 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.41 2010-08-24 21:11:45 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -89,7 +89,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("regmethod",&regmethod,   2, "TUnfold regularisation method (0=none, 1=size, 2=derivative, 3=curvature)");
 #endif
   args.Add ("onepage", &onepage,      4, "number of pads per page");
-  args.Add ("doerror", &doerror, RooUnfold::kErrors, "error treatment (0=none, 1=error propagation, 2=covariance propagation, 3=toy MC)");
+  args.Add ("doerror", &doerror,     -1, "error treatment (0=none, 1=error propagation, 2=covariance propagation, 3=toy MC)", "2");
   args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
   args.Add ("mtrainx", &mtrainx,    5.0, "training signal PDF X mean");
   args.Add ("wtrainx", &wtrainx,    1.2, "training signal PDF X width");
@@ -605,11 +605,12 @@ Int_t RooUnfoldTestHarness::CheckParms()
 {
   if (dosmear==-1 && method == RooUnfold::kBinByBin) {dosmear= 0;}  // bin-by-bin can't handle smearing or bias
   if (doerror==-1) {
-    doerror= !(method==RooUnfold::kBayes && ntbins*nmbins > 160000);
-    if (!doerror) {
-      cerr << "Don't calculate errors for Bayes algorithm - there are " << ntbins*nmbins
-           << " bins in the response matrix and the error calculation would take too long (set doerror=1 to override this)" << endl;
-    }
+    if (method==RooUnfold::kBayes && ntbins*nmbins >= 50625) {
+      doerror= RooUnfold::kErrors;
+      cerr << "Don't calculate full covariance matrix for Bayes algorithm - there are " << ntbins*nmbins
+           << " bins in the response matrix and the calculation would a long time (set doerror=2 to override this)" << endl;
+    } else
+      doerror= RooUnfold::kCovariance;
   }
 
   if (verbose>=0) PrintParms (cout);

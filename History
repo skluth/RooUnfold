@@ -1,9 +1,15 @@
-History of RooUnfold     $Id: History,v 1.95 2010-08-24 19:56:51 adye Exp $
+History of RooUnfold     $Id: History,v 1.96 2010-08-24 21:11:43 adye Exp $
 ====================
 
 Tim Adye         24-May-2010 V01-00-00
-  o Update README.
   o Tag a new release: 1.0.0
+  o Update README.
+  o RooUnfoldTest doerrors default is now 2 (calculate covariance matrix),
+    except for Bayes with more than 225*225 bins, when it uses 1.
+  o Make sure Ereco() etc do Unfold() if not yet done.
+  o Don't GetErrMat() if it's already done.
+  o HaveErrors() says whether a particular treatment of errors has been
+    calculated (useful for informational printout, like in PrintTable()).
 
 Tim Adye         23-Aug-2010 tja100823b
   o RooUnfoldTestHarness only includes RooUnfoldTUnfold.h (to allow setting of

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.29 2010-08-23 21:38:13 adye Exp $
+//      $Id: RooUnfold.h,v 1.30 2010-08-24 21:11:47 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -56,8 +56,9 @@ public:
   virtual       TH1* Hreco (ErrorTreatment withError=kErrors);
 
   virtual TVectorD&  Vreco();
-  virtual TMatrixD   Ereco(ErrorTreatment witherror);
-  virtual TVectorD   ErecoV(ErrorTreatment witherror);
+  virtual TMatrixD   Ereco(ErrorTreatment witherror=kCovariance);
+  virtual TVectorD   ErecoV(ErrorTreatment witherror=kErrors);
+  virtual Bool_t     HaveErrors(ErrorTreatment witherror=kErrors);
 
   virtual Int_t      verbose() const;
   virtual void       SetVerbose (Int_t level);
@@ -84,10 +85,11 @@ protected:
   virtual void SetNameTitleDefault(); 
   virtual void GetErrMat(); // Get covariance matrix using errors from residuals on reconstructed distribution
   virtual void GetErrors();
+  virtual void GetSettings();
   void Assign   (const RooUnfold& rhs); // implementation of assignment operator
   void CopyData (const RooUnfold& rhs);
+
   static TH1* Add_Random(const TH1* hMeas_AR);
-  virtual void GetSettings();
   static TMatrixD CutZeros(const TMatrixD& Ereco_copy);
 
   // instance variables
@@ -108,8 +110,6 @@ protected:
   mutable TMatrixD _err_mat; // Error Matrix (from toys)
   mutable TVectorD _errors;// Error Matrix (diagonals only)
   
-private:
-
 public:
 
   ClassDef (RooUnfold, 0) // Unfold

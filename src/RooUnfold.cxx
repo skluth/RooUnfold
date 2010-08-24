@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.37 2010-08-23 21:38:13 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.38 2010-08-24 21:11:47 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -243,6 +243,8 @@ void
 RooUnfold::GetErrors()
 {
     //Creates vector of diagonals of covariance matrices
+    if (!_unfolded) Unfold();
+    if (_fail)      return;
     Int_t nt= _nt + (_overflow ? 2 : 0);
     _errors.ResizeTo(nt);
     if (!_haveCov) GetCov();
@@ -256,6 +258,8 @@ void
 RooUnfold::GetCov()
 {
     //Creates covariance matrix using bin error on measured distribution.
+  if (!_unfolded) Unfold();
+  if (_fail)      return;
   Int_t first= _overflow ? 0 : 1;
   Int_t nt= _nt + (_overflow ? 2 : 0);
   _cov.ResizeTo (nt, nt);
@@ -272,6 +276,8 @@ void
 RooUnfold::GetErrMat()
 {
     //Get error matrix based on residuals found using the Runtoy method. 
+    if (!_unfolded) Unfold();
+    if (_fail)      return;
     Int_t total= _nt + (_overflow ? 2 : 0);
     vector<double> bc_vec(total);
     TMatrixD bc_mat(total,total);
@@ -481,10 +487,15 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment withErr
     o<< endl
     << "====================================================================" << xwid << endl;
   o.copyfmt (fmt);
-  Double_t chi_squ;
-  chi_squ = Chi2(hTrue,withError);
-  o << "Chi^2/NDF=" << chi_squ << "/" << ndf;
-  if (withError==kCovariance||withError==kCovToy) o << " (bin-by-bin Chi^2=" << chi2 << ")";
+  Double_t chi_squ = chi2;
+  if ((withError==kErrors && HaveErrors(kCovariance)) ||  // some methods get covariance when calculating errors
+       withError==kCovariance ||
+       withError==kCovToy) {
+    chi_squ = Chi2(hTrue,withError);
+    o << "Chi^2/NDF=" << chi_squ << "/" << ndf << " (bin-by-bin Chi^2=" << chi2 << ")";
+  } else {
+    o << "Bin-by-bin Chi^2/NDF=" << chi_squ << "/" << ndf;
+  }
   o << endl;
   if (chi_squ<=0){
     cerr << "Warning: Invalid Chi^2 Value" << endl;
@@ -517,8 +528,8 @@ RooUnfold::Hreco (ErrorTreatment withError)
   TH1* reco= (TH1*) _res->Htruth()->Clone(GetName());
   reco->Reset();
   reco->SetTitle (GetTitle());
-  if (!_unfolded)             Unfold();
-  if (_fail)                  return 0;
+  if (!_unfolded) Unfold();
+  if (_fail)      return 0;
   if (withError==kErrors && !_haveErrors){
     GetErrors();
     if (!_haveErrors) withError= kNoError;
@@ -694,8 +705,8 @@ RooUnfold::Ereco(ErrorTreatment witherror)
         Ereco_m.ResizeTo(_cov.GetNrows(),_cov.GetNcols());
         Ereco_m=_cov;
         break;
-        case kCovToy:
-        GetErrMat();
+      case kCovToy:
+        if (!_have_err_mat) GetErrMat();
         Ereco_m.ResizeTo(_err_mat.GetNrows(),_err_mat.GetNcols());
         Ereco_m=_err_mat;
         break;
@@ -736,7 +747,7 @@ RooUnfold::ErecoV(ErrorTreatment witherror)
         }
         break;
       case kCovToy:
-        GetErrMat();
+        if (!_have_err_mat) GetErrMat();
         Ereco_m.ResizeTo(_err_mat.GetNrows(),_err_mat.GetNcols());
         for (int i=0; i<_err_mat.GetNrows(); i++){
             Ereco_m(i)=_err_mat(i,i);
@@ -746,4 +757,23 @@ RooUnfold::ErecoV(ErrorTreatment witherror)
         cerr<<"Error, unrecognised error method= "<<witherror<<endl;
     }
     return Ereco_m;
+}
+
+Bool_t
+RooUnfold::HaveErrors(ErrorTreatment witherror)
+{
+    if (!_unfolded) return false;
+    switch(witherror){
+      case kNoError:
+        return true;
+      case kErrors:
+        return _haveErrors;
+      case kCovariance:
+        return _haveCov;
+      case kCovToy:
+        return _have_err_mat;
+      default:
+        cerr<<"Error, unrecognised error method= "<<witherror<<endl;
+    }
+    return false;
 }
