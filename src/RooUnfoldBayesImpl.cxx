@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayesImpl.cxx,v 1.23 2010-08-25 10:05:55 fwx38934 Exp $
+//      $Id: RooUnfoldBayesImpl.cxx,v 1.24 2010-08-25 20:48:21 adye Exp $
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the
@@ -554,7 +554,6 @@ RooUnfoldBayesImpl::train(Int_t iterations, Bool_t smoothit)
     //if (_nc*_ne < 50000) {getCovariance();}
 
     // so not smooth the last iteraction
-    
     if (kiter < (iterations-1)) {
       if (smoothit) {smooth(PbarCi);}
       //smooth(PbarCi);
@@ -582,6 +581,7 @@ RooUnfoldBayesImpl::smooth(vector<Double_t>& PbarCi, Double_t nevts) const
   // to be smoothed PbarCi; nevts is the numbers of events
   // (needed to calculate suitable errors for the smearing).
   // PbarCi is returned with the smoothed distribution.
+
   if (_ndims != 1) {
     cerr << "Smoothing only implemented for 1-D distributions" << endl;
     return (0);
