@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.44 2010-08-25 22:44:03 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.45 2010-08-25 23:46:34 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -321,8 +321,12 @@ Int_t RooUnfoldTestHarness::Unfold ()
   if (verbose>=0) unfold->PrintTable (cout, hTrue, (RooUnfold::ErrorTreatment)doerror);
 
   // Calculate pulls and residuals
-  hRes=   dynamic_cast<TH1*>(hReco->Clone ("res"));   hRes  ->SetTitle ("Residuals");
-  hPulls= dynamic_cast<TH1*>(hReco->Clone ("pulls")); hPulls->SetTitle ("Pulls");
+  hRes=   dynamic_cast<TH1*>(hReco->Clone ("res"));   
+  hRes  ->Reset();
+  hRes  ->SetTitle ("Residuals");
+  hPulls= dynamic_cast<TH1*>(hReco->Clone ("pulls"));
+  hPulls->Reset();
+  hPulls->SetTitle ("Pulls");
 
   for (Int_t i= 1; i<=ntbins; i++) {
     if ((hReco->GetBinContent(i)!=0.0 || (doerror && hReco->GetBinError(i)>0.0)) &&

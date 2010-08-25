@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.30 2010-08-24 21:11:47 adye Exp $
+//      $Id: RooUnfold.h,v 1.31 2010-08-25 23:46:36 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -86,6 +86,7 @@ protected:
   virtual void GetErrMat(); // Get covariance matrix using errors from residuals on reconstructed distribution
   virtual void GetErrors();
   virtual void GetSettings();
+  virtual Bool_t GetErrorObject (ErrorTreatment withError);
   void Assign   (const RooUnfold& rhs); // implementation of assignment operator
   void CopyData (const RooUnfold& rhs);
 
