@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTUnfold.cxx,v 1.15 2010-08-25 10:05:55 fwx38934 Exp $
+//      $Id: RooUnfoldTUnfold.cxx,v 1.16 2010-08-25 10:23:49 adye Exp $
 //
 // Description:
 //      Unfolding class using TUnfold from ROOT to do the actual unfolding.
@@ -145,7 +145,6 @@ RooUnfoldTUnfold::Unfold()
 #else
   _unf->SetInput(_meas);
 #endif
-  _unf->SetInput(_meas);
   //_unf->SetConstraint(TUnfold::kEConstraintArea);
   if (!tau_set){
     iBest=_unf->ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
@@ -156,17 +155,9 @@ RooUnfoldTUnfold::Unfold()
     _unf->DoUnfold(_tau);
   }
   TH1* reco=_unf->GetOutput("_rec","reconstructed dist",0,0);
-  if (_overflow){
-      _rec.ResizeTo (reco->GetNbinsX()+reco->GetNbinsY());
-      for (int i=0;i<reco->GetNbinsX();i++){
-        _rec(i)=(reco->GetBinContent(i));
-      }
-  }
-  else{
-    _rec.ResizeTo (reco->GetNbinsX()+reco->GetNbinsY());
-      for (int i=0;i<reco->GetNbinsX()+reco->GetNbinsY();i++){
-        _rec(i)=reco->GetBinContent(i+1);
-      }
+  _rec.ResizeTo (reco->GetNbinsX());
+  for (int i=0;i<reco->GetNbinsX();i++){
+    _rec(i)=(reco->GetBinContent(i+1));
   }
   delete Hresc;
   delete reco;

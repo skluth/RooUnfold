@@ -1,11 +1,14 @@
-History of RooUnfold     $Id: History,v 1.99 2010-08-25 10:05:46 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.100 2010-08-25 10:23:47 adye Exp $
 ====================
+
+Tim Adye         25-Aug-2010 tja100825a
+  o Small RooUnfoldTUnfold bin index fix.
 
 Richard Claridge 25-Aug-2010 rgc100825a
   o Minor changes to descriptions
   o Overflow switched off by default
 
-Tim Adye         24-May-2010 tja100824a
+Tim Adye         24-Aug-2010 tja100824a
   o Update README.
   o RooUnfoldTest doerrors default is now 2 (calculate covariance matrix),
     except for Bayes with more than 225*225 bins, when it uses 1.
