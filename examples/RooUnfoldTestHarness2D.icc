@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.17 2010-08-12 15:19:20 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness2D.icc,v 1.18 2010-08-25 22:30:51 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 2D toy MC.
@@ -204,15 +204,15 @@ void RooUnfoldTestHarness2D::Results()
   lTest->Draw();
   canvas->Update();
 
-  if (onepage>=2 && ploterrors==0 && plotparms==0) 
-  {canvas->cd(++ipad);
-  hTrue->Draw();
-  canvas->Update();}
+  if (onepage>=2 && !ploterrors) {
+    canvas->cd(++ipad);
+    hTrue->Draw();
+    canvas->Update();
+  }
 
-  if (onepage>=2 && ploterrors==0 && plotparms==0) 
-  {canvas->cd(++ipad);
+  canvas->cd(++ipad);
   hMeas->Draw();
-  canvas->Update();}
+  canvas->Update();
 
   if (!hReco) return;
 
@@ -241,9 +241,11 @@ void RooUnfoldTestHarness2D::Results()
     }
   }
 
-  if (onepage>=2 && ploterrors==0 && plotparms==0) {canvas->cd(++ipad);
-  hPulls->Draw("COLZ");
-  canvas->Update();}
+  if (onepage>=2 && !ploterrors) {
+    canvas->cd(++ipad);
+    hPulls->Draw("COLZ");
+    canvas->Update();
+  }
 
   if (onepage && onepage < 10) return;
 
@@ -297,11 +299,10 @@ bool RooUnfoldTestHarness2D::Eff2D (Double_t x, Double_t y) const
 
 void RooUnfoldTestHarness2D::Smear2D (Double_t& x, Double_t& y) const
 {
-  if (!dosmear) return;
   x= Smear (x, ntx, xlo, xhi, xbias, xsmear);
   y= Smear (y, nty, ylo, yhi, ybias, ysmear);
+  if (!addbias) return;
   Rot (x, y, rotxy, 0.5*(xlo+xhi), 0.5*(ylo+yhi));
-  return;
 }
 
 //==============================================================================

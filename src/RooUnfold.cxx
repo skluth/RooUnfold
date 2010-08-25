@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.40 2010-08-25 10:05:55 fwx38934 Exp $
+//      $Id: RooUnfold.cxx,v 1.41 2010-08-25 22:30:53 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -686,10 +686,12 @@ RooUnfold::Ereco(ErrorTreatment witherror)
     TMatrixD Ereco_m;
     switch(witherror){
       case kNoError:
-        TH1* HR=Hreco(kNoError);
-        Ereco_m.ResizeTo(HR->GetNbinsX(),HR->GetNbinsX());
-        for (int i=0; i<HR->GetNbinsX(); i++){
+        {
+          TH1* HR=Hreco(kNoError);
+          Ereco_m.ResizeTo(HR->GetNbinsX(),HR->GetNbinsX());
+          for (int i=0; i<HR->GetNbinsX(); i++){
             Ereco_m(i,i)=HR->GetBinError(i);
+          }
         }
         break;
       case kErrors:
@@ -727,10 +729,12 @@ RooUnfold::ErecoV(ErrorTreatment witherror)
     TVectorD Ereco_m;
     switch(witherror){
       case kNoError:
-        TH1* HR=Hreco(kNoError);
-        Ereco_m.ResizeTo(HR->GetNbinsX());
-        for (int i=0; i<HR->GetNbinsX(); i++){
+        {
+          TH1* HR=Hreco(kNoError);
+          Ereco_m.ResizeTo(HR->GetNbinsX());
+          for (int i=0; i<HR->GetNbinsX(); i++){
             Ereco_m(i)=HR->GetBinError(i);
+          }
         }
         break;
       case kErrors:

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness3D.icc,v 1.14 2010-07-08 17:00:22 adye Exp $
+//      $Id: RooUnfoldTestHarness3D.icc,v 1.15 2010-08-25 22:30:51 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 3D toy MC.
@@ -289,10 +289,10 @@ bool RooUnfoldTestHarness3D::Eff3D (Double_t x, Double_t y, Double_t z) const
 
 void RooUnfoldTestHarness3D::Smear3D (Double_t& x, Double_t& y, Double_t& z) const
 {
-  if (!dosmear) return;
   x= Smear (x, ntx, xlo, xhi, xbias, xsmear);
   y= Smear (y, nty, ylo, yhi, ybias, ysmear);
   z= Smear (z, ntz, zlo, zhi, zbias, zsmear);
+  if (!addbias) return;
   Rot (x, y, rotxy, 0.5*(xlo+xhi), 0.5*(ylo+yhi));
   Rot (x, z, rotxz, 0.5*(xlo+xhi), 0.5*(zlo+zhi));
   Rot (y, z, rotyz, 0.5*(ylo+yhi), 0.5*(zlo+zhi));

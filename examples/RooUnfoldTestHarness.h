@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.h,v 1.30 2010-08-23 21:38:11 adye Exp $
+//      $Id: RooUnfoldTestHarness.h,v 1.31 2010-08-25 22:30:51 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -47,7 +47,8 @@ class RooUnfoldTestHarness : public TNamed {
 public:
   // Parameters
   Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain, wpaper, hpaper, regmethod;
-  Int_t    ntoyssvd, nmx, onepage, doerror, dim, overflow, dosmear, nbPDF, verbose, dodraw, ntoys,ploterrors,plotparms;
+  Int_t    ntoyssvd, nmx, onepage, doerror, dim, overflow, addbias, nbPDF, verbose, dodraw;
+  Int_t    ntoys, ploterrors, plotparms;
   Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx;
   Double_t regparm, effxlo, effxhi, xbias, xsmear, minparm,maxparm,stepsize;
 
@@ -77,6 +78,8 @@ public:
   virtual Int_t    Test();
   virtual Int_t    Unfold();
   virtual void     Results();
+  virtual void     PlotErrors();
+  virtual void     PlotParms();
   virtual TH1D*    Generate (TVectorD& x, const char* name, const char* title, Int_t nt, Int_t fpdf,
                              Int_t nx, Double_t xlo, Double_t xhi, Double_t bkg, Double_t mean, Double_t width,
                              Double_t bias, Double_t smear);

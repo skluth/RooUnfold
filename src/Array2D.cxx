@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: Array2D.cxx,v 1.2 2010-01-19 15:33:47 adye Exp $
+//      $Id: Array2D.cxx,v 1.3 2010-08-25 22:30:53 adye Exp $
 //
 // Description:
 //      A helper class designed to store an 2 dimensional array as a 1-D array.
@@ -37,6 +37,7 @@ Array2D::Array2D(Int_t R, Int_t C, Double_t initval)
 }
 
 Array2D::Array2D(const Array2D &rhs)
+  : TObject()
 {
   // copy constructor
   _nRows = rhs._nRows;

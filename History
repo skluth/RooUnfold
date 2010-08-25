@@ -1,5 +1,14 @@
-History of RooUnfold     $Id: History,v 1.100 2010-08-25 10:23:47 adye Exp $
+History of RooUnfold     $Id: History,v 1.101 2010-08-25 22:30:50 adye Exp $
 ====================
+
+Tim Adye         25-Aug-2010 tja100825b
+  o Bin-by-bin and invert unfolding methods don't work well if there is a
+    systematic bias (or 2D rotation), but they aren't too bad with some smearing.
+    In RooUnfoldTest, this is now controlled by an 'addbias' parameter, which
+    is off by default for those methods. (Previously 'dosmear' allowed disabling
+    of both smearing and bias, by default just for the bin-by-bin method.)
+  o Fix some warnings when compiling on a Mac.
+  o Separate off code into RooUnfoldTestHarness::PlotErrors and PlotParms.
 
 Tim Adye         25-Aug-2010 tja100825a
   o Small RooUnfoldTUnfold bin index fix.
