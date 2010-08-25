@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.39 2010-08-24 21:42:36 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.40 2010-08-25 10:05:55 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -19,7 +19,7 @@
 <ul>
 <li>RooUnfoldBayes: Uses the Bayes method of unfolding based on the method written by D'Agostini (<a href="http://www.slac.stanford.edu/spires/find/hep/www?j=NUIMA,A362,487">NIM A 362 (1995) 487</a>).
 <ul>
-<li>Works for 1, 2 and 3 dimensional distributions
+<li>Works for 1 & 2 dimensional distributions
 <li>Returned errors can be either as a diagonal matrix or as a full matrix of covariances
 <li>Regularisation parameter sets the number of iterations used in the unfolding (default=4)
 <li>Is able to account for bin migration and smearing
@@ -45,6 +45,7 @@
 </ul>
 <li> RooUnfoldTUnfold: Uses the unfolding method implemented in ROOT's <a href="http://root.cern.ch/root/html/TUnfold.html">TUnfold</a> class
 <ul>
+<li>Only included in ROOT versions 5.22 and higher 
 <li>Only able to reconstruct 1 dimensional distributions
 <li>Can account for bin migration and smearing
 <li>Errors come as a full covariance matrix. 

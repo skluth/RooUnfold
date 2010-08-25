@@ -1,5 +1,9 @@
-History of RooUnfold     $Id: History,v 1.98 2010-08-24 23:14:11 adye Exp $
+History of RooUnfold     $Id: History,v 1.99 2010-08-25 10:05:46 fwx38934 Exp $
 ====================
+
+Richard Claridge 25-Aug-2010 rgc100825a
+  o Minor changes to descriptions
+  o Overflow switched off by default
 
 Tim Adye         24-May-2010 tja100824a
   o Update README.

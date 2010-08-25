@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTUnfold.cxx,v 1.14 2010-08-24 21:42:36 adye Exp $
+//      $Id: RooUnfoldTUnfold.cxx,v 1.15 2010-08-25 10:05:55 fwx38934 Exp $
 //
 // Description:
 //      Unfolding class using TUnfold from ROOT to do the actual unfolding.
@@ -12,6 +12,7 @@
 //____________________________________________________________
 /* BEGIN_HTML
 <p>Uses the unfolding method implemented in ROOT's <a href="http://root.cern.ch/root/html/TUnfold.html">TUnfold</a> class
+<p>Only included in ROOT versions 5.22 and higher
 <p>Only able to reconstruct 1 dimensional distributions
 <p>Can account for bin migration and smearing
 <p>Errors come as a full covariance matrix. 
@@ -144,6 +145,7 @@ RooUnfoldTUnfold::Unfold()
 #else
   _unf->SetInput(_meas);
 #endif
+  _unf->SetInput(_meas);
   //_unf->SetConstraint(TUnfold::kEConstraintArea);
   if (!tau_set){
     iBest=_unf->ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
@@ -153,16 +155,16 @@ RooUnfoldTUnfold::Unfold()
   else{
     _unf->DoUnfold(_tau);
   }
-  TH1D* reco=_unf->GetOutput("_rec","reconstructed dist",0,0);
+  TH1* reco=_unf->GetOutput("_rec","reconstructed dist",0,0);
   if (_overflow){
-      _rec.ResizeTo (reco->GetNbinsX());
-      for (int i=1;i<reco->GetNbinsX();i++){
+      _rec.ResizeTo (reco->GetNbinsX()+reco->GetNbinsY());
+      for (int i=0;i<reco->GetNbinsX();i++){
         _rec(i)=(reco->GetBinContent(i));
       }
   }
   else{
-    _rec.ResizeTo (reco->GetNbinsX());
-      for (int i=0;i<reco->GetNbinsX();i++){
+    _rec.ResizeTo (reco->GetNbinsX()+reco->GetNbinsY());
+      for (int i=0;i<reco->GetNbinsX()+reco->GetNbinsY();i++){
         _rec(i)=reco->GetBinContent(i+1);
       }
   }
@@ -177,7 +179,7 @@ void
 RooUnfoldTUnfold::GetCov()
 {
     //Gets Covariance matrix
-    Int_t nt=_meas->GetNbinsX();
+    Int_t nt=_rec.GetNrows();
     if (_overflow){nt+=2;}
     if (!_unfolded) Unfold();
     if (_fail) return;
@@ -254,6 +256,8 @@ RooUnfoldTUnfold::SetRegMethod(TUnfold::ERegMode regmethod)
       TUnfold::kRegModeSize         minimize the size of (x-x0)
       TUnfold::kRegModeDerivative   minimize the 1st derivative of (x-x0)
       TUnfold::kRegModeCurvature    minimize the 2nd derivative of (x-x0)
+      kRegModeDerivative and kRegModeCurvature are the optimal settings for a 1D input
+      kRegModeSize is optimal for a 2D distribution (but still does not produce great results).
      */
     _reg_method=regmethod;
 }

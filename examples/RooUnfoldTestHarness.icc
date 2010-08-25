@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.41 2010-08-24 21:11:45 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.42 2010-08-25 10:05:51 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -101,7 +101,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("effxhi",  &effxhi,     0.9, "efficiency at xhi");
   args.Add ("xbias",   &xbias,     -1.0, "shift in X");
   args.Add ("xsmear",  &xsmear,     0.5, "X smearing width in bins");
-  args.Add ("overflow",&overflow,     1, "0=unfolding ignores under/overflow bins, 1=unfolding uses under/overflow bins, 2=fill under/overflows into first/last bins");
+  args.Add ("overflow",&overflow,     0, "0=unfolding ignores under/overflow bins, 1=unfolding uses under/overflow bins, 2=fill under/overflows into first/last bins");
   args.Add ("dosmear", &dosmear,     -1, "do shift, smear, and rotation (disabled by default for bin-by-bin method)", "1");
   args.Add ("wpaper",  &wpaper,       0, "paper width", "");
   args.Add ("hpaper",  &hpaper,       0, "paper height", "");
@@ -503,6 +503,7 @@ Double_t RooUnfoldTestHarness::Smear (Double_t x, Int_t nt, Double_t xlo, Double
   Double_t delta= xsigma <= 0.0 ? bias_m : gRandom->Gaus(bias_m, xsigma);     // bias and smear
   if (verbose>=3) cout << "SMEAR " << x << " " << xsmear << " " << xsigma << endl;
   return x+delta;
+
 }
 
 Double_t RooUnfoldTestHarness::Overflow (Double_t x, Int_t nt, Double_t xlo, Double_t xhi) const

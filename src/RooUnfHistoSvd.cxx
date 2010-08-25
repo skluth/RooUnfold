@@ -2,7 +2,7 @@
 //Kerstin Tackmann, Heiko Lacker (TU Dresden)
 //based on 
 //Andreas Hoecker, Vakhtang Kartvelishvili, hep-ph/9509307
-//$Id: RooUnfHistoSvd.cxx,v 1.5 2010-08-23 18:07:54 adye Exp $
+//$Id: RooUnfHistoSvd.cxx,v 1.6 2010-08-25 10:05:55 fwx38934 Exp $
 ///////////////////////////////////////////////////////////////////////
 
 #include "RooUnfHistoSvd.h"
@@ -138,7 +138,6 @@ TVectorD TUnfHisto::Unfold(Int_t tau, Int_t toy, Int_t mattoy)
   //Fill and invert the second derivative matrix
   fillC(mCurv, mC, _gDim, _ddim);
   TMatrixD mCinv(_gDim, _gDim);
-
   //Inversion of mC by help of SVD
   TDecompSVD CSVD(mC);
   TMatrixD CUort = CSVD.GetU();
