@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.101 2010-08-25 22:30:50 adye Exp $
+History of RooUnfold     $Id: History,v 1.102 2010-08-25 22:44:01 adye Exp $
 ====================
+
+Tim Adye         25-Aug-2010 tja100825c
+  o Fix crash testing reading response matrix from a file.
 
 Tim Adye         25-Aug-2010 tja100825b
   o Bin-by-bin and invert unfolding methods don't work well if there is a

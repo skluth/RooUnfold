@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.43 2010-08-25 22:30:51 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.44 2010-08-25 22:44:03 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -180,7 +180,7 @@ void RooUnfoldTestHarness::SetupCanvas()
 
 Int_t RooUnfoldTestHarness::RunTests()
 {
-    if (stage != 2) {
+  if (stage != 2) {
     TString name("response"), title;
     title.Form ("Test %dD", dim);
     response= new RooUnfoldResponse (name, title);
@@ -199,11 +199,12 @@ Int_t RooUnfoldTestHarness::RunTests()
     if (!response) {
       TString file (GetName());
       file += ".root";
+      cout << "Read 'response' object from " << file << endl;
       TFile f (file);
       f.GetObject ("response", response);
       f.Close();
       if (!response) {
-        cerr << "could not read 'response' object from file RooUnfoldTest.root" << endl;
+        cerr << "could not read 'response' object from " << file << endl;
         return 5;
       }
     }
@@ -216,7 +217,7 @@ Int_t RooUnfoldTestHarness::RunTests()
     }
     if (dodraw) {
       if (!plotparms){
-        TrainResults();
+        if (stage == 0) TrainResults();
         Results();
       }
       if (ploterrors) PlotErrors();
