@@ -2,7 +2,7 @@
 //Kerstin Tackmann, Heiko Lacker (TU Dresden)
 //based on 
 //Andreas Hoecker, Vakhtang Kartvelishvili, hep-ph/9509307
-//$Id: RooUnfHistoSvd.cxx,v 1.7 2010-08-25 20:48:21 adye Exp $
+//$Id: RooUnfHistoSvd.cxx,v 1.8 2010-08-26 15:07:43 fwx38934 Exp $
 ///////////////////////////////////////////////////////////////////////
 
 #include "RooUnfHistoSvd.h"
@@ -50,6 +50,7 @@ void TUnfHisto::init(const TH1D *b, const TH1D *bini, const TH1D *xini, const TH
   _xini = xini;
   _A = A;
   _ddim = 2;
+  _prop_errors=false;
   if (!nofile)
     _resfile = new TFile("UnfHisto.root","RECREATE");
 }
@@ -69,14 +70,19 @@ void TUnfHisto::init(const TH1D *b, const TH1D *bini, const TH1D *xini, const TH
   _xref = xref;
   _MC = 1;
   _ddim = 2;
+  _prop_errors=false;
   if (!nofile)
     _resfile = new TFile("UnfHisto.root","RECREATE");
 }
 
-TVectorD TUnfHisto::Unfold(Int_t tau, Int_t toy, Int_t mattoy)
+TVectorD TUnfHisto::Unfold(Int_t tau,Bool_t properrors, Int_t toy, Int_t mattoy)
 {
-  //  cout << "Unfolding with regularization parameter " << tau << endl;
-
+  //Unfold distribution with regularisation parameter tau. (=k)
+  //If properrors is true then covariance matrix calculated by propagation of errors (as in hocker and Kartvelishvili's paper)
+  //At present this produces very large error bars and is switched off by default.
+  
+  
+_prop_errors=properrors;
   //Make the histos
   if(!toy && !mattoy){
     InitHistos(tau);
@@ -109,7 +115,6 @@ TVectorD TUnfHisto::Unfold(Int_t tau, Int_t toy, Int_t mattoy)
     H2M(_A, mA);
   }
   if(_MC){H2V(_xref, vxref);}
-
   //Scale the MC vectors to data norm
   Double_t Scale = SNorm(vb, _rDim)/SNorm(vbini, _rDim);
   for(Int_t i=0; i<_rDim; i++){
@@ -121,7 +126,6 @@ TVectorD TUnfHisto::Unfold(Int_t tau, Int_t toy, Int_t mattoy)
       mA(j,i) = mA(j,i) * Scale;
     }
   }
-
   //Normalize xref to one if necessary
   if(_MC){
     Scale = SNorm(vxref, _gDim);
@@ -134,11 +138,11 @@ TVectorD TUnfHisto::Unfold(Int_t tau, Int_t toy, Int_t mattoy)
       cout << "Norm of reference distribution in zero!" << endl;
     }
   }
-
+  
   //Fill and invert the second derivative matrix
   fillC(mCurv, mC, _gDim, _ddim);
   TMatrixD mCinv(_gDim, _gDim);
-
+  TMatrixD mC_i(_gDim, _gDim);
   //Inversion of mC by help of SVD
   TDecompSVD CSVD(mC);
   TMatrixD CUort = CSVD.GetU();
@@ -149,12 +153,20 @@ TVectorD TUnfHisto::Unfold(Int_t tau, Int_t toy, Int_t mattoy)
   for(Int_t i=0; i<_gDim; i++){
     CSVM(i,i) = 1/CSV(i);
   }
-
+  if (_prop_errors){
+      for (int i=0; i<_gDim; i++){
+        mC_i(i,i)+=eps;
+        for (int j=0; j<_gDim;j++){
+            mC_i(i,j)+=mC(i,j);
+        }
+      }
+      TDecompSVD cisvd(mC_i);
+      mC_i=cisvd.Invert();
+  }
   CUort.Transpose(CUort);
   TMatrixD test(_gDim, _gDim);
   test.Mult(CVort,CSVM);
   mCinv.Mult(test,CUort);
-
   //Rescale matrix and vectors by error of data vector
   vbini = VecDiv(vbini, vberr);
   vb = VecDiv(vb, vberr, 1);
@@ -178,7 +190,29 @@ TVectorD TUnfHisto::Unfold(Int_t tau, Int_t toy, Int_t mattoy)
   Uort.Transpose(Uort);
   vdini = MatMultVec(Uort, vbini, _rDim);
   vd = MatMultVec(Uort, vb, _rDim);
-
+      //covariance matrix
+  if (_prop_errors){
+      double tau_z=ASV(tau)*ASV(tau);
+      _covmatrix.ResizeTo(ASV.GetNrows(),ASV.GetNrows());
+      TMatrixD Vort_t(Vort.GetNrows(),Vort.GetNcols());
+      TMatrixD c_it(mC_i.GetNrows(),mC_i.GetNcols());
+      TMatrixD Z(ASV.GetNrows(),ASV.GetNrows());
+      TMatrixD W(ASV.GetNrows(),ASV.GetNrows());
+      c_it.Transpose(mC_i);
+      Vort_t.Transpose(Vort);
+      for (int i=0; i<ASV.GetNrows();i++){
+        double s=ASV(i);
+        double ssq=s*s;
+        Z(i,i)=(ssq)/((ssq+tau_z)*(ssq+tau_z));
+      }
+      
+      W=mC_i*Vort*Z*Vort_t*c_it;
+      for (int i=0; i<ASV.GetNrows();i++){
+        for (int j=0; j<ASV.GetNrows();j++){
+            _covmatrix(i,j)=(_xini->GetBinContent(i))*W(i,j)*(_xini->GetBinContent(j));
+        }
+     }
+  }
   if(!toy && !mattoy){
     sprintf(hname, "%s", "dd");
     V2H(vd, hname);
@@ -220,15 +254,18 @@ TVectorD TUnfHisto::Unfold(Int_t tau, Int_t toy, Int_t mattoy)
       sprintf(hname, "%s%d", "w", k+1);
       V2H(vw, hname);
     }
-
     //Rescale by xini
     vx = CompProd(vw, vxini);
-
     //Scale result to unit area
     Scale = SNorm(vx, _gDim);
     if(Scale!=0){
       for(Int_t i=0; i<_gDim; i++){
         vx(i) = vx(i)/Scale;
+        if(_prop_errors){
+            for (Int_t j=0; j<_gDim; j++){
+                _covmatrix(i,j)/=(Scale*Scale);//?????
+            }
+        }
       }
     }
     if(!toy && !mattoy){
@@ -259,7 +296,12 @@ TVectorD TUnfHisto::Unfold(Int_t tau, Int_t toy, Int_t mattoy)
   return vx;
 }
 
-TMatrixD TUnfHisto::GetCov(const TMatrixD& cov, const TH1D *bref,  Int_t ntoys, Int_t tau, TH1D* toydist[16], Int_t fg)
+TMatrixD TUnfHisto::GetCov()
+{
+    return _covmatrix;
+}
+
+TMatrixD TUnfHisto::GetCovToys(const TMatrixD& cov, const TH1D *bref,  Int_t ntoys, Int_t tau, TH1D* toydist[16], Int_t fg)
 {
 //Code for generation of toys taken from RooResult and modified
 
@@ -938,4 +980,9 @@ void TUnfHisto::V2H(const TVectorD& vec, TString hname)
   return;
 }
 
-
+void TUnfHisto::UsePropErrors(Bool_t PE)
+{
+    //Allows covariance matrix calculation by propagation of errors
+    //At present this produces very large error bars
+    _prop_errors=PE;
+}

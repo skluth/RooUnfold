@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.45 2010-08-25 23:46:34 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.46 2010-08-26 15:07:39 fwx38934 Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -392,8 +392,11 @@ void RooUnfoldTestHarness::PlotErrors()
 {
   if (onepage) canvas->cd(++ipad);
   RooUnfoldErrors All(ntoys,unfold,hTrue);
-  All.RMSResiduals()->Draw("P");
+  TH1* RMSRes=All.RMSResiduals();
+  setmax(RMSRes,All.UnfoldingError());
+  RMSRes->Draw("P");
   All.UnfoldingError()->Draw("P SAME");
+
   canvas->Update();
   if (onepage) canvas->cd(++ipad);
   Double_t good_chi= All.Chi2()->Draw("chi2","abs(chi2)<1e10");

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.19 2010-08-23 18:07:54 adye Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.20 2010-08-26 15:07:43 fwx38934 Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -89,6 +89,7 @@ RooUnfoldSvd::Init()
   _svd= 0;
   _meas1d= _train1d= _truth1d= 0;
   _reshist= 0;
+  _prop_errors=false;
   GetSettings();
 }
 
@@ -131,7 +132,6 @@ RooUnfoldSvd::Unfold()
   _truth1d= CopyOverflow (_res->Htruth1D());
   _reshist= CopyOverflow2D (_res->Hresponse());
   TH1::AddDirectory (oldstat);
-
   if (_nt != _nm) {
     cerr << "RooUnfoldSvd requires the same number of bins in the truth and measured distributions" << endl;
     _fail= true;
@@ -154,7 +154,7 @@ RooUnfoldSvd::Unfold()
 
   _rec.ResizeTo (nt);
   if (_verbose>=1) cout << "SVD unfold kterm=" << _kterm << endl;
-  _rec= _svd->Unfold (_kterm);
+  _rec= _svd->Unfold (_kterm,_prop_errors);
   Double_t sf= (_truth1d->Integral() / _train1d->Integral()) * _meas1d->Integral();
   for (Int_t i= 0; i<nt; i++) {
     _rec[i] *= sf;
@@ -181,14 +181,22 @@ RooUnfoldSvd::GetCov()
 
   //Get the covariance matrix for statistical uncertainties on measured spectrum
   _cov.ResizeTo (nt, nt);
-  _cov= _svd->GetCov (covMeas, _meas1d, _ntoyssvd, _kterm);
-  //Get the covariance matrix for statistical uncertainties on signal MC
-  TMatrixD ucovTrain= _svd->GetMatStatCov (_ntoyssvd, _kterm);
+  TMatrixD ucovTrain(nt,nt);
+  if (!_prop_errors){
+      _cov= _svd->GetCovToys(covMeas, _meas1d, _ntoyssvd, _kterm);
+      //Get the covariance matrix for statistical uncertainties on signal MC
+      ucovTrain=_svd->GetMatStatCov (_ntoyssvd, _kterm);
+  }
+  else{
+    _cov= _svd->GetCov();
+  }
   Double_t sf= (_truth1d->Integral() / _train1d->Integral()) * _meas1d->Integral();
   Double_t sf2= sf*sf;
   for (Int_t i= 0; i<nt; i++) {
     for (Int_t j= 0; j<nt; j++) {
-      _cov(i,j) += ucovTrain(i,j);
+        if (!_prop_errors){
+            _cov(i,j) += ucovTrain(i,j);
+        }
       _cov(i,j) *= sf2;
     }
   }
@@ -234,4 +242,12 @@ RooUnfoldSvd::GetSettings(){
     _maxparm=_meas->GetNbinsX();
     _stepsizeparm=1;
     _defaultparm=_meas->GetNbinsX()/2;
+}
+
+void 
+RooUnfoldSvd::UsePropErrors(Bool_t PE)
+{
+    //Allows covariance matrix calculation by propagation of errors
+    //At present this produces very large error bars
+    _prop_errors=PE;
 }

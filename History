@@ -1,5 +1,10 @@
-History of RooUnfold     $Id: History,v 1.103 2010-08-25 23:46:32 adye Exp $
+History of RooUnfold     $Id: History,v 1.104 2010-08-26 15:07:35 fwx38934 Exp $
 ====================
+
+Richard Claridge 26-Aug-2010 rgc100826a
+  o Added new getcov routine to svd. Calculates covariance matrix via the method presented in Hocker and Kartvelishvili's paper.
+  o Modified GetErrMat to use RooUnfoldResponse::GetBin to find the correct bin for use in filling covariance matrix
+  o Added error on unfolding column to printtable routine
 
 Tim Adye         25-Aug-2010 tja100825d
   o Fix RooUnfoldTest residual and pull plots which had uninitialised bins.

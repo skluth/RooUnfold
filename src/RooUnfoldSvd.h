@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.h,v 1.14 2010-08-11 19:27:37 adye Exp $
+//      $Id: RooUnfoldSvd.h,v 1.15 2010-08-26 15:07:43 fwx38934 Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -48,6 +48,7 @@ public:
   virtual Double_t GetRegParm() const { return GetKterm(); }
   virtual void Reset();
   virtual TObject* Impl();
+  void UsePropErrors(Bool_t PE);
 
 protected:
 
@@ -65,7 +66,7 @@ protected:
   TUnfHisto* _svd;
   Int_t _kterm;
   Int_t _ntoyssvd;
-
+  Bool_t _prop_errors;
   TH1D *_meas1d, *_train1d, *_truth1d;
   TH2D *_reshist;
 

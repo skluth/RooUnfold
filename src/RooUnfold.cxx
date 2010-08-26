@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.42 2010-08-25 23:46:36 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.43 2010-08-26 15:07:43 fwx38934 Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -286,16 +286,19 @@ RooUnfold::GetErrMat()
     for (int k=0; k<_NToys; k++){
         TH1* res=Runtoy();
         for (int i=0; i<total;i++){
-            Double_t res_bci=res->GetBinContent(i);
+            Int_t it= RooUnfoldResponse::GetBin (res, i, _overflow);
+            Double_t res_bci=res->GetBinContent(it);
             bc_vec[i]+=res_bci;
             for (int j=0; j<total; j++){
-            bc_mat(i,j)+=(res_bci*res->GetBinContent(j));
+                Int_t jt= RooUnfoldResponse::GetBin (res, j, _overflow);
+                bc_mat(i,j)+=(res_bci*res->GetBinContent(jt));
             }
         }
     }
     for (unsigned int i=0; i<bc_vec.size();i++){
         for (unsigned int j=0; j<bc_vec.size(); j++){
             _err_mat(i,j)=(bc_mat(i,j)-(bc_vec[i]*bc_vec[j])/_NToys)/_NToys;
+            
         }
     }
     _have_err_mat=true;
@@ -413,17 +416,16 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment withErr
   const TH1* hMeas=      Hmeasured();
   const TH1* hTrainTrue= response()->Htruth();
   const TH1* hTrain=     response()->Hmeasured();
-
   std::ostringstream fmt;
   fmt.copyfmt (o);  
   Int_t dim= hReco->GetDimension(), ntxb= hReco->GetNbinsX()+2, ntyb= hReco->GetNbinsY()+2;
   if (hMeas->GetDimension() != dim || hMeas->GetNbinsX()+2 != ntxb || hMeas->GetNbinsY()+2 != ntyb) dim= 1;
   Int_t iwid= (dim==3) ? 8 : (dim==2) ? 7 : 5;
   const char* xwid= (dim==3) ? "===" : (dim==2) ? "==" : "";
-  o << "====================================================================" << xwid << endl
-    << setw(iwid) << ""      << setw(9) << "Train" << setw(9) << "Train"    << setw(9) << "Test"  << setw(9) << "Test"  << setw(9) << "Unfolded" << setw(9) << "Diff" << setw(9) << "Pull" << endl
-    << setw(iwid) << "Bin"   << setw(9) << "Truth" << setw(9) << "Measured" << setw(9) << "Truth" << setw(9) << "Input" << setw(9) << "Output"   << endl
-    << "====================================================================" << xwid << endl;
+  o << "===============================================================================" << xwid << endl
+    << setw(iwid) << ""      << setw(9) << "Train" << setw(9) << "Train"    << setw(9) << "Test"  << setw(9) << "Test"  << setw(9) << "Unfolded" << setw(10)<<"Error on"<<setw(9) << "Diff" << setw(9) << "Pull" << endl
+    << setw(iwid) << "Bin"   << setw(9) << "Truth" << setw(9) << "Measured" << setw(9) << "Truth" << setw(9) << "Input" << setw(9) << "Output"   << setw(10)<<"Unfolding"<<endl
+    << "===============================================================================" << xwid << endl;
   Double_t true_train_tot=0;
   Double_t meas_train_tot=0;
   Double_t true_test_tot=0;
@@ -476,6 +478,7 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment withErr
            (hTrue->GetBinContent(it)!=0.0 || (withError && hTrue->GetBinError(it)>0.0)))) {
         Double_t ydiff    = hReco->GetBinContent(it) - hTrue->GetBinContent(it);
         Double_t ydiffErr = hReco->GetBinError(it);
+        o << " " << setw(9) << ydiffErr;
         o << ' ' << setw(8) << ydiff;
         if (ydiffErr>0.0) {
           ndf++;
@@ -489,7 +492,7 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment withErr
     
   }
   
-  o << "====================================================================" << xwid << endl
+  o << "===============================================================================" << xwid << endl
     << setw(iwid) << "" << std::fixed << setprecision(0)
     << ' ' << setw(8) << true_train_tot
     << ' ' << setw(8) << meas_train_tot;
@@ -499,12 +502,13 @@ RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment withErr
     o << setw(9) << " ";
   o << ' ' << setw(8) << meas_test_tot << setprecision(1)
     << ' ' << setw(8) << unf_tot
+    << ' ' << setw(9) << sqrt(meas_test_tot)*(true_train_tot/meas_train_tot)
     << ' ' << setw(8) << unf_tot-true_test_tot;
     if(hMeas->Integral()>0){
     o<< ' ' << setw(8) <<(unf_tot-true_test_tot)/sqrt(meas_test_tot);
     }
     o<< endl
-    << "====================================================================" << xwid << endl;
+    << "===============================================================================" << xwid << endl;
   o.copyfmt (fmt);
   Double_t chi_squ = chi2;
   if (withError==kCovariance || withError==kCovToy) {

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldErrors.cxx,v 1.6 2010-08-23 18:07:54 adye Exp $
+//      $Id: RooUnfoldErrors.cxx,v 1.7 2010-08-26 15:07:43 fwx38934 Exp $
 //
 // Description:
 //      Unfolding errors class
@@ -141,7 +141,7 @@ RooUnfoldErrors::CreatePlots()
     for (int a=0; a<ntx; a++) {
     TString graph_title("Residuals at Bin ");
     graph_title+=a;
-    TH1D* graph_name = new TH1D (graph_title,graph_title, 200,0,1000);
+    TH1D* graph_name = new TH1D (graph_title,graph_title, 2000,0,10000);
     graph_vector.push_back(graph_name);
     }
     
@@ -159,8 +159,8 @@ RooUnfoldErrors::CreatePlots()
         }
         for (int i=0; i<ntx; i++) {    
             Double_t res= hReco_->GetBinContent(i);
-            graph_vector[i]->Fill(res); 
-            Double_t u_error=hReco_->GetBinError(i); 
+            graph_vector[i]->Fill(res);
+            Double_t u_error=hReco_->GetBinError(i+1); 
             h_err->Fill(i*dx,u_error);
             } 
         if (hTrue){
@@ -171,7 +171,7 @@ RooUnfoldErrors::CreatePlots()
             }
         }
     delete hReco_;
-    }       
+    }     
     for (unsigned int i=0; i<graph_vector.size(); i++){
         Double_t spr=(graph_vector[i]->GetRMS());
         h_err_res->SetBinContent(i,spr);
@@ -182,7 +182,7 @@ RooUnfoldErrors::CreatePlots()
     }
     
     if (odd_ch){
-        cout <<"There are " << odd_ch << " bins over "<<max <<endl;
+        cout <<"There are " << odd_ch << " bins over outside the range of 0 to "<<max <<endl;
     }
 
 }
