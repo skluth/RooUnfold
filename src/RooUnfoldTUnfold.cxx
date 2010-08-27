@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTUnfold.cxx,v 1.16 2010-08-25 10:23:49 adye Exp $
+//      $Id: RooUnfoldTUnfold.cxx,v 1.17 2010-08-27 23:27:54 adye Exp $
 //
 // Description:
 //      Unfolding class using TUnfold from ROOT to do the actual unfolding.
@@ -120,12 +120,12 @@ RooUnfoldTUnfold::Unfold()
 {
     /* Does the unfolding. Uses the optimal value of the unfolding parameter unless a value has already been set using FixTau*/
        
-  const TH2D* Hres=_res->Hresponse();
   if (_fail) return;
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
-  TH2D* Hresc=CopyOverflow(Hres);
-  TH2D* Hres_flipped=TransposeHist(Hresc);
+  TH1D* meas= (_meas->GetDimension() == 1) ? CopyOverflow (_meas,_overflow) : RooUnfoldResponse::H2H1D (_meas, _nm);
+  TH2D* Hres=_res->HresponseNoOverflow();
+  TH2D* Hres_flipped=TransposeHist(Hres);
   TH1::AddDirectory (oldstat);
 
   _unf= new TUnfold(Hres_flipped,TUnfold::kHistMapOutputHoriz,_reg_method);
@@ -139,11 +139,11 @@ RooUnfoldTUnfold::Unfold()
   // this method scans the parameter tau and finds the kink in the L curve
   // finally, the unfolding is done for the best choice of tau
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,23,0)  /* TUnfold v6 (included in ROOT 5.22) didn't have setInput return value */
-  if(_unf->SetInput(_meas)>=10000) {
+  if(_unf->SetInput(meas)>=10000) {
     cerr<<"Unfolding result may be wrong\n";
   }
 #else
-  _unf->SetInput(_meas);
+  _unf->SetInput(meas);
 #endif
   //_unf->SetConstraint(TUnfold::kEConstraintArea);
   if (!tau_set){
@@ -155,11 +155,12 @@ RooUnfoldTUnfold::Unfold()
     _unf->DoUnfold(_tau);
   }
   TH1* reco=_unf->GetOutput("_rec","reconstructed dist",0,0);
-  _rec.ResizeTo (reco->GetNbinsX());
-  for (int i=0;i<reco->GetNbinsX();i++){
+  _rec.ResizeTo (_nt);
+  for (int i=0;i<_nt;i++){
     _rec(i)=(reco->GetBinContent(i+1));
   }
-  delete Hresc;
+  delete meas;
+  delete Hres;
   delete reco;
   delete Hres_flipped;
   _unfolded= true;
@@ -170,14 +171,10 @@ void
 RooUnfoldTUnfold::GetCov()
 {
     //Gets Covariance matrix
-    Int_t nt=_rec.GetNrows();
-    if (_overflow){nt+=2;}
-    if (!_unfolded) Unfold();
-    if (_fail) return;
     TH2D* ematrix=_unf->GetEmatrix("ematrix","error matrix",0,0);
-    _cov.ResizeTo (nt,nt);
-    for (Int_t i= 0; i<nt; i++) {
-        for (Int_t j= 0; j<nt; j++) {
+    _cov.ResizeTo (_nt,_nt);
+    for (Int_t i= 0; i<_nt; i++) {
+        for (Int_t j= 0; j<_nt; j++) {
             _cov (i,j)= ematrix->GetBinContent(i+1,j+1);
         }
     }
@@ -206,24 +203,6 @@ RooUnfoldTUnfold::TransposeHist(const TH2D* h)
       sumineff+=h->GetBinContent(i,j); 
     }
     hx->SetBinContent(i,0,_res->Htruth()->GetBinContent(i)-sumineff);
-  }
-  return hx;
-}
-
-TH2D*
-RooUnfoldTUnfold::CopyOverflow (const TH2D* h) const
-{
-  if (!_overflow) return (TH2D*)h->Clone();
-  Int_t nx= h->GetNbinsX(), ny= h->GetNbinsX();
-  Double_t xlo= h->GetXaxis()->GetXmin(), xhi= h->GetXaxis()->GetXmax(), xb= (xhi-xlo)/nx;
-  Double_t ylo= h->GetYaxis()->GetXmin(), yhi= h->GetYaxis()->GetXmax(), yb= (yhi-ylo)/ny;
-  nx += 2; ny += 2;
-  TH2D* hx= new TH2D (h->GetName(), h->GetTitle(), nx, xlo-xb, xhi+xb, ny, ylo-yb, yhi+yb);
-  for (Int_t i= 0; i < nx; i++) {
-    for (Int_t j= 0; j < ny; j++) {
-      hx->SetBinContent (i+1, j+1, h->GetBinContent (i, j));
-      hx->SetBinError   (i+1, j+1, h->GetBinError   (i, j));
-    }
   }
   return hx;
 }

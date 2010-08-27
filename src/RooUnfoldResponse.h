@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.12 2010-07-08 17:00:24 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.13 2010-08-27 23:27:54 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -67,7 +67,7 @@ public:
 
   Int_t        GetDimensionMeasured() const;   // Dimensionality of the measured distribution
   Int_t        GetDimensionTruth()    const;   // Dimensionality of the truth distribution
-  Int_t        GetNbinsMeasured()     const;   // Total number of bins in the 
+  Int_t        GetNbinsMeasured()     const;   // Total number of bins in the measured distribution
   Int_t        GetNbinsTruth()        const;   // Total number of bins in the truth distribution
 
   const TH1*   Hmeasured()            const;   // Measured distribution, used for normalisation
@@ -76,6 +76,7 @@ public:
   TH1*         Htruth();                       // Truth distribution, used for normalisation
   const TH2D*  Hresponse()            const;   // Response matrix as a 2D-histogram: (x,y)=(measured,truth)
   TH2D*        Hresponse();                    // Response matrix as a 2D-histogram: (x,y)=(measured,truth)
+  TH2D*        HresponseNoOverflow()  const;   // Response matrix with under/overflow bins moved into histogram body
 
   TH1D*        Hmeasured1D()          const;   // Measured distribution, packed into a 1D histogram
   TH1D*        Htruth1D()             const;   // Truth distribution, packed into a 1D histogram

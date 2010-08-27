@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldParms.cxx,v 1.10 2010-08-23 18:07:54 adye Exp $
+//      $Id: RooUnfoldParms.cxx,v 1.11 2010-08-27 23:27:54 adye Exp $
 //
 // Description:
 //      Optimisation of regularisation parameter class
@@ -155,8 +155,8 @@ RooUnfoldParms::DoMath()
         }
         Int_t gvl=0;
         Int_t _overflow=unfold->Overflow();
-        Int_t _nt = unfold->NBins();
-        Int_t nt= _nt + (_overflow ? 2 : 0);
+        Int_t nt = unfold->response()->GetNbinsTruth();
+        if (_overflow) nt += 2;
     
         for (Double_t k=_minparm;k<=_maxparm;k+=_stepsizeparm)
         {   

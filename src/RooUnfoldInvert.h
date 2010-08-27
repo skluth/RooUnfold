@@ -7,33 +7,36 @@ class RooUnfoldResponse;
 class TH1;
 class TH1D;
 class TH2D;
+class TDecompSVD;
 
 class RooUnfoldInvert : public RooUnfold {
 
 public:
-
-
- RooUnfoldInvert(); // default constructor
+  RooUnfoldInvert(); // default constructor
   RooUnfoldInvert (const char*    name, const char*    title); // named constructor
   RooUnfoldInvert (const TString& name, const TString& title); // named constructor
   RooUnfoldInvert (const RooUnfoldInvert& rhs); // copy constructor
   virtual ~RooUnfoldInvert(); // destructor
   RooUnfoldInvert& operator= (const RooUnfoldInvert& rhs); // assignment operator
   virtual RooUnfoldInvert* Clone (const char* newname= 0) const;
-RooUnfoldInvert (const RooUnfoldResponse* res, const TH1* meas, const char* name=0, const char* title=0);
+  RooUnfoldInvert (const RooUnfoldResponse* res, const TH1* meas, const char* name=0, const char* title=0);
 
+  virtual void Reset();
+  virtual TObject* Impl();
 
 protected:
-virtual void Unfold();
-virtual void GetCov();
-virtual void GetSettings();
+  virtual void Unfold();
+  virtual void GetCov();
+  virtual void GetSettings();
 
 private:
-  TMatrixD Hres_i;
-  TVectorD Hmeas_m;
+  void Init();
+
+protected:
+  // instance variables
+  TDecompSVD* _svd;
   
 public:
-
   ClassDef (RooUnfoldInvert, 0) 
 };
 

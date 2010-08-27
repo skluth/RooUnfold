@@ -46,7 +46,6 @@ private:
   TUnfold::ERegMode _reg_method; //Regularisation method 
   TUnfold* _unf; //TUnfold object
   TH2D* TransposeHist(const TH2D* Hres);
-  TH2D* CopyOverflow(const TH2D* h)const;
   Bool_t tau_set;
   Double_t _tau;
   

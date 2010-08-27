@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.h,v 1.16 2010-08-27 15:47:29 adye Exp $
+//      $Id: RooUnfoldSvd.h,v 1.17 2010-08-27 23:27:54 adye Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -51,17 +51,17 @@ public:
   void UsePropErrors(Bool_t PE=true);
 
 protected:
-
-  void Init();
-  void Destroy();
+  void Assign (const RooUnfoldSvd& rhs); // implementation of assignment operator
   virtual void Unfold();
   virtual void GetCov();
-  void Assign   (const RooUnfoldSvd& rhs); // implementation of assignment operator
-  void CopyData (const RooUnfoldSvd& rhs);
-  TH1D* CopyOverflow   (const TH1* h) const;
-  TH2D* CopyOverflow2D (const TH1* h) const;
   virtual void GetSettings();
 
+private:
+  void Init();
+  void Destroy();
+  void CopyData (const RooUnfoldSvd& rhs);
+
+protected:
   // instance variables
   TUnfHisto* _svd;
   Int_t _kterm;
@@ -72,7 +72,6 @@ protected:
   TH2D *_reshist;
 
 public:
-
   ClassDef (RooUnfoldSvd, 0) // SVD Unfolding
 };
 

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldInvert.cxx,v 1.4 2010-08-23 21:38:13 adye Exp $
+//      $Id: RooUnfoldInvert.cxx,v 1.5 2010-08-27 23:27:54 adye Exp $
 //
 // Description:
 //      Unfolding class using inversion of the response matrix. This does not produce
@@ -41,12 +41,14 @@ ClassImp (RooUnfoldInvert);
 RooUnfoldInvert::RooUnfoldInvert (const RooUnfoldInvert& rhs)
   : RooUnfold (rhs)
 {
+  Init();
 }
 
 RooUnfoldInvert::RooUnfoldInvert (const RooUnfoldResponse* res, const TH1* meas,
                             const char* name, const char* title)
   : RooUnfold (res, meas, name, title)
 {
+  Init();
 }
 
 RooUnfoldInvert*
@@ -60,37 +62,47 @@ RooUnfoldInvert::Clone (const char* newname) const
 
 RooUnfoldInvert::~RooUnfoldInvert()
 {
+  delete _svd;
+}
+
+void
+RooUnfoldInvert::Init()
+{
+  _svd= 0;
+  GetSettings();
+}
+
+void
+RooUnfoldInvert::Reset()
+{
+  delete _svd;
+  Init();
+  RooUnfold::Reset();
+}
+
+TObject*
+RooUnfoldInvert::Impl()
+{
+  return _svd;
 }
 
 void
 RooUnfoldInvert::Unfold()
 {
-       
-  const TH2D* Hres=_res->Hresponse();
-  const TH1* Hmeas=_meas;
-  int HresXbins=Hres->GetNbinsX();
-  int HresYbins=Hres->GetNbinsY();
-  int HmeasXbins=Hmeas->GetNbinsX();
-  
-  TMatrixD* Hres_m;
-  if (_overflow){Hres_m=RooUnfoldResponse::H2M(Hres,HresXbins,HresYbins,_res->Htruth(),1);}
-  else {Hres_m=RooUnfoldResponse::H2M(Hres,HresXbins,HresYbins,_res->Htruth(),0);}
-  if (_overflow){
-    HresXbins+=2;
-    HresYbins+=2;
-    HmeasXbins+=2;
+  _svd= new TDecompSVD (_res->Mresponse());
+  if (_svd->Condition()<0){
+    cerr <<"Warning: response matrix bad condition= "<<_svd->Condition()<<endl;
   }
-  TVectorD* Hmeas_mp=RooUnfoldResponse::H2V(Hmeas,HmeasXbins);
-  Hmeas_m.ResizeTo(HmeasXbins);
-  Hmeas_m=(*Hmeas_mp);
-  TDecompSVD svd(*Hres_m);
-  if (svd.Condition()<0){
-    cerr <<"Error: bad condition= "<<svd.Condition()<<endl;
+
+  _rec.ResizeTo(_nm);
+  _rec= Vmeasured();
+  Bool_t ok= _svd->Solve (_rec);
+  if (!ok) {
+    cerr << "Response matrix Solve failed" << endl;
+    _fail= true;
+    return;
   }
-  Hres_i.ResizeTo(HresYbins,HresXbins);
-  Hres_i=svd.Invert();
-  _rec.ResizeTo(Hres_i.GetNrows());
-  _rec=Hres_i*Hmeas_m;
+
   _unfolded= true;
   _haveCov=  false;
 }
@@ -98,13 +110,25 @@ RooUnfoldInvert::Unfold()
 void
 RooUnfoldInvert::GetCov()
 {
-    if (!_unfolded){Unfold();}
-    _cov.ResizeTo(Hres_i.GetNrows(),Hres_i.GetNcols());
-    for (int i=0;i<Hres_i.GetNrows();i++){
-        for (int j=0;j<Hres_i.GetNrows();j++){
-            for (int k=0; k<Hres_i.GetNcols();k++){
-                _cov(i,j)+=(Hres_i(i,k)*Hres_i(j,k)*Hmeas_m(k));
+    Bool_t ok;
+    TMatrixD resinv(_nt,_nm);
+    resinv=_svd->Invert(ok);
+    if (!ok) {
+      cerr << "response matrix inversion failed" << endl;
+      _fail= true;
+      return;
+    }
+
+    const TVectorD& vmeasured= Vmeasured();
+    _cov.ResizeTo(_nt,_nt);
+    for (int i=0;i<_nt;i++){
+        for (int j=0;j<=i;j++){
+            Double_t c= 0;
+            for (int k=0; k<_nm;k++){
+                c += resinv(i,k) * resinv(j,k) * vmeasured(k);
             }
+            _cov(i,j)= c;
+            _cov(j,i)= c;
         }
     }
     _haveCov= true;

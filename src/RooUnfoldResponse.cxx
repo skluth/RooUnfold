@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.16 2010-08-23 18:07:54 adye Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.17 2010-08-27 23:27:54 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -349,6 +349,25 @@ RooUnfoldResponse::H2H1D(const TH1* h, Int_t nb)
     h1d->SetBinError   (i+1, h->GetBinError   (j));
   }
   return h1d;
+}
+
+TH2D*
+RooUnfoldResponse::HresponseNoOverflow() const
+{
+  const TH2D* h= Hresponse();
+  if (!_overflow) return dynamic_cast<TH2D*>(h->Clone());
+  Int_t nx= h->GetNbinsX(), ny= h->GetNbinsX();
+  Double_t xlo= h->GetXaxis()->GetXmin(), xhi= h->GetXaxis()->GetXmax(), xb= (xhi-xlo)/nx;
+  Double_t ylo= h->GetYaxis()->GetXmin(), yhi= h->GetYaxis()->GetXmax(), yb= (yhi-ylo)/ny;
+  nx += 2; ny += 2;
+  TH2D* hx= new TH2D (h->GetName(), h->GetTitle(), nx, xlo-xb, xhi+xb, ny, ylo-yb, yhi+yb);
+  for (Int_t i= 0; i < nx; i++) {
+    for (Int_t j= 0; j < ny; j++) {
+      hx->SetBinContent (i+1, j+1, h->GetBinContent (i, j));
+      hx->SetBinError   (i+1, j+1, h->GetBinError   (i, j));
+    }
+  }
+  return hx;
 }
 
 TVectorD*

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.cxx,v 1.13 2010-08-23 21:38:13 adye Exp $
+//      $Id: RooUnfoldBinByBin.cxx,v 1.14 2010-08-27 23:27:54 adye Exp $
 //
 // Description:
 //      Unfolding class using the bin by bin method of conversion factors. 
@@ -31,14 +31,14 @@ ClassImp (RooUnfoldBinByBin);
 RooUnfoldBinByBin::RooUnfoldBinByBin (const RooUnfoldBinByBin& rhs)
   : RooUnfold (rhs)
 {
-  
+  GetSettings();  
 }
 
 RooUnfoldBinByBin::RooUnfoldBinByBin (const RooUnfoldResponse* res, const TH1* meas, 
                             const char* name, const char* title)
   : RooUnfold (res, meas, name, title)
 {
-  
+  GetSettings();
 }
 
 RooUnfoldBinByBin::~RooUnfoldBinByBin()
@@ -59,70 +59,28 @@ RooUnfoldBinByBin::Clone (const char* newname) const
 void
 RooUnfoldBinByBin::Unfold()
 {
-    const TH2D* Hres=_res->Hresponse();
-    HresXbins=Hres->GetNbinsX();
-    if (_overflow){
-        HresXbins+=2;
-    }
-    _rec.ResizeTo(HresXbins);
-    double c;
-    c_vector.ResizeTo(HresXbins);
-    for (int i=0; i<HresXbins;i++){     
-        if(_overflow){
-            c=(_res->Htruth()->GetBinContent(i))/(_res->Hmeasured()->GetBinContent(i));
-            if (_res->Hmeasured()->GetBinContent(i)==0){
-                _rec(i)=0;
-                c_vector(i)=0;
-            }
-            else{
-                c_vector(i)=c;
-                _rec(i)= _meas->GetBinContent(i)*c;
-            }
-        }
-        else{
-            //fiddling needed to exclude underflow bin (still included)
-            c=(_res->Htruth()->GetBinContent(i+1))/(_res->Hmeasured()->GetBinContent(i+1));
-            if (_res->Hmeasured()->GetBinContent(i+1)==0){
-                _rec(i)=0;
-                c_vector(i)=0;
-            }
-            else{
-                c_vector(i)=c;
-                _rec(i)= _meas->GetBinContent(i+1)*c;
-            }
-        }
+    const TVectorD& vtrain= _res->Vmeasured();
+    const TVectorD& vtruth= _res->Vtruth();
+    _rec.ResizeTo(_nt);
+    _cov.ResizeTo(_nt,_nt);
+    Int_t nb= _nm < _nt ? _nm : _nt;
+    for (int i=0; i<nb;i++){     
+      if (vtrain(i)!=0.0){
+        Double_t c=(vtruth(i))/(vtrain(i));
+        Int_t j= RooUnfoldResponse::GetBin (_meas, i, _overflow);
+        Double_t m= _meas->GetBinContent(j);
+        _rec(i)=     c*m;
+        _cov(i,i)= c*c*m;
+      }
     }
     _unfolded= true;
-    _haveCov=  false;
+    _haveCov=  true;
 }
 
 void
 RooUnfoldBinByBin::GetCov()
 {
-    if(!_unfolded){Unfold();}
-    _cov.ResizeTo(HresXbins,HresXbins);
-    for (int i=0; i<HresXbins;i++){
-        if(_overflow){
-            double c=c_vector(i);
-            if (_res->Hmeasured()->GetBinContent(i)==0){
-                _cov(i,i)=0;
-            }
-            else{
-                _cov(i,i)=c*c*_meas->GetBinContent(i);
-            }
-        }
-        else{
-            double c=c_vector(i);
-            if (_res->Hmeasured()->GetBinContent(i+1)==0){
-                _cov(i,i)=0;
-            }
-            else{
-                _cov(i,i)=c*c*_meas->GetBinContent(i+1);
-            }
-        }
-            
-    }
-    _haveCov= true;
+    // RooUnfoldBinByBin::Unfold already filled _cov
 }
 
 void

@@ -1,5 +1,32 @@
-History of RooUnfold     $Id: History,v 1.108 2010-08-27 15:47:27 adye Exp $
+History of RooUnfold     $Id: History,v 1.109 2010-08-27 23:27:52 adye Exp $
 ====================
+
+Tim Adye         27-Aug-2010 tja100827d
+  o Add RooUnfold::Vmeasured() and Emeasured() to return the measured
+    distribution and its errors as TVectorD.
+  o Remove unused RooUnfold::NBins() and HaveErrors() methods.
+  o Rename RooUnfold::GetErrorObject() to UnfoldWithErrors(). This now always
+    does an Unfold() first.
+  o Move RooUnfoldSvd::CopyOverflow() to the base clase, RooUnfold, so
+    RooUnfoldTUnfold doesn't need its own version. It is now static.
+  o Remove unneccessary mutable property on most RooUnfold members.
+  o RooUnfold::_nm and _nt now count in the under/overflow bins. This simplifies
+    the logic nearly everywhere.
+  o Rename RooUnfold::_errors to _variances, since it holds errors squared.
+  o RooUnfold::ErecoV() returns a vector of errors, not variances.
+  o Replace various instances of RooUnfold::Hreco(),
+    RooUnfoldResponse::Hresponse(), Hmeasured(), and Htruth() with direct
+    TVectorD/TMatrixD equivalents, when that is more convenient.
+    Also, use _nt and _nm instead of GetNbinsX() etc.
+  o Make RooUnfold::Init(), Destroy(), and CopyData() methods private, since
+    these should not be inherited.
+  o RooUnfoldBayes::Destroy() didn't do much, so replace it with its contents.
+  o Fill RooUnfoldBinByBin::_cov in Unfold(), so GetCov() has nothing to do.
+  o TDecompSVD is now the RooUnfoldInvert::Impl() object. Use Solve() rather
+    than Invert() for unfolding (Invert() still used for errors).
+  o Speed up RooUnfoldInvert::GetCov() symmetric matrix multiplication.
+  o New RooUnfoldResponse::HresponseNoOverflow() method to replace
+    RooUnfoldSvd::CopyOverflow2D(Hresponse()).
 
 Tim Adye         27-Aug-2010 V01-00-01
 Tim Adye         27-Aug-2010 tja100827c
