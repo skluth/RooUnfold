@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: ArgVars.icc,v 1.8 2010-07-17 00:47:15 adye Exp $
+//      $Id: ArgVars.icc,v 1.9 2010-08-27 12:50:08 adye Exp $
 //
 // Description:
 //      Parse argument list for parameter settings
@@ -172,8 +172,11 @@ Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split) const
           while (nv>0 && p[nv-1]==' ') nv--;
         }
         d++;
-        TString argname (p, nv);
-        arg= Find (argname.Data());
+        char* argname= new char[nv+1];
+        strncpy (argname, p, nv);
+        argname[nv]= '\0';
+        arg= Find (argname);
+        delete [] argname; argname= 0;
         if (arg) {
           char* nxt= 0;
           if (arg->ivar) *(arg->ivar)= strtol (d, &nxt, 10);
