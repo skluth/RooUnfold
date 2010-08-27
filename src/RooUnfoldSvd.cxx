@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.20 2010-08-26 15:07:43 fwx38934 Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.21 2010-08-27 15:47:29 adye Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -105,6 +105,7 @@ RooUnfoldSvd::CopyData (const RooUnfoldSvd& rhs)
 {
   _kterm= rhs._kterm;
   _ntoyssvd= rhs._ntoyssvd;
+  _prop_errors= rhs._prop_errors;
 }
 
 TObject*
@@ -123,6 +124,7 @@ RooUnfoldSvd::Unfold()
   Int_t overflow= (_overflow ? 2 : 0), nt= _nt+overflow, nm= _nm+overflow;
 
   _svd= new TUnfHisto (nt, nm);
+  if (_prop_errors) _svd->UsePropErrors();
 
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
@@ -154,7 +156,7 @@ RooUnfoldSvd::Unfold()
 
   _rec.ResizeTo (nt);
   if (_verbose>=1) cout << "SVD unfold kterm=" << _kterm << endl;
-  _rec= _svd->Unfold (_kterm,_prop_errors);
+  _rec= _svd->Unfold (_kterm);
   Double_t sf= (_truth1d->Integral() / _train1d->Integral()) * _meas1d->Integral();
   for (Int_t i= 0; i<nt; i++) {
     _rec[i] *= sf;
@@ -183,12 +185,12 @@ RooUnfoldSvd::GetCov()
   _cov.ResizeTo (nt, nt);
   TMatrixD ucovTrain(nt,nt);
   if (!_prop_errors){
-      _cov= _svd->GetCovToys(covMeas, _meas1d, _ntoyssvd, _kterm);
+      _cov= _svd->GetCov(covMeas, _meas1d, _ntoyssvd, _kterm);
       //Get the covariance matrix for statistical uncertainties on signal MC
       ucovTrain=_svd->GetMatStatCov (_ntoyssvd, _kterm);
   }
   else{
-    _cov= _svd->GetCov();
+    _cov= _svd->GetCovProp();
   }
   Double_t sf= (_truth1d->Integral() / _train1d->Integral()) * _meas1d->Integral();
   Double_t sf2= sf*sf;

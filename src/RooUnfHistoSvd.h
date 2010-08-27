@@ -2,7 +2,7 @@
 //Kerstin Tackmann, Heiko Lacker (TU Dresden)
 //based on 
 //Andreas Hoecker, Vakhtang Kartvelishvili, hep-ph/9509307
-//$Id: RooUnfHistoSvd.h,v 1.2 2010-08-26 15:07:43 fwx38934 Exp $
+//$Id: RooUnfHistoSvd.h,v 1.3 2010-08-27 15:47:29 adye Exp $
 ///////////////////////////////////////////////////////////////////////
 
 #ifndef TUNFHISTO_HH
@@ -25,12 +25,13 @@ class TUnfHisto : public TObject
 
   void init(const TH1D *b, const TH1D *bini, const TH1D *xini, const TH2D *A, Bool_t nofile= false); //Unfolding of data
   void init(const TH1D *b, const TH1D *bini, const TH1D *xini, const TH2D *A, const TH1D *xref, Bool_t nofile= false); //Unfolding of MC 
-  TVectorD Unfold(Int_t tau=1, Bool_t properrors=false,Int_t toy=0, Int_t mattoy=0);
-  TMatrixD GetCovToys(const TMatrixD& cov, const TH1D *bref, Int_t ntoys, Int_t tau, TH1D *toydist[16]=NULL, Int_t fg=0);
+  TVectorD Unfold(Int_t tau=1, Int_t toy=0, Int_t mattoy=0);
+  TMatrixD GetCov(const TMatrixD& cov, const TH1D *bref, Int_t ntoys, Int_t tau, TH1D *toydist[16]=NULL, Int_t fg=0);
   void GetS2(const TMatrixD& cov, const TMatrixD& mcov, const TH1D *xref, Int_t ntoys, Int_t tau, Int_t fg, TH1D *s2dist);
   TMatrixD GetMatStatCov(Int_t ntoys, Int_t tau, Int_t fg=0);
-  void UsePropErrors(Bool_t PE);
-  TMatrixD GetCov();
+  void UsePropErrors(Bool_t PE=true);
+  TMatrixD GetCovProp();
+
 
   private : 
 

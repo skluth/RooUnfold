@@ -1,7 +1,11 @@
-History of RooUnfold     $Id: History,v 1.107 2010-08-27 14:18:03 adye Exp $
+History of RooUnfold     $Id: History,v 1.108 2010-08-27 15:47:27 adye Exp $
 ====================
 
 Tim Adye         27-Aug-2010 V01-00-01
+Tim Adye         27-Aug-2010 tja100827c
+  o Revert rgc100826a's name changes to RooUnfHistoSvd.
+    New methods UsePropErrors() and GetCovProp().
+
 Tim Adye         27-Aug-2010 tja100827b
   o Fix long-standing CINT crash in RooUnfoldTest with more than one parameter:
     for some reason it didn't like making a TString at a certain point.
