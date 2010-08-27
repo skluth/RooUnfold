@@ -1,6 +1,7 @@
-History of RooUnfold     $Id: History,v 1.106 2010-08-27 12:50:06 adye Exp $
+History of RooUnfold     $Id: History,v 1.107 2010-08-27 14:18:03 adye Exp $
 ====================
 
+Tim Adye         27-Aug-2010 V01-00-01
 Tim Adye         27-Aug-2010 tja100827b
   o Fix long-standing CINT crash in RooUnfoldTest with more than one parameter:
     for some reason it didn't like making a TString at a certain point.
@@ -37,6 +38,7 @@ Richard Claridge 25-Aug-2010 rgc100825a
   o Minor changes to descriptions
   o Overflow switched off by default
 
+Tim Adye         24-Aug-2010 V01-00-00
 Tim Adye         24-Aug-2010 tja100824a
   o Update README.
   o RooUnfoldTest doerrors default is now 2 (calculate covariance matrix),
