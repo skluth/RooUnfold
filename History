@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.104 2010-08-26 15:07:35 fwx38934 Exp $
+History of RooUnfold     $Id: History,v 1.105 2010-08-27 10:33:01 adye Exp $
 ====================
+
+Tim Adye         27-Aug-2010 tja100827a
+  o Fix some Mac GCC 4.2.1 warnings.
 
 Richard Claridge 26-Aug-2010 rgc100826a
   o Added new getcov routine to svd. Calculates covariance matrix via the method presented in Hocker and Kartvelishvili's paper.

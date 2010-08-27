@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.46 2010-08-26 15:07:39 fwx38934 Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.47 2010-08-27 10:33:04 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -443,18 +443,18 @@ void RooUnfoldTestHarness::PlotParms()
 //==============================================================================
 
 TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char* title,
-                                      Int_t nt, Int_t fpdf, Int_t nx, Double_t xlo, Double_t xhi,
+                                      Int_t nt, Int_t fpdf, Int_t nx, Double_t lo, Double_t hi,
                                       Double_t mean, Double_t width, Double_t bkg,
                                       Double_t bias, Double_t smear)
 {
-  TH1D* hPDF= new TH1D (name, title, nbPDF, xlo, xhi);
+  TH1D* hPDF= new TH1D (name, title, nbPDF, lo, hi);
   hPDF->SetLineColor(kGreen);
   hPDF->SetLineWidth(2);
-  Double_t xwide = (5.0*smear) * (xhi-xlo) / Double_t(nt);  // 5*sigma
-  xlo -= xwide;
-  xhi += xwide;
-  if (verbose >= 1) cout << "Generate values in range " << xlo << " to " << xhi << endl;
-  if (!RooUnfoldTestPdf (fpdf, nx, xlo, xhi, x, hPDF, mean, width, bkg, verbose)) return 0;
+  Double_t xwide = (5.0*smear) * (hi-lo) / Double_t(nt);  // 5*sigma
+  lo -= xwide;
+  hi += xwide;
+  if (verbose >= 1) cout << "Generate values in range " << lo << " to " << hi << endl;
+  if (!RooUnfoldTestPdf (fpdf, nx, lo, hi, x, hPDF, mean, width, bkg, verbose)) return 0;
   hPDF->Scale (nbPDF/Double_t(nt));
   return hPDF;
 }
@@ -463,32 +463,32 @@ TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char*
 // Gaussian smearing, systematic translation, and variable inefficiency
 //==============================================================================
 
-bool RooUnfoldTestHarness::Eff (Double_t x, Double_t xlo, Double_t xhi, Double_t efflo, Double_t effhi) const
+bool RooUnfoldTestHarness::Eff (Double_t x, Double_t lo, Double_t hi, Double_t efflo, Double_t effhi) const
 {
   // Apply an efficiency function to the truth.
-  // Efficiency: 30% at x=xlo, 90% at x=xhi.
+  // Efficiency: 30% at x=lo, 90% at x=hi.
 
-  Double_t xwidth =  (xhi-xlo);
+  Double_t xwidth =  (hi-lo);
   Double_t slope = (effhi-efflo) / xwidth;
-  Double_t yeff= (efflo + slope * (x-xlo));  // efficiency
+  Double_t yeff= (efflo + slope * (x-lo));  // efficiency
   // MC test: if random number < eff then accept
   return (gRandom->Rndm() < yeff);
 }
 
-Double_t RooUnfoldTestHarness::Smear (Double_t x, Int_t nt, Double_t xlo, Double_t xhi, Double_t bias, Double_t smear) const
+Double_t RooUnfoldTestHarness::Smear (Double_t x, Int_t nt, Double_t lo, Double_t hi, Double_t bias, Double_t smear) const
 {
   // Apply a gaussian smearing and systematic translation to the truth.
 
-  Double_t xsigma = (xhi-xlo) * smear / Double_t(nt);     // smear sigma
+  Double_t xsigma = (hi-lo) * smear / Double_t(nt);     // smear sigma
   
   if (!addbias)
     bias= 0.0;
   else {
-    Double_t halfinterval=(xhi+xlo)/2;
+    Double_t halfinterval=(hi+lo)/2;
     if (x<=halfinterval)
-      bias *= (x-xlo)/(halfinterval-xlo);
+      bias *= (x-lo)/(halfinterval-lo);
     else
-      bias *= (xhi-x)/(xhi-halfinterval);
+      bias *= (hi-x)/(hi-halfinterval);
   }
   
   Double_t delta= xsigma <= 0.0 ? bias : gRandom->Gaus (bias, xsigma);     // bias and smear
@@ -497,11 +497,11 @@ Double_t RooUnfoldTestHarness::Smear (Double_t x, Int_t nt, Double_t xlo, Double
 
 }
 
-Double_t RooUnfoldTestHarness::Overflow (Double_t x, Int_t nt, Double_t xlo, Double_t xhi) const
+Double_t RooUnfoldTestHarness::Overflow (Double_t x, Int_t nt, Double_t lo, Double_t hi) const
 {
   if (overflow!=2)     return x;
-  else if   (x < xlo)  return xlo + (xhi-xlo) / Double_t(2*nt);
-  else if (!(x < xhi)) return xhi - (xhi-xlo) / Double_t(2*nt);
+  else if   (x < lo)  return lo + (hi-lo) / Double_t(2*nt);
+  else if (!(x < hi)) return hi - (hi-lo) / Double_t(2*nt);
   else return x;
 }
 
