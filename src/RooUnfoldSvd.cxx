@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.22 2010-08-27 23:27:54 adye Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.23 2010-09-10 17:14:34 adye Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -108,7 +108,7 @@ RooUnfoldSvd::CopyData (const RooUnfoldSvd& rhs)
   _prop_errors= rhs._prop_errors;
 }
 
-TObject*
+TUnfHisto*
 RooUnfoldSvd::Impl()
 {
   return _svd;

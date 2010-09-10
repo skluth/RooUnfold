@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.32 2010-08-27 23:27:54 adye Exp $
+//      $Id: RooUnfold.h,v 1.33 2010-09-10 17:14:34 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -68,7 +68,6 @@ public:
   virtual void       SetNToys (Int_t toys); // Set number of toys
   virtual Int_t      Overflow() const;
   virtual void       PrintTable (std::ostream& o, const TH1* hTrue= 0, ErrorTreatment=kNoError);
-  virtual TObject*   Impl();
   virtual void       SetRegParm (Double_t parm);
   virtual Double_t   GetRegParm() const; // Get Regularisation Parameter
   Double_t Chi2 (const TH1* hTrue,ErrorTreatment DoChi2);
@@ -140,7 +139,6 @@ inline void RooUnfold::SetMeasured (const TH1* meas)         { _meas= meas; }
 inline TVectorD&                RooUnfold::Vreco()           { if (!_unfolded) Unfold(); return _rec; } // Vector of reconstructed points
 inline const TVectorD&          RooUnfold::Vmeasured() const { if (!_vMes) _vMes= RooUnfoldResponse::H2V  (_meas, _nm, _overflow); return *_vMes; }
 inline const TVectorD&          RooUnfold::Emeasured() const { if (!_eMes) _eMes= RooUnfoldResponse::H2VE (_meas, _nm, _overflow); return *_eMes; }
-inline TObject*                 RooUnfold::Impl()            { return 0; };
 inline void  RooUnfold::SetVerbose (Int_t level)             { _verbose= level; } // Set verbose
 inline void  RooUnfold::SetNToys (Int_t toys)                { _NToys= toys; } // Set toys
 inline void  RooUnfold::SetRegParm (Double_t)                {} // Set Regularisation parameter

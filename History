@@ -1,5 +1,10 @@
-History of RooUnfold     $Id: History,v 1.109 2010-08-27 23:27:52 adye Exp $
+History of RooUnfold     $Id: History,v 1.110 2010-09-10 17:14:32 adye Exp $
 ====================
+
+Tim Adye         10-Sep-2010 tja100910a
+  o RooUnfold*::Impl() method is now a specific method for each algorithm,
+    returning the correct type, rather than virtual returning a TObject*.
+  o Use TUnfold::kHistMapOutputVert instead of transposing response matrix.
 
 Tim Adye         27-Aug-2010 tja100827d
   o Add RooUnfold::Vmeasured() and Emeasured() to return the measured

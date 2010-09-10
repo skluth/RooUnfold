@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.27 2010-08-27 23:27:54 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.28 2010-09-10 17:14:34 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -103,7 +103,7 @@ RooUnfoldBayes::CopyData (const RooUnfoldBayes& rhs)
   _smoothit= rhs._smoothit;
 }
 
-TObject*
+RooUnfoldBayesImpl*
 RooUnfoldBayes::Impl()
 {
   return _bayes;

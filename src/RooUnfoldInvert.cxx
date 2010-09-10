@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldInvert.cxx,v 1.5 2010-08-27 23:27:54 adye Exp $
+//      $Id: RooUnfoldInvert.cxx,v 1.6 2010-09-10 17:14:34 adye Exp $
 //
 // Description:
 //      Unfolding class using inversion of the response matrix. This does not produce
@@ -80,7 +80,7 @@ RooUnfoldInvert::Reset()
   RooUnfold::Reset();
 }
 
-TObject*
+TDecompSVD*
 RooUnfoldInvert::Impl()
 {
   return _svd;

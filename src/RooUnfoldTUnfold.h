@@ -21,17 +21,17 @@ public:
   RooUnfoldTUnfold& operator= (const RooUnfoldTUnfold& rhs); // assignment operator
   virtual RooUnfoldTUnfold* Clone (const char* newname= 0) const;
   RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas,TUnfold::ERegMode reg=TUnfold::kRegModeDerivative, 
-                const char* name= 0, const char* title= 0);
-    void Reset();
-    
-    TObject* Impl();
-    void FixTau(Double_t tau);
-    void OptimiseTau();
-    virtual void SetRegParm(Double_t parm){FixTau(parm);}
-    Double_t GetTau() const { return _tau;    }
-    virtual Double_t GetRegParm() const { return GetTau(); }
-    void SetRegMethod (TUnfold::ERegMode regmethod);
-    TUnfold::ERegMode GetRegMethod() const {return _reg_method;}
+                    const char* name= 0, const char* title= 0);
+
+  void Reset();
+  TUnfold* Impl();
+  void FixTau(Double_t tau);
+  void OptimiseTau();
+  virtual void SetRegParm(Double_t parm){FixTau(parm);}
+  Double_t GetTau() const { return _tau;    }
+  virtual Double_t GetRegParm() const { return GetTau(); }
+  void SetRegMethod (TUnfold::ERegMode regmethod);
+  TUnfold::ERegMode GetRegMethod() const {return _reg_method;}
 
 protected:
   void Init();
@@ -45,7 +45,6 @@ protected:
 private:
   TUnfold::ERegMode _reg_method; //Regularisation method 
   TUnfold* _unf; //TUnfold object
-  TH2D* TransposeHist(const TH2D* Hres);
   Bool_t tau_set;
   Double_t _tau;
   

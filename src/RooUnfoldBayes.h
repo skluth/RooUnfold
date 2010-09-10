@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.h,v 1.19 2010-08-27 23:27:54 adye Exp $
+//      $Id: RooUnfoldBayes.h,v 1.20 2010-09-10 17:14:34 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -50,7 +50,7 @@ public:
   virtual Double_t GetRegParm() const { return GetIterations(); }
   virtual void Reset();
   virtual void Print (Option_t* option= "") const;
-  virtual TObject* Impl();
+  RooUnfoldBayesImpl* Impl();
 
   static vector<Double_t>& H2VD (const TH1*  h, vector<Double_t>& v, Bool_t overflow= kFALSE);
   static Array2D&          H2AD (const TH2D* h, Array2D& m, const TH1* norm= 0, Bool_t overflow= kFALSE);

@@ -22,7 +22,7 @@ public:
   RooUnfoldInvert (const RooUnfoldResponse* res, const TH1* meas, const char* name=0, const char* title=0);
 
   virtual void Reset();
-  virtual TObject* Impl();
+  TDecompSVD* Impl();
 
 protected:
   virtual void Unfold();
