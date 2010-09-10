@@ -1,5 +1,8 @@
-History of RooUnfold     $Id: History,v 1.110 2010-09-10 17:14:32 adye Exp $
+History of RooUnfold     $Id: History,v 1.111 2010-09-10 18:27:48 adye Exp $
 ====================
+
+Tim Adye         10-Sep-2010 tja100910b
+  o RooUnfoldTUnfold now does 2D and 3D regularisation.
 
 Tim Adye         10-Sep-2010 tja100910a
   o RooUnfold*::Impl() method is now a specific method for each algorithm,

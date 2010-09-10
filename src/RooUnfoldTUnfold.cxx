@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTUnfold.cxx,v 1.18 2010-09-10 17:14:34 adye Exp $
+//      $Id: RooUnfoldTUnfold.cxx,v 1.19 2010-09-10 18:27:50 adye Exp $
 //
 // Description:
 //      Unfolding class using TUnfold from ROOT to do the actual unfolding.
@@ -139,7 +139,28 @@ RooUnfoldTUnfold::Unfold()
     Hres->SetBinContent (0, i, Htru->GetBinContent(i)-nmeas);
   }
 
-  _unf= new TUnfold(Hres,TUnfold::kHistMapOutputVert,_reg_method);
+  Int_t ndim= _meas->GetDimension();
+  TUnfold::ERegMode reg= _reg_method;
+  if (ndim == 2 || ndim == 3) reg= TUnfold::kRegModeNone;  // set explicitly
+
+  _unf= new TUnfold(Hres,TUnfold::kHistMapOutputVert,reg);
+
+  if        (ndim == 2) {
+    Int_t nx= _meas->GetNbinsX(), ny= _meas->GetNbinsY();
+    _unf->RegularizeBins2D (0, 1, nx, nx, ny, _reg_method);
+  } else if (ndim == 3) {
+    Int_t nx= _meas->GetNbinsX(), ny= _meas->GetNbinsY(), nz= _meas->GetNbinsZ(), nxy= nx*ny;
+    for (Int_t i= 0; i<nx; i++) {
+      _unf->RegularizeBins2D (    i, nx, ny, nxy, nz, _reg_method);
+    }
+    for (Int_t i= 0; i<ny; i++) {
+      _unf->RegularizeBins2D ( nx*i,  1, nx, nxy, nz, _reg_method);
+    }
+    for (Int_t i= 0; i<nz; i++) {
+      _unf->RegularizeBins2D (nxy*i,  1, nx,  nx, ny, _reg_method);
+    }
+  }
+
   Int_t nScan=30;
   // use automatic L-curve scan: start with taumin=taumax=0.0
   Double_t tauMin=0.0;
@@ -214,7 +235,6 @@ RooUnfoldTUnfold::SetRegMethod(TUnfold::ERegMode regmethod)
       TUnfold::kRegModeDerivative   minimize the 1st derivative of (x-x0)
       TUnfold::kRegModeCurvature    minimize the 2nd derivative of (x-x0)
       kRegModeDerivative and kRegModeCurvature are the optimal settings for a 1D input
-      kRegModeSize is optimal for a 2D distribution (but still does not produce great results).
      */
     _reg_method=regmethod;
 }
