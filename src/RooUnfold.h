@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.33 2010-09-10 17:14:34 adye Exp $
+//      $Id: RooUnfold.h,v 1.34 2010-09-10 23:58:02 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -87,10 +87,11 @@ protected:
   virtual void GetErrMat(); // Get covariance matrix using errors from residuals on reconstructed distribution
   virtual void GetSettings();
   virtual Bool_t UnfoldWithErrors (ErrorTreatment withError);
+  TH1D* HmeasuredNoOverflow1D();
 
   static TH1*     Add_Random   (const TH1* meas);
   static TMatrixD CutZeros     (const TMatrixD& ereco);
-  static TH1D*    CopyOverflow (const TH1* h, Bool_t overflow);
+  static TH1D*    HistNoOverflow (const TH1* h, Bool_t overflow);
 
 private:
   void Init();
@@ -104,8 +105,8 @@ protected:
   Double_t _stepsizeparm; //StepSize value to be used in RooUnfoldParms
   Double_t _defaultparm; //Recommended value for regularisation parameter
   Int_t _verbose;  // Debug print level
-  Int_t _nm;   // Total number of measured bins
-  Int_t _nt;   // Total number of truth    bins
+  Int_t _nm;   // Total number of measured bins (including under/overflows if _overflow set)
+  Int_t _nt;   // Total number of truth    bins (including under/overflows if _overflow set)
   Int_t _overflow;   // Use histogram under/overflows if 1 (set from RooUnfoldResponse)
   Int_t _NToys; // Number of toys to be used
   Bool_t _unfolded, _haveCov,_have_err_mat, _fail, _haveErrors;
@@ -135,10 +136,9 @@ inline Int_t                    RooUnfold::NToys()     const { return _NToys;   
 inline Int_t                    RooUnfold::Overflow()  const { return _overflow;}
 inline const RooUnfoldResponse* RooUnfold::response()  const { return _res;     } // Response object
 inline const TH1*               RooUnfold::Hmeasured() const { return _meas;    } // Measured Distribution
-inline void RooUnfold::SetMeasured (const TH1* meas)         { _meas= meas; }
 inline TVectorD&                RooUnfold::Vreco()           { if (!_unfolded) Unfold(); return _rec; } // Vector of reconstructed points
-inline const TVectorD&          RooUnfold::Vmeasured() const { if (!_vMes) _vMes= RooUnfoldResponse::H2V  (_meas, _nm, _overflow); return *_vMes; }
-inline const TVectorD&          RooUnfold::Emeasured() const { if (!_eMes) _eMes= RooUnfoldResponse::H2VE (_meas, _nm, _overflow); return *_eMes; }
+inline const TVectorD&          RooUnfold::Vmeasured() const { if (!_vMes) _vMes= RooUnfoldResponse::H2V  (_meas, _res->GetNbinsMeasured(), _overflow); return *_vMes; }
+inline const TVectorD&          RooUnfold::Emeasured() const { if (!_eMes) _eMes= RooUnfoldResponse::H2VE (_meas, _res->GetNbinsMeasured(), _overflow); return *_eMes; }
 inline void  RooUnfold::SetVerbose (Int_t level)             { _verbose= level; } // Set verbose
 inline void  RooUnfold::SetNToys (Int_t toys)                { _NToys= toys; } // Set toys
 inline void  RooUnfold::SetRegParm (Double_t)                {} // Set Regularisation parameter

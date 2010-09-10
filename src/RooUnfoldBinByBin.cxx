@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBinByBin.cxx,v 1.14 2010-08-27 23:27:54 adye Exp $
+//      $Id: RooUnfoldBinByBin.cxx,v 1.15 2010-09-10 23:58:02 adye Exp $
 //
 // Description:
 //      Unfolding class using the bin by bin method of conversion factors. 
@@ -67,8 +67,7 @@ RooUnfoldBinByBin::Unfold()
     for (int i=0; i<nb;i++){     
       if (vtrain(i)!=0.0){
         Double_t c=(vtruth(i))/(vtrain(i));
-        Int_t j= RooUnfoldResponse::GetBin (_meas, i, _overflow);
-        Double_t m= _meas->GetBinContent(j);
+        Double_t m= RooUnfoldResponse::GetBinContent (_meas, i, _overflow);
         _rec(i)=     c*m;
         _cov(i,i)= c*c*m;
       }

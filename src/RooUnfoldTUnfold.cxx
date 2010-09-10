@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTUnfold.cxx,v 1.19 2010-09-10 18:27:50 adye Exp $
+//      $Id: RooUnfoldTUnfold.cxx,v 1.20 2010-09-10 23:58:02 adye Exp $
 //
 // Description:
 //      Unfolding class using TUnfold from ROOT to do the actual unfolding.
@@ -125,7 +125,7 @@ RooUnfoldTUnfold::Unfold()
 
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
-  TH1D* meas= (_meas->GetDimension() == 1) ? CopyOverflow (_meas,_overflow) : RooUnfoldResponse::H2H1D (_meas, _nm);
+  TH1D* meas= HmeasuredNoOverflow1D();
   TH2D* Hres=_res->HresponseNoOverflow();
   TH1::AddDirectory (oldstat);
 

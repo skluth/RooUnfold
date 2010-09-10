@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.44 2010-08-27 23:27:54 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.45 2010-09-10 23:58:02 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -225,6 +225,14 @@ RooUnfold::Setup (const RooUnfoldResponse* res, const TH1* meas)
 }
 
 void
+RooUnfold::SetMeasured (const TH1* meas)
+{
+  _meas= meas;
+  delete _vMes; _vMes= 0;
+  delete _eMes; _eMes= 0;
+}
+
+void
 RooUnfold::SetResponse (const RooUnfoldResponse* res)
 {
   _res= res;
@@ -243,11 +251,10 @@ RooUnfold::Unfold()
 {
     // Dummy unfolding - just copies input
   cout << "********************** " << ClassName() << ": dummy unfolding - just copy input **********************" << endl;
-  Int_t first= _overflow ? 0 : 1;
   _rec.ResizeTo (_nt);
   Int_t nb= _nm < _nt ? _nm : _nt;
   for (Int_t i= 0; i < nb; i++) {
-    _rec[i]= _meas->GetBinContent (i+first);
+    _rec(i)= Vmeasured()(i);
   }
   _unfolded= true;
 }
@@ -270,11 +277,10 @@ void
 RooUnfold::GetCov()
 {
     //Dummy routine to get covariance matrix. It should be overridden by derived classes.
-  Int_t first= _overflow ? 0 : 1;
   _cov.ResizeTo (_nt, _nt);
   Int_t nb= _nm < _nt ? _nm : _nt;
   for (Int_t i= 0; i < nb; i++) {
-    Double_t err= _meas->GetBinError (i+first);
+    Double_t err= Emeasured()(i);
     _cov(i,i)= err*err;
   }
   _haveCov= true;
@@ -284,23 +290,21 @@ void
 RooUnfold::GetErrMat()
 {
     //Get covariance matrix from the variation of the results in toy MC tests, using the Runtoy method. 
-    vector<double> bc_vec(_nt);
+    TVectorD bc_vec(_nt);
     TMatrixD bc_mat(_nt,_nt);
     _err_mat.ResizeTo(_nt,_nt);
-    for (int k=0; k<_NToys; k++){
+    for (Int_t k=0; k<_NToys; k++){
         TH1* res=Runtoy();
-        for (int i=0; i<_nt;i++){
-            Int_t it= RooUnfoldResponse::GetBin (res, i, _overflow);
-            Double_t res_bci=res->GetBinContent(it);
+        for (Int_t i=0; i<_nt;i++){
+            Double_t res_bci=RooUnfoldResponse::GetBinContent (res, i, _overflow);
             bc_vec[i]+=res_bci;
-            for (int j=0; j<_nt; j++){
-                Int_t jt= RooUnfoldResponse::GetBin (res, j, _overflow);
-                bc_mat(i,j)+=(res_bci*res->GetBinContent(jt));
+            for (Int_t j=0; j<_nt; j++){
+                bc_mat(i,j) += res_bci * RooUnfoldResponse::GetBinContent (res, j, _overflow);
             }
         }
     }
-    for (unsigned int i=0; i<bc_vec.size();i++){
-        for (unsigned int j=0; j<bc_vec.size(); j++){
+    for (Int_t i=0; i<_nt;i++){
+        for (Int_t j=0; j<_nt; j++){
             _err_mat(i,j)=(bc_mat(i,j)-(bc_vec[i]*bc_vec[j])/_NToys)/_NToys;
             
         }
@@ -338,53 +342,38 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
     Returns warnings for small determinants of covariance matrices and if the condition is very large.
     If a matrix has to be inverted also removes rows/cols with all their elements equal to 0*/
 
-    const TH1* hReco=Hreco (DoChi2);
-    TMatrixD Ereco_copy;
     if (DoChi2==kCovariance||DoChi2==kCovToy){
-        Ereco_copy.ResizeTo(Ereco(DoChi2).GetNrows(),Ereco(DoChi2).GetNcols());
-        Ereco_copy=Ereco(DoChi2);
+        TMatrixD ereco(_nt,_nt);
+        ereco=Ereco(DoChi2);
         
-        TMatrixD reco_matrix(_nt,1);
+        TVectorD res(_nt);
         for (Int_t i = 0 ; i < _nt; i++) {
-            Int_t it= RooUnfoldResponse::GetBin (hReco, i, _overflow);
-            if ((hReco->GetBinContent(it)!=0.0 || (hReco->GetBinError(it)>0.0)) &&
-                (hTrue->GetBinContent(it)!=0.0 || (hTrue->GetBinError(it)>0.0))) {
-                reco_matrix(i,0)    = hReco->GetBinContent(it) - hTrue->GetBinContent(it);
+            Int_t it= RooUnfoldResponse::GetBin (hTrue, i, _overflow);
+            if (hTrue->GetBinContent(it)!=0.0 || hTrue->GetBinError(it)>0.0) {
+              res(i) = _rec(i) - hTrue->GetBinContent(it);
             }
         }
-        TMatrixD Ereco_copy2=Ereco_copy;
         //cutting out 0 elements    
-        TMatrixD Ereco_copy_cut=CutZeros(Ereco_copy);
-        TMatrixD reco_matrix_cut(Ereco_copy_cut.GetNrows(),1);
-        int v=0;
-        for (int i=0;i<Ereco_copy.GetNrows();i++){
-            if(Ereco_copy(i,i)==0){
-                v++;
-            }
-            else{
-                reco_matrix_cut(i-v,0)=reco_matrix(i,0);
-            }
+        TMatrixD ereco_cut=CutZeros(ereco);
+        if (ereco_cut.GetNrows()<=0) return 0.0;
+        TMatrixD res_matrix_cut(ereco_cut.GetNrows(),1);
+        for (Int_t i=0, v=0; i<_nt; i++){
+            if (ereco(i,i) != 0.0) res_matrix_cut(v++,0)= res(i);
         }
-        int zeros;
-        for (int i=0; i<Ereco_copy_cut.GetNrows(); i++){
-            if (Ereco_copy (i,i) ==0){
-                zeros++;
-            }
-        }
-        Double_t Ereco_det=Ereco_copy_cut.Determinant();
-        TMatrixD reco_matrix_t=reco_matrix_cut;
-        reco_matrix_t.T();
+        Double_t Ereco_det=ereco_cut.Determinant();
+        TMatrixD res_matrix_t=res_matrix_cut;
+        res_matrix_t.T();
         if (fabs(Ereco_det)<1e-5 && _verbose>=1){
             cerr << "Warning: Small Determinant of Covariance Matrix =" << Ereco_det << endl;
             cerr << "Chi^2 may be invalid due to small determinant" << endl;
         }
-        TDecompSVD svd(Ereco_copy_cut);
+        TDecompSVD svd(ereco_cut);
         Double_t cond=svd.Condition();
         if (_verbose>=1){
             cout<<"For Covariance matrix condition= "<<cond<<" determinant= "<<Ereco_det<<endl;
         }
-        svd.MultiSolve(reco_matrix_cut);
-        TMatrixD chisq_nw = reco_matrix_t*reco_matrix_cut;
+        svd.MultiSolve(res_matrix_cut);
+        TMatrixD chisq_nw = res_matrix_t*res_matrix_cut;
         double cond_max=1e17;
         if (cond>=cond_max && _verbose>=1){
             cerr << "Warning, very large matrix condition= "<< cond<<" chi^2 may be inaccurate"<<endl;
@@ -393,16 +382,14 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
     }
     else{
         Double_t chi2=0;
+        TVectorD ereco(_nt);
+        ereco= ErecoV(DoChi2);
         for (Int_t i = 0 ; i < _nt; i++) {
-            Int_t it= RooUnfoldResponse::GetBin (hReco, i, _overflow);
-            if((hReco->GetBinContent(it)!=0.0 || (hReco->GetBinError(it)>0.0)) &&
-           (hTrue->GetBinContent(it)!=0.0 || (hTrue->GetBinError(it)>0.0))) {
-                Double_t ydiff    = hReco->GetBinContent(it) - hTrue->GetBinContent(it);
-                Double_t ydiffErr = hReco->GetBinError(it);
-                if (ydiffErr>0.0) {
-                    Double_t ypull = ydiff/ydiffErr;
-                     chi2 += ypull*ypull;
-                }
+            Int_t it= RooUnfoldResponse::GetBin (hTrue, i, _overflow);
+            if (ereco(i)>0.0 &&
+                hTrue->GetBinContent(it)!=0.0 || hTrue->GetBinError(it)>0.0) {
+                Double_t ypull = (_rec(i) - hTrue->GetBinContent(it)) / ereco(i);
+                chi2 += ypull*ypull;
             }
         }
         
@@ -631,7 +618,8 @@ RooUnfold::Add_Random(const TH1* hMeas_AR)
     //Adds a random number to the measured distribution before the unfolding//
     TH1* hMeas2= dynamic_cast<TH1*>(hMeas_AR->Clone());
     hMeas2->Reset();
-    for (Int_t i=0; i<hMeas_AR->GetNbinsX()+2 ; i++){
+    Int_t nb= (hMeas_AR->GetNbinsX()+2) * (hMeas_AR->GetNbinsY()+2) * (hMeas_AR->GetNbinsZ()+2);
+    for (Int_t i=0; i<nb ; i++){
             Double_t err=hMeas_AR->GetBinError(i);
             Double_t new_x = hMeas_AR->GetBinContent(i);
             if (err>0.0) new_x += gRandom->Gaus(0,err);
@@ -756,7 +744,7 @@ RooUnfold::ErecoV(ErrorTreatment withError)
 }
 
 TH1D*
-RooUnfold::CopyOverflow (const TH1* h, Bool_t overflow)
+RooUnfold::HistNoOverflow (const TH1* h, Bool_t overflow)
 {
   if (!overflow) return (TH1D*) h->Clone();
   Int_t nb= h->GetNbinsX();
@@ -768,4 +756,13 @@ RooUnfold::CopyOverflow (const TH1* h, Bool_t overflow)
     hx->SetBinError   (i+1, h->GetBinError   (i));
   }
   return hx;
+}
+
+TH1D*
+RooUnfold::HmeasuredNoOverflow1D()
+{
+  if (_meas->GetDimension() == 1)
+    return HistNoOverflow (_meas, _overflow);
+  else
+    return RooUnfoldResponse::H2H1D (_meas, _nm);  // don't worry about overflow, since it isn't supported for 2D+
 }

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldSvd.cxx,v 1.23 2010-09-10 17:14:34 adye Exp $
+//      $Id: RooUnfoldSvd.cxx,v 1.24 2010-09-10 23:58:02 adye Exp $
 //
 // Description:
 //      SVD unfolding. Just an interface to RooUnfHistoSvd.
@@ -127,10 +127,9 @@ RooUnfoldSvd::Unfold()
 
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
-  _meas1d=  (_meas->GetDimension() == 1) ? CopyOverflow (_meas,_overflow) : RooUnfoldResponse::H2H1D (_meas, _nm);
-  // FIXME: use of CopyOverflow leaks copy and can do unneccessary copy
-  _train1d= CopyOverflow (_res->Hmeasured1D(),_overflow);
-  _truth1d= CopyOverflow (_res->Htruth1D(),_overflow);
+  _meas1d=  HmeasuredNoOverflow1D();
+  _train1d= HistNoOverflow (_res->Hmeasured1D(), _overflow);
+  _truth1d= HistNoOverflow (_res->Htruth1D(),    _overflow);
   _reshist= _res->HresponseNoOverflow();
   TH1::AddDirectory (oldstat);
   if (_nt != _nm) {

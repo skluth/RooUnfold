@@ -1,5 +1,19 @@
-History of RooUnfold     $Id: History,v 1.111 2010-09-10 18:27:48 adye Exp $
+History of RooUnfold     $Id: History,v 1.112 2010-09-10 23:58:00 adye Exp $
 ====================
+
+Tim Adye         10-Sep-2010 tja100910c
+  o RooUnfold::SetMeasured() ensures Vmeasured() and Emeasured() caches are
+    cleared.
+  o Use new RooUnfoldResponse::GetBinContent and GetBinError routines instead
+    of TH1::GetBinContent(GetBin()) etc.
+  o Tidy up RooUnfold::Chi2() and fix for multi-dimensional case.
+  o Rename RooUnfold::CopyOverflow() to HistNoOverflow().
+  o New RooUnfold::HmeasuredNoOverflow1D() method.
+  o Fix RooUnfold::Vmeasured() and Emeasured() with overflows.
+  o Correct RooUnfoldResponse documentation comments.
+  o Speed up RooUnfoldResponse::GetBinDim().
+  o Fix RooUnfoldResponse::H2V(), V2H(), H2VE(), H2M(), and H2ME() for
+    multi-dimensional histograms.
 
 Tim Adye         10-Sep-2010 tja100910b
   o RooUnfoldTUnfold now does 2D and 3D regularisation.

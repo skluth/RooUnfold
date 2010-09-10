@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldParms.cxx,v 1.11 2010-08-27 23:27:54 adye Exp $
+//      $Id: RooUnfoldParms.cxx,v 1.12 2010-09-10 23:58:02 adye Exp $
 //
 // Description:
 //      Optimisation of regularisation parameter class
@@ -166,9 +166,7 @@ RooUnfoldParms::DoMath()
             TH1* hReco=unf->Hreco(doerror); 
             for (Int_t i= 0; i < nt; i++)
             {
-                Int_t j= RooUnfoldResponse::GetBin (hReco, i, _overflow);
-                //cout<<"for hreco error="<<hReco->GetBinError(j)<<" bin content= "<<hReco->GetBinContent(j)<<endl;
-                sq_err_tot+=hReco->GetBinError(j);
+              sq_err_tot += RooUnfoldResponse::GetBinError (hReco, i, _overflow);
             }
             herr->Fill(k,sq_err_tot/nt);
             if (hTrue)

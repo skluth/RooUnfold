@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayes.cxx,v 1.28 2010-09-10 17:14:34 adye Exp $
+//      $Id: RooUnfoldBayes.cxx,v 1.29 2010-09-10 23:58:02 adye Exp $
 //
 // Description:
 //      Bayesian unfolding. Just an interface to RooUnfoldBayesImpl.
@@ -183,7 +183,7 @@ RooUnfoldBayes::H2VD (const TH1* h, vector<Double_t>& v, Bool_t overflow)
   if (!h) return v;
   size_t nb= v.size();
   for (size_t i= 0; i < nb; i++)
-    v[i]= h->GetBinContent (RooUnfoldResponse::GetBin(h,i,overflow));
+    v[i]= RooUnfoldResponse::GetBinContent (h, i, overflow);
   return v;
 }
 

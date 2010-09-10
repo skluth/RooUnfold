@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.13 2010-08-27 23:27:54 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.14 2010-09-10 23:58:02 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -100,6 +100,8 @@ public:
   static TMatrixD* H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm= 0, Bool_t overflow= kFALSE);
   static void      V2H  (const TVectorD& v, TH1* h, Int_t nb, Bool_t overflow= kFALSE);
   static Int_t   GetBin (const TH1*  h, Int_t i, Bool_t overflow= kFALSE);  // vector index (0..nx*ny-1) -> multi-dimensional histogram global bin number (0..(nx+2)*(ny+2)-1) skipping under/overflow bins
+  static Double_t GetBinContent (const TH1* h, Int_t i, Bool_t overflow= kFALSE); // Bin content by vector index
+  static Double_t GetBinError   (const TH1* h, Int_t i, Bool_t overflow= kFALSE); // Bin error   by vector index
 
   TH1* ApplyToTruth (const TH1* truth= 0, const char* name= "AppliedResponse") const; // If argument is 0, applies itself to its own truth
 
@@ -120,11 +122,11 @@ private:
   // instance variables
 
   Int_t _mdim; // Number of measured  dimensions
-  Int_t _tdim; // Number of truth dimensions
-  Int_t _nm;   // Total number of measured  bins
-  Int_t _nt;   // Total number of truth bins
+  Int_t _tdim; // Number of truth     dimensions
+  Int_t _nm;   // Total number of measured  bins (not counting under/overflows)
+  Int_t _nt;   // Total number of truth     bins (not counting under/overflows)
   TH1*  _mes;  // Measured histogram
-  TH1*  _tru;  // Truth histogram
+  TH1*  _tru;  // Truth    histogram
   TH2D* _res;  // Response histogram
   Int_t _overflow; // Use histogram under/overflows if 1
 
@@ -171,6 +173,8 @@ inline const TMatrixD& RooUnfoldResponse::Eresponse()         const { if (!_eRes
 
 inline Double_t RooUnfoldResponse::operator() (Int_t r, Int_t t) const { return Mresponse()(r,t); }
 inline Int_t    RooUnfoldResponse::GetBin (const TH1* h, Int_t i, Bool_t overflow) { return (h->GetDimension()<2) ? i+(overflow ? 0 : 1) : GetBinDim(h,i); }
+inline Double_t RooUnfoldResponse::GetBinContent (const TH1* h, Int_t i, Bool_t overflow) { return h->GetBinContent (GetBin (h, i, overflow)); }
+inline Double_t RooUnfoldResponse::GetBinError   (const TH1* h, Int_t i, Bool_t overflow) { return h->GetBinError   (GetBin (h, i, overflow)); }
 
 inline Int_t RooUnfoldResponse::Miss (Double_t xt)                          { return                                Miss1D(xt);      }
 inline Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t w)              { return _mdim==2 ? Miss2D(xt,w) :      Miss1D(xt,w);    }
