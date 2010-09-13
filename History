@@ -1,6 +1,7 @@
-History of RooUnfold     $Id: History,v 1.112 2010-09-10 23:58:00 adye Exp $
+History of RooUnfold     $Id: History,v 1.113 2010-09-13 21:02:08 adye Exp $
 ====================
 
+Tim Adye         10-Sep-2010 V01-00-02
 Tim Adye         10-Sep-2010 tja100910c
   o RooUnfold::SetMeasured() ensures Vmeasured() and Emeasured() caches are
     cleared.
