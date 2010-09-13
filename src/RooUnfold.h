@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.34 2010-09-10 23:58:02 adye Exp $
+//      $Id: RooUnfold.h,v 1.35 2010-09-13 21:19:09 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -70,7 +70,7 @@ public:
   virtual void       PrintTable (std::ostream& o, const TH1* hTrue= 0, ErrorTreatment=kNoError);
   virtual void       SetRegParm (Double_t parm);
   virtual Double_t   GetRegParm() const; // Get Regularisation Parameter
-  Double_t Chi2 (const TH1* hTrue,ErrorTreatment DoChi2);
+  Double_t Chi2 (const TH1* hTrue,ErrorTreatment DoChi2=kCovariance);
   Double_t GetMinParm() const;
   Double_t GetMaxParm() const;
   Double_t GetStepSizeParm() const;

@@ -1,7 +1,9 @@
-History of RooUnfold     $Id: History,v 1.113 2010-09-13 21:02:08 adye Exp $
+History of RooUnfold     $Id: History,v 1.114 2010-09-13 21:19:07 adye Exp $
 ====================
 
-Tim Adye         10-Sep-2010 V01-00-02
+Tim Adye         13-Sep-2010 V01-00-02
+  o RooUnfold::Chi2 uses kCovariance ErrorTreatment by default.
+
 Tim Adye         10-Sep-2010 tja100910c
   o RooUnfold::SetMeasured() ensures Vmeasured() and Emeasured() caches are
     cleared.
