@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness.icc,v 1.47 2010-08-27 10:33:04 adye Exp $
+//      $Id: RooUnfoldTestHarness.icc,v 1.48 2010-09-14 22:47:54 adye Exp $
 //
 // Description:
 //      Test Harness class for the RooUnfold package using toy MC generated
@@ -450,9 +450,12 @@ TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char*
   TH1D* hPDF= new TH1D (name, title, nbPDF, lo, hi);
   hPDF->SetLineColor(kGreen);
   hPDF->SetLineWidth(2);
-  Double_t xwide = (5.0*smear) * (hi-lo) / Double_t(nt);  // 5*sigma
-  lo -= xwide;
-  hi += xwide;
+  if (overflow == 1) {
+    // Fill under/overflow bins too
+    Double_t xbin= (hi-lo) / Double_t(nt);
+    lo -= xbin;
+    hi += xbin;
+  }
   if (verbose >= 1) cout << "Generate values in range " << lo << " to " << hi << endl;
   if (!RooUnfoldTestPdf (fpdf, nx, lo, hi, x, hPDF, mean, width, bkg, verbose)) return 0;
   hPDF->Scale (nbPDF/Double_t(nt));
@@ -481,14 +484,14 @@ Double_t RooUnfoldTestHarness::Smear (Double_t x, Int_t nt, Double_t lo, Double_
 
   Double_t xsigma = (hi-lo) * smear / Double_t(nt);     // smear sigma
   
-  if (!addbias)
+  if (!addbias || x < lo || x > hi)
     bias= 0.0;
   else {
-    Double_t halfinterval=(hi+lo)/2;
-    if (x<=halfinterval)
-      bias *= (x-lo)/(halfinterval-lo);
-    else
-      bias *= (hi-x)/(hi-halfinterval);
+    // actual bias is a quartic with maximum of "bias" in mid-range,
+    // dropping to 0 at edges so we don't shift events in/out of range
+    // (except a bit by smearing)
+    Double_t xm= (2*x-(hi+lo)) / (hi-lo), xm2= xm*xm;
+    bias *= 1.0-(xm2*xm2);
   }
   
   Double_t delta= xsigma <= 0.0 ? bias : gRandom->Gaus (bias, xsigma);     // bias and smear
@@ -499,7 +502,7 @@ Double_t RooUnfoldTestHarness::Smear (Double_t x, Int_t nt, Double_t lo, Double_
 
 Double_t RooUnfoldTestHarness::Overflow (Double_t x, Int_t nt, Double_t lo, Double_t hi) const
 {
-  if (overflow!=2)     return x;
+  if (overflow!=2)    return x;
   else if   (x < lo)  return lo + (hi-lo) / Double_t(2*nt);
   else if (!(x < hi)) return hi - (hi-lo) / Double_t(2*nt);
   else return x;

@@ -1,5 +1,14 @@
-History of RooUnfold     $Id: History,v 1.114 2010-09-13 21:19:07 adye Exp $
+History of RooUnfold     $Id: History,v 1.115 2010-09-14 22:47:52 adye Exp $
 ====================
+
+Tim Adye         14-Sep-2010 tja100914a
+  o RooUnfoldResponse::HresponseNoOverflow() and RooUnfold::HistNoOverflow()
+    clear under/overflow bins. TUnfold uses the underflow bins of the response
+    matrix, so they shouldn't have other stuff in them.
+  o RooUnfoldTest bias model is now a quartic so as not to have a bump in the
+    middle.
+  o RooUnfoldTest doesn't generate events in the under/overflow bins unless
+    overflow=1, and then only do the same as the neighbouring bin.
 
 Tim Adye         13-Sep-2010 V01-00-02
   o RooUnfold::Chi2 uses kCovariance ErrorTreatment by default.

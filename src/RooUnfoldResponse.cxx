@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.cxx,v 1.18 2010-09-10 23:58:02 adye Exp $
+//      $Id: RooUnfoldResponse.cxx,v 1.19 2010-09-14 22:47:56 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -352,8 +352,21 @@ TH2D*
 RooUnfoldResponse::HresponseNoOverflow() const
 {
   const TH2D* h= Hresponse();
-  if (!_overflow) return dynamic_cast<TH2D*>(h->Clone());
-  Int_t nx= h->GetNbinsX(), ny= h->GetNbinsX();
+  Int_t nx= h->GetNbinsX(), ny= h->GetNbinsY();
+  if (!_overflow) {
+    TH2D* hx= dynamic_cast<TH2D*>(h->Clone());
+    if (!hx) return hx;
+    // clear under/overflows
+    for (Int_t i= 0; i <= nx+1; i++) {
+      hx->SetBinContent (i, 0,    0.0);
+      hx->SetBinContent (i, ny+1, 0.0);
+    }
+    for (Int_t i= 1; i <= ny;   i++) {
+      hx->SetBinContent (0,    i, 0.0);
+      hx->SetBinContent (nx+1, i, 0.0);
+    }
+    return hx;
+  }
   Double_t xlo= h->GetXaxis()->GetXmin(), xhi= h->GetXaxis()->GetXmax(), xb= (xhi-xlo)/nx;
   Double_t ylo= h->GetYaxis()->GetXmin(), yhi= h->GetYaxis()->GetXmax(), yb= (yhi-ylo)/ny;
   nx += 2; ny += 2;

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.cxx,v 1.45 2010-09-10 23:58:02 adye Exp $
+//      $Id: RooUnfold.cxx,v 1.46 2010-09-14 22:47:56 adye Exp $
 //
 // Description:
 //      Unfolding framework base class.
@@ -746,8 +746,14 @@ RooUnfold::ErecoV(ErrorTreatment withError)
 TH1D*
 RooUnfold::HistNoOverflow (const TH1* h, Bool_t overflow)
 {
-  if (!overflow) return (TH1D*) h->Clone();
   Int_t nb= h->GetNbinsX();
+  if (!overflow) {
+    TH1D* hx= dynamic_cast<TH1D*>(h->Clone());
+    if (!hx) return hx;
+    hx->SetBinContent (0,    0.0);
+    hx->SetBinContent (nb+1, 0.0);
+    return hx;
+  }
   Double_t xlo= h->GetXaxis()->GetXmin(), xhi= h->GetXaxis()->GetXmax(), xb= (xhi-xlo)/nb;
   nb += 2;
   TH1D* hx= new TH1D (h->GetName(), h->GetTitle(), nb, xlo-xb, xhi+xb);
