@@ -1,12 +1,12 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestPdf.icc,v 1.7 2010-05-20 22:50:57 adye Exp $
+//      $Id: RooUnfoldTestPdf.icc,v 1.7 2010/05/20 22:50:57 adye Exp $
 //
 // Description:
 //      MC Generation routines implemented without RooFit.
-//      NB. This version does not take into account the portion of the signal PDF
-//      outside [xlo:xhi] when normalising the PDF histogram, h, so
-//      it won't be displayed properly if the |mean +/- width| is too large.
+//      NB. This version generates peaked signal events over their full
+//      range, so will have a fewer events within the range than requested,
+//      especially if the |mean +/- width| is too large.
 //
 //      The PDFs are defined by fpdf as follows:-
 //

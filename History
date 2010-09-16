@@ -1,5 +1,9 @@
-History of RooUnfold     $Id: History,v 1.115 2010-09-14 22:47:52 adye Exp $
+History of RooUnfold     $Id: History,v 1.115 2010/09/14 22:47:52 adye Exp $
 ====================
+
+Tim Adye         15-Sep-2010 tja100915a
+  o Reformat method definitions so they appear correctly in the
+    ROOT class documentation.
 
 Tim Adye         14-Sep-2010 tja100914a
   o RooUnfoldResponse::HresponseNoOverflow() and RooUnfold::HistNoOverflow()

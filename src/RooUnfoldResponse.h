@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldResponse.h,v 1.14 2010-09-10 23:58:02 adye Exp $
+//      $Id: RooUnfoldResponse.h,v 1.14 2010/09/10 23:58:02 adye Exp $
 //
 // Description:
 //      Response Matrix
@@ -121,19 +121,22 @@ private:
 
   // instance variables
 
-  Int_t _mdim; // Number of measured  dimensions
-  Int_t _tdim; // Number of truth     dimensions
-  Int_t _nm;   // Total number of measured  bins (not counting under/overflows)
-  Int_t _nt;   // Total number of truth     bins (not counting under/overflows)
-  TH1*  _mes;  // Measured histogram
-  TH1*  _tru;  // Truth    histogram
-  TH2D* _res;  // Response histogram
+  Int_t _mdim;     // Number of measured  dimensions
+  Int_t _tdim;     // Number of truth     dimensions
+  Int_t _nm;       // Total number of measured  bins (not counting under/overflows)
+  Int_t _nt;       // Total number of truth     bins (not counting under/overflows)
+  TH1*  _mes;      // Measured histogram
+  TH1*  _tru;      // Truth    histogram
+  TH2D* _res;      // Response histogram
   Int_t _overflow; // Use histogram under/overflows if 1
 
-  mutable TVectorD *_vMes, *_eMes; //! Cached measured     vector and error
-  mutable TVectorD *_vTru, *_eTru; //! Cached truth    vector and error
-  mutable TMatrixD *_mRes, *_eRes; //! Cached response matrix and error
-  mutable Bool_t _cached;          //! We are using cached vectors/matrices
+  mutable TVectorD* _vMes;   //! Cached measured vector
+  mutable TVectorD* _eMes;   //! Cached measured error
+  mutable TVectorD* _vTru;   //! Cached truth    vector
+  mutable TVectorD* _eTru;   //! Cached truth    error
+  mutable TMatrixD* _mRes;   //! Cached response matrix
+  mutable TMatrixD* _eRes;   //! Cached response error
+  mutable Bool_t    _cached; //! We are using cached vectors/matrices
 
 public:
 
