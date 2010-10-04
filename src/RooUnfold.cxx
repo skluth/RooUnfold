@@ -88,6 +88,9 @@ END_HTML */
 #ifndef NOTUNFOLD
 #include "RooUnfoldTUnfold.h"
 #endif
+#ifdef HAVE_DAGOSTINI
+#include "RooUnfoldDagostini.h"
+#endif
 
 using std::cout;
 using std::cerr;
@@ -143,8 +146,16 @@ RooUnfold* RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH
       return 0;
 #endif
     case kInvert:
-      unfold = new RooUnfoldInvert (res,meas);
+      unfold = new RooUnfoldInvert  (res,meas);
       break;
+    case kDagostini:
+#ifdef HAVE_DAGOSTINI
+      unfold = new RooUnfoldDagostini (res,meas);
+      break;
+#else
+      cerr << "RooUnfoldDagostini is not available" << endl;
+      return 0;
+#endif
     default:
       cerr << "Unknown RooUnfold method " << Int_t(alg) << endl;
       return 0;
@@ -304,21 +315,33 @@ void RooUnfold::GetErrMat()
 
 Bool_t RooUnfold::UnfoldWithErrors (ErrorTreatment withError)
 {
-  if (!_unfolded) Unfold();
-  if (_fail)      return false;
+  if (!_unfolded) {
+    if (_fail) return false;
+    Unfold();
+    if (!_unfolded) {
+      _fail= true;
+      return false;
+    }
+  }
+  Bool_t ok;
   switch (withError) {
     case kErrors:
       if   (!_haveErrors)   GetErrors();
-      return _haveErrors;
+      ok= _haveErrors;
+      break;
     case kCovariance:
       if   (!_haveCov)      GetCov();
-      return _haveCov;
+      ok= _haveCov;
+      break;
     case kCovToy:
       if   (!_have_err_mat) GetErrMat();
-      return _have_err_mat;
+      ok= _have_err_mat;
+      break;
     default:
-      return true;
+      ok= true;
   }
+  if (!ok) _fail= true;
+  return ok;
 }
 
 Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
@@ -334,6 +357,7 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
     if (DoChi2==kCovariance||DoChi2==kCovToy){
         TMatrixD ereco(_nt,_nt);
         ereco=Ereco(DoChi2);
+        if (!_unfolded) return -1;
 
         TVectorD res(_nt);
         for (Int_t i = 0 ; i < _nt; i++) {
@@ -373,6 +397,7 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
         Double_t chi2=0;
         TVectorD ereco(_nt);
         ereco= ErecoV(DoChi2);
+        if (!_unfolded) return -1;
         for (Int_t i = 0 ; i < _nt; i++) {
             Int_t it= RooUnfoldResponse::GetBin (hTrue, i, _overflow);
             if (ereco(i)>0.0 &&
@@ -391,7 +416,7 @@ void RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment wi
 {
     //Prints data from truth, measured and reconstructed data for each bin.
   const TH1* hReco=      Hreco (withError);
-  if (_fail) return;
+  if (!_unfolded) return;
   const TH1* hMeas=      Hmeasured();
   const TH1* hTrainTrue= response()->Htruth();
   const TH1* hTrain=     response()->Hmeasured();
@@ -526,6 +551,7 @@ TH1* RooUnfold::Hreco (ErrorTreatment withError)
   reco->Reset();
   reco->SetTitle (GetTitle());
   if (!UnfoldWithErrors (withError)) withError= kNoError;
+  if (!_unfolded) return reco;
 
   for (Int_t i= 0; i < _nt; i++) {
     Int_t j= RooUnfoldResponse::GetBin (reco, i, _overflow);

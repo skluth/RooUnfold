@@ -41,8 +41,8 @@ public:
   RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, Int_t niter= 4, Bool_t smoothit= false,
                   const char* name= 0, const char* title= 0);
 
-  virtual void SetIterations (Int_t niter= 4)         { _niter=    niter;    }
-  virtual void SetSmoothing  (Bool_t smoothit= false) { _smoothit= smoothit; }
+  void SetIterations (Int_t niter= 4)         { _niter=    niter;    }
+  void SetSmoothing  (Bool_t smoothit= false) { _smoothit= smoothit; }
   Int_t GetIterations() const { return _niter;    }
   Int_t GetSmoothing()  const { return _smoothit; }
 

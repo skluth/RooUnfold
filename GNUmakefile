@@ -94,6 +94,8 @@ PACKAGE       = RooUnfold
 OBJDIR        = $(WORKDIR)obj/
 DEPDIR        = $(WORKDIR)dep/
 CPPFLAGS     += -DMAKEBUILD
+FFFLAGS      += -fPIC
+EXCLUDE       =
 
 ifeq ($(HAVE_TUNFOLD),)
 ifneq ($(wildcard $(ROOTINCDIR)/TUnfold.h),)
@@ -101,9 +103,23 @@ HAVE_TUNFOLD  = 1
 endif
 endif
 
-ifeq ($(HAVE_TUNFOLD),)
+ifneq ($(HAVE_TUNFOLD),1)
 CPPFLAGS     += -DNOTUNFOLD
-EXCLUDE       = RooUnfoldTUnfold.cxx RooUnfoldTUnfold.h
+EXCLUDE      += RooUnfoldTUnfold.cxx RooUnfoldTUnfold.h
+endif
+
+ifeq ($(HAVE_DAGOSTINI),)
+ifneq ($(wildcard $(SRCDIR)/bayes.for),)
+HAVE_DAGOSTINI = 1
+endif
+endif
+
+ifeq ($(HAVE_DAGOSTINI),1)
+EXTRASRC     += bayes.for
+FDEP          = $(SRCDIR)bayes_c.for
+CPPFLAGS     += -DHAVE_DAGOSTINI
+else
+EXCLUDE      += RooUnfoldDagostini.cxx RooUnfoldDagostini.h
 endif
 
 ifeq ($(NOROOFIT),)
@@ -144,8 +160,12 @@ LINKLIBOPT    = -Wl,-static -l$(PACKAGE) $(EXTRALIBS) -Wl,-Bdynamic
 endif
 
 # List of all object files to build
-SRCLIST       = $(filter-out $(EXCLUDE),$(notdir $(wildcard $(SRCDIR)*.cxx)))
-OLIST         = $(addprefix $(OBJDIR),$(patsubst %.cxx,%.o,$(SRCLIST)))
+SRCLIST       = $(filter-out $(EXCLUDE),$(notdir $(wildcard $(SRCDIR)*.cxx))) $(EXTRASRC)
+OLIST         = $(addprefix $(OBJDIR),$(addsuffix .o,$(basename $(SRCLIST))))
+
+ifneq ($(filter %.for,$(SRCLIST)),)
+GCCLIBS       = -lg2c
+endif
 
 ifeq ($(MFLAGS),)
 
@@ -155,7 +175,7 @@ HDEP          = $(HLIST)
 else
 
 # List of all dependency file to make
-DLIST         = $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(SRCLIST) $(filter-out $(EXCLUDE),$(notdir $(wildcard $(EXESRC)*.cxx)))))
+DLIST         = $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(filter %.cxx,$(SRCLIST) $(filter-out $(EXCLUDE),$(notdir $(wildcard $(EXESRC)*.cxx))))))
 
 endif
 
@@ -196,6 +216,12 @@ $(OBJDIR)%.o : $(SRCDIR)%.cxx $(HDEP)
 	@mkdir -p $(OBJDIR)
 	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
 
+# Implicit rule for Fortran (if any)
+$(OBJDIR)%.o : $(SRCDIR)%.for $(FDEP)
+	@echo "Compiling $<"
+	@mkdir -p $(OBJDIR)
+	$(_)$(FC) $(FFFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@)
+
 # Implicit rule to compile main program
 $(OBJDIR)%.o : $(EXESRC)%.cxx $(HDEP)
 	@echo "Compiling main program $<"
@@ -229,12 +255,12 @@ $(SHLIBFILE) : $(OLIST) $(CINTOBJ)
 	@echo "Making $(SHLIBFILE)"
 	@mkdir -p $(SHLIBDIR)
 	@rm -f $(SHLIBFILE)
-	$(_)$(LD) $(SOFLAGS) $(LDFLAGS) $(OLIST) $(CINTOBJ) $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS)
+	$(_)$(LD) $(SOFLAGS) $(LDFLAGS) $(OLIST) $(CINTOBJ) $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS) $(GCCLIBS)
 
 $(MAINEXE) : $(EXEDIR)%$(ExeSuf) : $(OBJDIR)%.o $(LINKLIB)
 	@echo "Making executable $@"
 	@mkdir -p $(EXEDIR)
-	$(_)$(LD) $(LDFLAGS) $< $(OutPutOpt)$@ $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(if $(findstring $<,$(ROOFITCLIENTS)),$(ROOFITLIBS))
+	$(_)$(LD) $(LDFLAGS) $< $(OutPutOpt)$@ $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(if $(findstring $<,$(ROOFITCLIENTS)),$(ROOFITLIBS)) $(GCCLIBS)
 
 # Useful build targets
 include: $(DLIST)
@@ -249,9 +275,9 @@ commands :
 	@echo
 	@echo "Compile $(SRCDIR)%.cxx:	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(SRCDIR)%.cxx -o $(OBJDIR)%.o $(INCLUDES)"
 	@echo
-	@echo "Make $(SHLIBFILE):	$(LD) $(SOFLAGS) $(LDFLAGS) *.o $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS)"
+	@echo "Make $(SHLIBFILE):	$(LD) $(SOFLAGS) $(LDFLAGS) *.o $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS) $(GCCLIBS)"
 	@echo
-	@echo "Make executable $(EXEDIR)RooUnfoldTest$(ExeSuf):	$(LD) $(LDFLAGS) $(OBJDIR)RooUnfoldTest.o $(OutPutOpt)$(EXEDIR)RooUnfoldTest$(ExeSuf) $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(ROOFITLIBS)"
+	@echo "Make executable $(EXEDIR)RooUnfoldTest$(ExeSuf):	$(LD) $(LDFLAGS) $(OBJDIR)RooUnfoldTest.o $(OutPutOpt)$(EXEDIR)RooUnfoldTest$(ExeSuf) $(LIBS) $(LINKLIBOPT) $(ROOTLIBS) $(ROOFITLIBS) $(GCCLIBS)"
 
 clean : cleanbin
 	rm -f $(DLIST)

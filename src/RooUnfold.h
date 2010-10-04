@@ -30,7 +30,8 @@ public:
     kSVD,                //   RooUnfoldSvd
     kBinByBin,           //   RooUnfoldBinByBin
     kTUnfold,            //   RooUnfoldTUnfold
-    kInvert              //   RooUnfoldInvert
+    kInvert,             //   RooUnfoldInvert
+    kDagostini           //   RooUnfoldDagostini
   };
 
   enum ErrorTreatment {  // Error treatment:
@@ -223,7 +224,13 @@ inline
 TVectorD&                RooUnfold::Vreco()
 {
   // Unfolded (reconstructed) distribution as a vector
-  if (!_unfolded) Unfold();
+  if (!_unfolded) {
+    if (!_fail) Unfold();
+    if (!_unfolded) {
+      _fail= true;
+      if (_nt > 0 && _rec.GetNrows() == 0) _rec.ResizeTo(_nt);   // need something
+    }
+  }
   return _rec;
 }
 

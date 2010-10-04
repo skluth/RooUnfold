@@ -1,6 +1,17 @@
 History of RooUnfold     $Id: History,v 1.115 2010/09/14 22:47:52 adye Exp $
 ====================
 
+Tim Adye          4-Oct-2010 tja101004a
+  o New RooUnfoldResponse::Add method, suggested by Seth Zenz.
+  o Protections against failure in Unfold() and GetCov() etc.
+    Use RooUnfold::_fail to ensure that Unfold() is not retried on failure.
+  o RooUnfoldBayes::SetIterations() and SetSmoothing() no longer virtual.
+  o Add RooUnfoldDagostini class. This is an interface to D'Agostini's bayes.for
+    for comparison with our RooUnfoldBayes (they implement the same algorithm).
+    RooUnfoldDagostini is not normally compiled, but will be if bayes.for and
+    bayes_c.for are copied into the src directory. These can be downloaded from
+    http://www.roma1.infn.it/~dagos/bayes_distr.txt .
+
 Tim Adye         15-Sep-2010 tja100915a
   o Reformat method definitions so they appear correctly in the
     ROOT class documentation.

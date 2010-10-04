@@ -117,7 +117,6 @@ RooUnfoldSvd::Impl()
 void
 RooUnfoldSvd::Unfold()
 {
-  if (_fail) return;
   if (_res->GetDimensionTruth() != 1 || _res->GetDimensionMeasured() != 1) {
     cerr << "RooUnfoldSvd may not work very well for multi-dimensional distributions" << endl;
   }
@@ -134,18 +133,15 @@ RooUnfoldSvd::Unfold()
   TH1::AddDirectory (oldstat);
   if (_nt != _nm) {
     cerr << "RooUnfoldSvd requires the same number of bins in the truth and measured distributions" << endl;
-    _fail= true;
     return;
   }
   if (_kterm < 0) {
     cerr << "RooUnfoldSvd invalid kterm: " << _kterm << endl;
-    _fail= true;
     return;
   }
   Int_t nb= _nm < _nt ? _nm : _nt;
   if (_kterm > nb) {
     cerr << "RooUnfoldSvd invalid kterm=" << _kterm << " with " << nb << " bins" << endl;
-    _fail= true;
     return;
   }
 

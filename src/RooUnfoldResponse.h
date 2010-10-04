@@ -63,6 +63,8 @@ public:
           Int_t Miss (Double_t xt, Double_t yt, Double_t w);  // Fill missed event into 2D (with weight) or 3D Response Matrix
   virtual Int_t Miss (Double_t xt, Double_t yt, Double_t zt, Double_t w);  // Fill missed event into 3D Response Matrix
 
+  virtual void Add (const RooUnfoldResponse& rhs);
+
   // Accessors
 
   Int_t        GetDimensionMeasured() const;   // Dimensionality of the measured distribution
