@@ -1,3 +1,14 @@
+//=====================================================================-*-C++-*-
+// File and Version Information:
+//      $Id$
+//
+// Description:
+//      Unfolding class using TUnfold from ROOT to do the actual unfolding.
+//
+// Authors: Richard Claridge <richard.claridge@stfc.ac.uk> & Tim Adye <T.J.Adye@rl.ac.uk>
+//
+//==============================================================================
+
 #ifndef ROOUNFOLDTUNFOLD_H_
 #define ROOUNFOLDTUNFOLD_H_
 

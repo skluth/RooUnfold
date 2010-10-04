@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTestHarness2D.icc,v 1.18 2010-08-25 22:30:51 adye Exp $
+//      $Id$
 //
 // Description:
 //      Test Harness class for the RooUnfold package using 2D toy MC.

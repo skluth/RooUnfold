@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldExample.cxx,v 1.5 2010-05-20 22:50:57 adye Exp $
+//      $Id$
 //
 // Description:
 //      Simple example usage of the RooUnfold package using toy MC.

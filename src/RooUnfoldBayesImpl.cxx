@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldBayesImpl.cxx,v 1.24 2010-08-25 20:48:21 adye Exp $
+//      $Id$
 //
 // Description:
 //   A class for unfolding 1, 2 or 3 dimensions of data using the

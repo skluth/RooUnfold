@@ -2,7 +2,7 @@
 //Kerstin Tackmann, Heiko Lacker (TU Dresden)
 //based on 
 //Andreas Hoecker, Vakhtang Kartvelishvili, hep-ph/9509307
-//$Id: RooUnfHistoSvd.h,v 1.3 2010-08-27 15:47:29 adye Exp $
+//$Id$
 ///////////////////////////////////////////////////////////////////////
 
 #ifndef TUNFHISTO_HH

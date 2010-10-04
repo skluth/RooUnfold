@@ -1,3 +1,16 @@
+//=====================================================================-*-C++-*-
+// File and Version Information:
+//      $Id$
+//
+// Description:
+//      Unfolding class using inversion of the response matrix. This does not produce
+//      good results and is designed to illustrate the need for more sophisticated
+//      unfolding techniques
+//
+// Authors: Richard Claridge <richard.claridge@stfc.ac.uk> & Tim Adye <T.J.Adye@rl.ac.uk>
+//
+//==============================================================================
+
 #ifndef ROOUNFOLDINVERT_H_
 #define ROOUNFOLDINVERT_H_
 

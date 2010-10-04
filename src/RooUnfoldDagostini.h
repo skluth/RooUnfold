@@ -1,3 +1,15 @@
+//=====================================================================-*-C++-*-
+// File and Version Information:
+//      $Id$
+//
+// Description:
+//      Unfolding interface to Fortran routine, BAYES, by G. D'Agostini from
+//      http://www.roma1.infn.it/~dagos/bayes_distr.txt
+//
+// Authors: Tim Adye <T.J.Adye@rl.ac.uk>
+//
+//==============================================================================
+
 #ifndef ROOUNFOLDDAGOSTINI_H_
 #define ROOUNFOLDDAGOSTINI_H_
 

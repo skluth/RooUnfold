@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldTest.cxx,v 1.19 2010-08-23 21:38:11 adye Exp $
+//      $Id$
 //
 // Description:
 //      Tests RooUnfold package using toy MC generated according to PDFs

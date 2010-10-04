@@ -1,3 +1,14 @@
+//=====================================================================-*-C++-*-
+// File and Version Information:
+//      $Id$
+//
+// Description:
+//      Unfolding class using the bin by bin method of conversion factors. 
+//
+// Authors: Richard Claridge <richard.claridge@stfc.ac.uk> & Tim Adye <T.J.Adye@rl.ac.uk>
+//
+//==============================================================================
+
 #ifndef ROOUNFOLDBINBYBIN_H_
 #define ROOUNFOLDBINBYBIN_H_
 

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldParms.cxx,v 1.12 2010-09-10 23:58:02 adye Exp $
+//      $Id$
 //
 // Description:
 //      Optimisation of regularisation parameter class

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldErrors.cxx,v 1.7 2010-08-26 15:07:43 fwx38934 Exp $
+//      $Id$
 //
 // Description:
 //      Unfolding errors class

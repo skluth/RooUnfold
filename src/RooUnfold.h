@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfold.h,v 1.35 2010/09/13 21:19:09 adye Exp $
+//      $Id$
 //
 // Description:
 //      Unfolding framework base class.

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: Array2D.h,v 1.2 2010-01-19 15:33:47 adye Exp $
+//      $Id$
 //
 // Description:
 //      A helper class designed to store an 2 dimensional array as a 1-D array.

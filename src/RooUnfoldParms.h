@@ -1,3 +1,14 @@
+//=====================================================================-*-C++-*-
+// File and Version Information:
+//      $Id$
+//
+// Description:
+//      Optimisation of regularisation parameter class
+//
+// Author: Richard Claridge <richard.claridge@stfc.ac.uk>
+//
+//==============================================================================
+
 #ifndef ROOUNFOLDPARMS_H_
 #define ROOUNFOLDPARMS_H_
 

@@ -1,6 +1,6 @@
 //=====================================================================-*-C++-*-
 // File and Version Information:
-//      $Id: RooUnfoldErrors.h,v 1.2 2010-08-11 19:27:37 adye Exp $
+//      $Id$
 //
 // Description:
 //      Graph Drawing Class for use with RooUnfold.
