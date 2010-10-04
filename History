@@ -1,6 +1,9 @@
 History of RooUnfold     $Id: History,v 1.115 2010/09/14 22:47:52 adye Exp $
 ====================
 
+Tim Adye          4-Oct-2010 tja101004b
+  o Use SVN Id keyword substitution.
+
 Tim Adye          4-Oct-2010 tja101004a
   o New RooUnfoldResponse::Add method, suggested by Seth Zenz.
   o Protections against failure in Unfold() and GetCov() etc.
