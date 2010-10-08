@@ -102,7 +102,6 @@ protected:
   virtual void GetErrMat(); // Get covariance matrix using errors from residuals on reconstructed distribution
   virtual void GetSettings();
   virtual Bool_t UnfoldWithErrors (ErrorTreatment withError);
-  TH1D* HmeasuredNoOverflow1D();
 
   static TH1*     Add_Random   (const TH1* meas);
   static TMatrixD CutZeros     (const TMatrixD& ereco);

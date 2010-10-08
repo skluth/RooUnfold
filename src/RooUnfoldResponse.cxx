@@ -12,7 +12,7 @@
 //____________________________________________________________
 /* BEGIN_HTML
  <p> Class to create response object as used in RooUnfold </p>
- <p> Contains measured and truth distributions as TH1s and the response matrix as a TH2D. Also contains methods for handling these data</p>
+ <p> Contains measured and truth distributions as TH1s and the response matrix as a TH2. Also contains methods for handling these data</p>
 <p> Can handle 1,2 or 3 dimensional histograms and return vectors and matrices of their bin content and error (1 and 2D distributions respectively).
  Conversely can also convert these vectors and matrices into TH1Ds and TH2Ds. </p>
 <p> Can also take a variety of parameters as inputs. This includes maximum and minimum values, distributions and vectors/matrices of values. </p>
@@ -63,7 +63,7 @@ RooUnfoldResponse::RooUnfoldResponse (Int_t nm, Double_t mlo, Double_t mhi, Int_
   Setup (nm, mlo, mhi, nt, tlo, thi);
 }
 
-RooUnfoldResponse::RooUnfoldResponse (const TH1* measured, const TH1* truth, const TH2D* response,
+RooUnfoldResponse::RooUnfoldResponse (const TH1* measured, const TH1* truth, const TH2* response,
                                       const char* name, const char* title)
   : TNamed (name, title)
 {
@@ -199,7 +199,7 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
 }
 
 RooUnfoldResponse&
-RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2D* response)
+RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2* response)
 {
     //Reads in measured and truth distribution as well as error matrix.
   Reset();
@@ -207,7 +207,7 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2D* res
   TH1::AddDirectory (kFALSE);
   _mes= (TH1*)  measured->Clone();
   _tru= (TH1*)  truth   ->Clone();
-  _res= (TH2D*) response->Clone();
+  _res= (TH2*)  response->Clone();
   TH1::AddDirectory (oldstat);
   _mdim= _mes->GetDimension();
   _tdim= _tru->GetDimension();
@@ -244,8 +244,8 @@ RooUnfoldResponse::Fill (Double_t xr, Double_t xt, Double_t w)
   assert (_mes != 0 && _tru != 0);
   assert (_mdim==1 && _tdim==1);
   if (_cached) ClearCache();
-  ((TH1D*)_mes)->Fill (xr, w);
-  ((TH1D*)_tru)->Fill (xt, w);
+  _mes->Fill (xr, w);
+  _tru->Fill (xt, w);
   return _res->Fill (xr, xt, w);
 }
 
@@ -256,8 +256,8 @@ RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t xt, Double_t yt, Dou
   assert (_mes != 0 && _tru != 0);
   assert (_mdim==2 && _tdim==2);
   if (_cached) ClearCache();
-  ((TH2D*)_mes)->Fill (xr, yr, w);
-  ((TH2D*)_tru)->Fill (xt, yt, w);
+  ((TH2*)_mes)->Fill (xr, yr, w);
+  ((TH2*)_tru)->Fill (xt, yt, w);
   return _res->Fill (Double_t(FindBin (_mes, xr, yr))+.5, Double_t(FindBin (_tru, xt, yt))+.5, w);
 }
 
@@ -268,8 +268,8 @@ RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t zr, Double_t xt, Dou
   assert (_mes != 0 && _tru != 0);
   assert (_mdim==3 && _tdim==3);
   if (_cached) ClearCache();
-  ((TH3D*)_mes)->Fill (xr, yr, zr, w);
-  ((TH3D*)_tru)->Fill (xt, yt, zt, w);
+  ((TH3*)_mes)->Fill (xr, yr, zr, w);
+  ((TH3*)_tru)->Fill (xt, yt, zt, w);
   return _res->Fill (Double_t(FindBin (_mes, xr, yr, zt))+.5, Double_t(FindBin (_tru, xt, yt, zt))+.5, w);
 }
 
@@ -331,7 +331,7 @@ RooUnfoldResponse::Miss1D (Double_t xt, Double_t w)
   assert (_tru != 0);
   assert (_mdim==1 && _tdim==1);
   if (_cached) ClearCache();
-  return ((TH1D*)_tru)->Fill (xt, w);
+  return _tru->Fill (xt, w);
 }
 
 Int_t
@@ -341,7 +341,7 @@ RooUnfoldResponse::Miss2D (Double_t xt, Double_t yt, Double_t w)
   assert (_tru != 0);
   assert (_mdim==2 && _tdim==2);
   if (_cached) ClearCache();
-  return ((TH2D*)_tru)->Fill (xt, yt, w);
+  return ((TH2*)_tru)->Fill (xt, yt, w);
 }
 
 Int_t
@@ -351,13 +351,13 @@ RooUnfoldResponse::Miss (Double_t xt, Double_t yt, Double_t zt, Double_t w)
   assert (_tru != 0);
   assert (_mdim==3 && _tdim==3);
   if (_cached) ClearCache();
-  return ((TH3D*)_tru)->Fill (xt, yt, zt, w);
+  return ((TH3*)_tru)->Fill (xt, yt, zt, w);
 }
 
 TH1D*
 RooUnfoldResponse::H2H1D(const TH1* h, Int_t nb)
 {
-  if (h->GetDimension() == 1) return (TH1D*) h->Clone();
+  if (dynamic_cast<const TH1D*>(h)) return dynamic_cast<TH1D*>(h->Clone());
   TH1D* h1d= new TH1D(h->GetName(), h->GetTitle(), nb, 0.0, 1.0);
   for (Int_t i= 0; i < nb; i++) {
     Int_t j= GetBin (h, i);  // don't bother with under/overflow bins (not supported for >1D)
@@ -370,11 +370,22 @@ RooUnfoldResponse::H2H1D(const TH1* h, Int_t nb)
 TH2D*
 RooUnfoldResponse::HresponseNoOverflow() const
 {
-  const TH2D* h= Hresponse();
+  const TH2* h= Hresponse();
   Int_t nx= h->GetNbinsX(), ny= h->GetNbinsY();
-  if (!_overflow) {
+  if (_overflow) {  // implies truth/measured both 1D
+    Double_t xlo= h->GetXaxis()->GetXmin(), xhi= h->GetXaxis()->GetXmax(), xb= (xhi-xlo)/nx;
+    Double_t ylo= h->GetYaxis()->GetXmin(), yhi= h->GetYaxis()->GetXmax(), yb= (yhi-ylo)/ny;
+    nx += 2; ny += 2;
+    TH2D* hx= new TH2D (h->GetName(), h->GetTitle(), nx, xlo-xb, xhi+xb, ny, ylo-yb, yhi+yb);
+    for (Int_t i= 0; i < nx; i++) {
+      for (Int_t j= 0; j < ny; j++) {
+        hx->SetBinContent (i+1, j+1, h->GetBinContent (i, j));
+        hx->SetBinError   (i+1, j+1, h->GetBinError   (i, j));
+      }
+    }
+    return hx;
+  } else if (dynamic_cast<const TH2D*>(h)) {
     TH2D* hx= dynamic_cast<TH2D*>(h->Clone());
-    if (!hx) return hx;
     // clear under/overflows
     for (Int_t i= 0; i <= nx+1; i++) {
       hx->SetBinContent (i, 0,    0.0);
@@ -385,18 +396,18 @@ RooUnfoldResponse::HresponseNoOverflow() const
       hx->SetBinContent (nx+1, i, 0.0);
     }
     return hx;
-  }
-  Double_t xlo= h->GetXaxis()->GetXmin(), xhi= h->GetXaxis()->GetXmax(), xb= (xhi-xlo)/nx;
-  Double_t ylo= h->GetYaxis()->GetXmin(), yhi= h->GetYaxis()->GetXmax(), yb= (yhi-ylo)/ny;
-  nx += 2; ny += 2;
-  TH2D* hx= new TH2D (h->GetName(), h->GetTitle(), nx, xlo-xb, xhi+xb, ny, ylo-yb, yhi+yb);
-  for (Int_t i= 0; i < nx; i++) {
-    for (Int_t j= 0; j < ny; j++) {
-      hx->SetBinContent (i+1, j+1, h->GetBinContent (i, j));
-      hx->SetBinError   (i+1, j+1, h->GetBinError   (i, j));
+  } else {
+    Double_t xlo= h->GetXaxis()->GetXmin(), xhi= h->GetXaxis()->GetXmax();
+    Double_t ylo= h->GetYaxis()->GetXmin(), yhi= h->GetYaxis()->GetXmax();
+    TH2D* hx= new TH2D (h->GetName(), h->GetTitle(), nx, xlo, xhi, ny, ylo, yhi);
+    for (Int_t i= 0; i < nx+2; i++) {
+      for (Int_t j= 0; j < ny+2; j++) {
+        hx->SetBinContent (i, j, h->GetBinContent (i, j));
+        hx->SetBinError   (i, j, h->GetBinError   (i, j));
+      }
     }
+    return hx;
   }
-  return hx;
 }
 
 TVectorD*
@@ -438,7 +449,7 @@ RooUnfoldResponse::H2VE (const TH1* h, Int_t nb, Bool_t overflow)
 }
 
 TMatrixD*
-RooUnfoldResponse::H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm, Bool_t overflow)
+RooUnfoldResponse::H2M  (const TH2* h, Int_t nx, Int_t ny, const TH1* norm, Bool_t overflow)
 {
     //Returns Matrix of values of bins in a 2D input histogram
   Int_t first= overflow ? 0 : 1;
@@ -464,7 +475,7 @@ RooUnfoldResponse::H2M  (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm, Boo
 }
 
 TMatrixD*
-RooUnfoldResponse::H2ME (const TH2D* h, Int_t nx, Int_t ny, const TH1* norm, Bool_t overflow)
+RooUnfoldResponse::H2ME (const TH2* h, Int_t nx, Int_t ny, const TH1* norm, Bool_t overflow)
 {
     //Returns matrix of bin errors for a 2D histogram.
   Int_t first= overflow ? 0 : 1;

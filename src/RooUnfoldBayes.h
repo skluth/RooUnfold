@@ -18,7 +18,7 @@ using std::vector;
 
 class RooUnfoldResponse;
 class TH1;
-class TH2D;
+class TH2;
 class RooUnfoldBayesImpl;
 class Array2D;
 
@@ -53,7 +53,7 @@ public:
   RooUnfoldBayesImpl* Impl();
 
   static vector<Double_t>& H2VD (const TH1*  h, vector<Double_t>& v, Bool_t overflow= kFALSE);
-  static Array2D&          H2AD (const TH2D* h, Array2D& m, const TH1* norm= 0, Bool_t overflow= kFALSE);
+  static Array2D&          H2AD (const TH2* h, Array2D& m, const TH1* norm= 0, Bool_t overflow= kFALSE);
   static TVectorD&         VD2V (const vector<Double_t>& vd, TVectorD& v);
   static TMatrixD&         AD2M (const Array2D& ad, TMatrixD& m);
   static TVectorD&         AD2V (const Array2D& ad, TVectorD& m);

@@ -188,7 +188,7 @@ RooUnfoldBayes::H2VD (const TH1* h, vector<Double_t>& v, Bool_t overflow)
 }
 
 Array2D&
-RooUnfoldBayes::H2AD (const TH2D* h, Array2D& m, const TH1* norm, Bool_t overflow)
+RooUnfoldBayes::H2AD (const TH2* h, Array2D& m, const TH1* norm, Bool_t overflow)
 {
   if (!h) return m;
   Int_t first= overflow ? 0 : 1;

@@ -1,6 +1,13 @@
 History of RooUnfold     $Id: History,v 1.115 2010/09/14 22:47:52 adye Exp $
 ====================
 
+Tim Adye          8-Oct-2010 tja101008a
+  o RooUnfoldResponse can now take any TH2, not just TH2D. Hresponse() returns
+    a TH2, but everything else returns new TH2Ds.
+  o Fixes for when user's TH1s aren't doubles.
+  o Remove unneeded internal routines RooUnfold::HmeasuredNoOverflow1D() and
+    RooUnfoldResponse::Hmeasured1D() and Htruth1D().
+
 Tim Adye          4-Oct-2010 tja101004b
   o Use SVN Id keyword substitution.
 

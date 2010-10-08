@@ -126,9 +126,9 @@ RooUnfoldSvd::Unfold()
 
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
-  _meas1d=  HmeasuredNoOverflow1D();
-  _train1d= HistNoOverflow (_res->Hmeasured1D(), _overflow);
-  _truth1d= HistNoOverflow (_res->Htruth1D(),    _overflow);
+  _meas1d=  HistNoOverflow (_meas,             _overflow);
+  _train1d= HistNoOverflow (_res->Hmeasured(), _overflow);
+  _truth1d= HistNoOverflow (_res->Htruth(),    _overflow);
   _reshist= _res->HresponseNoOverflow();
   TH1::AddDirectory (oldstat);
   if (_nt != _nm) {

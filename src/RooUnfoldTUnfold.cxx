@@ -124,7 +124,7 @@ RooUnfoldTUnfold::Unfold()
 
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
-  TH1D* meas= HmeasuredNoOverflow1D();
+  TH1D* meas= HistNoOverflow (_meas, _overflow);
   TH2D* Hres=_res->HresponseNoOverflow();
   TH1::AddDirectory (oldstat);
 
