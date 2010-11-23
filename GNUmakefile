@@ -146,17 +146,20 @@ LINKDEF       = $(INCDIR)$(PACKAGE)_LinkDef.h
 HLIST         = $(filter-out $(addprefix $(INCDIR),$(EXCLUDE)) $(LINKDEF),$(wildcard $(INCDIR)*.h)) $(LINKDEF)
 CINTFILE      = $(WORKDIR)$(PACKAGE)Dict.cxx
 CINTOBJ       = $(OBJDIR)$(PACKAGE)Dict.o
-LIBFILE       = $(LIBDIR)lib$(PACKAGE).a
-SHLIBFILE     = $(SHLIBDIR)lib$(PACKAGE).$(DllSuf)
+LIBNAME       = $(PACKAGE)
+STATICLIBNAME = $(PACKAGE)_static
+LIBFILE       = $(LIBDIR)lib$(LIBNAME).a
+STATICLIBFILE = $(LIBDIR)lib$(STATICLIBNAME).a
+SHLIBFILE     = $(SHLIBDIR)lib$(LIBNAME).$(DllSuf)
 
 ifneq ($(SHARED),)
 LIBS          = -L$(SHLIBDIR)
 LINKLIB       = $(SHLIBFILE)
-LINKLIBOPT    = -l$(PACKAGE) $(EXTRALIBS)
+LINKLIBOPT    = -l$(LIBNAME) $(EXTRALIBS)
 else
 LIBS          = -L$(LIBDIR)
-LINKLIB       = $(LIBFILE)
-LINKLIBOPT    = -Wl,-static -l$(PACKAGE) $(EXTRALIBS) -Wl,-Bdynamic
+LINKLIB       = $(STATICLIBFILE)
+LINKLIBOPT    = -l$(STATICLIBNAME) $(EXTRALIBS)
 endif
 
 # List of all object files to build
@@ -214,19 +217,25 @@ $(DEPDIR)%.d : $(EXESRC)%.cxx
 $(OBJDIR)%.o : $(SRCDIR)%.cxx $(HDEP)
 	@echo "Compiling $<"
 	@mkdir -p $(OBJDIR)
-	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
+	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ $(INCLUDES)
+
+# Implicit rule to compile intermediate files
+$(OBJDIR)%.o : $(WORKDIR)%.cxx $(HDEP)
+	@echo "Compiling $<"
+	@mkdir -p $(OBJDIR)
+	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ $(INCLUDES)
 
 # Implicit rule for Fortran (if any)
 $(OBJDIR)%.o : $(SRCDIR)%.for $(FDEP)
 	@echo "Compiling $<"
 	@mkdir -p $(OBJDIR)
-	$(_)$(FC) $(FFFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@)
+	$(_)$(FC) $(FFFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Implicit rule to compile main program
 $(OBJDIR)%.o : $(EXESRC)%.cxx $(HDEP)
 	@echo "Compiling main program $<"
 	@mkdir -p $(OBJDIR)
-	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $(OBJDIR)$(notdir $@) $(INCLUDES)
+	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ $(INCLUDES)
 
 
 # === Explicit rules ===========================================================
@@ -234,28 +243,32 @@ $(OBJDIR)%.o : $(EXESRC)%.cxx $(HDEP)
 default : shlib
 
 # Rule to make ROOTCINT output file
-$(CINTOBJ) : $(HLIST)
+$(CINTFILE) : $(HLIST)
 	@mkdir -p $(WORKDIR)
 	@mkdir -p $(OBJDIR)
 	@echo "Generating dictionary from $(LINKDEF)"
 	$(_)cd $(SRC) ; $(ROOTCINT) -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)
-	@echo "Compiling $(CINTFILE)"
-	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(CINTFILE) -o $(CINTOBJ) $(INCLUDES)
 
 # Rule to combine objects into a library
 $(LIBFILE) : $(OLIST) $(CINTOBJ)
-	@echo "Making $(LIBFILE)"
+	@echo "Making $@"
 	@mkdir -p $(LIBDIR)
-	@rm -f $(LIBFILE)
-	$(_)ar q $(LIBFILE) $(OLIST) $(CINTOBJ)
-	@ranlib $(LIBFILE)
+	@rm -f $@
+	$(_)ar q $@ $^
+	@ranlib $@
+
+# Make symlink to static library so we can refer to that without picking up shared library.
+# Assumes $(LIBFILE) and $(STATICLIBFILE) are in the same directory
+$(STATICLIBFILE) : $(LIBFILE)
+	@rm -f $@
+	$(_)ln -s $(notdir $<) $@
 
 # Rule to combine objects into a shared library
 $(SHLIBFILE) : $(OLIST) $(CINTOBJ)
-	@echo "Making $(SHLIBFILE)"
+	@echo "Making $@"
 	@mkdir -p $(SHLIBDIR)
-	@rm -f $(SHLIBFILE)
-	$(_)$(LD) $(SOFLAGS) $(LDFLAGS) $(OLIST) $(CINTOBJ) $(OutPutOpt)$(SHLIBFILE) $(ROOTLIBS) $(GCCLIBS)
+	@rm -f $@
+	$(_)$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt)$@ $(ROOTLIBS) $(GCCLIBS)
 
 $(MAINEXE) : $(EXEDIR)%$(ExeSuf) : $(OBJDIR)%.o $(LINKLIB)
 	@echo "Making executable $@"
@@ -285,6 +298,7 @@ clean : cleanbin
 	rm -f $(OLIST) $(CINTOBJ)
 	rm -f $(LIBFILE)
 	rm -f $(SHLIBFILE)
+	rm -f $(STATICLIBFILE)
 
 cleanbin :
 	rm -f $(addprefix $(OBJDIR),$(patsubst %.cxx,%.o,$(MAIN)))

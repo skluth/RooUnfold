@@ -1,6 +1,11 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         23-Nov-2010
+  o Hack GNUMakefile so "make bin" works on MacOS: uses libRooUnfold_static.a
+    symlink to bypass linking shared library.
+    Also tidied up use of automatic variables.
+
 Tim Adye          8-Oct-2010 tja101008a
   o RooUnfoldResponse can now take any TH2, not just TH2D. Hresponse() returns
     a TH2, but everything else returns new TH2Ds.
