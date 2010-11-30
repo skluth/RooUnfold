@@ -401,7 +401,7 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
         for (Int_t i = 0 ; i < _nt; i++) {
             Int_t it= RooUnfoldResponse::GetBin (hTrue, i, _overflow);
             if (ereco(i)>0.0 &&
-                hTrue->GetBinContent(it)!=0.0 || hTrue->GetBinError(it)>0.0) {
+                (hTrue->GetBinContent(it)!=0.0 || hTrue->GetBinError(it)>0.0)) {
                 Double_t ypull = (_rec(i) - hTrue->GetBinContent(it)) / ereco(i);
                 chi2 += ypull*ypull;
             }

@@ -91,7 +91,7 @@ Int_t RooUnfoldTestHarness3D::Train()
   response->Setup (hTrain, hTrainTrue);
 
   for (Int_t i= 0; i<ntrain; i++) {
-    Double_t xt= xtrue[i], yt= ytrue[i], zt= ztrue[i];
+    Double_t xt= (*&xtrue)[i], yt= (*&ytrue)[i], zt= (*&ztrue)[i];
     Fill (hTrainTrue, xt, yt, zt);
 
     if (Eff3D (xt, yt, zt)) {
@@ -165,7 +165,7 @@ Int_t RooUnfoldTestHarness3D::Test()
   hMeas->SetLineColor(kRed);
 
   for (Int_t i=0; i<ntest ; i++) {
-    Double_t xt= xtest[i], yt= ytest[i], zt= ztest[i];
+    Double_t xt= (*&xtest)[i], yt= (*&ytest)[i], zt= (*&ztest)[i];
     Fill (hTrue, xt, yt, zt);
     if (Eff3D (xt, yt, zt)) {
       Double_t x= xt, y= yt, z= zt;

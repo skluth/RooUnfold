@@ -246,7 +246,8 @@ Int_t RooUnfoldTestHarness::Train()
   // or:  response->Setup (hTrain, hTrainTrue);
   for (Int_t i= 0; i<ntrain; i++) {
 
-    Double_t xt= xtrue[i], xto= Overflow (xt, ntx, xlo, xhi);
+    Double_t xt= (*&xtrue)[i];    // work round CINT crash on xtrue[i] (MacOSX x86_64 ROOT bug #75874)
+    Double_t xto= Overflow (xt, ntx, xlo, xhi);
     hTrainTrue->Fill (xto);
     if (Eff (xt, xlo, xhi, effxlo, effxhi)) {    
       Double_t x= Smear (xt, ntx, xlo, xhi, xbias, xsmear), xo= Overflow (x, ntx, xlo, xhi);
@@ -288,7 +289,8 @@ Int_t RooUnfoldTestHarness::Test()
   hMeas= new TH1D ("meas", "Test Measured", nmx, xlo, xhi);
   hMeas->SetLineColor(kRed);
   for (Int_t i=0; i<ntest ; i++) {
-    Double_t xt= xtest[i], xto= Overflow (xt, ntx, xlo, xhi);
+    Double_t xt= (*&xtest)[i];
+    Double_t xto= Overflow (xt, ntx, xlo, xhi);
     hTrue->Fill(xto);
     if (Eff (xt, xlo, xhi, effxlo, effxhi)) {
       Double_t x = Smear (xt, ntx, xlo, xhi, xbias, xsmear), xo= Overflow (x, ntx, xlo, xhi);
