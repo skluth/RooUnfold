@@ -3,7 +3,7 @@ History of RooUnfold     $Id$
 
 Tim Adye         30-Nov-2010
   o Hack to RooUnfoldTestHarness.icc to work round CINT crash on
-    MacOSX x86_64 (ROOT bug #75874).
+    MacOSX x86_64 (ROOT bug #75874). Crash reported by Julia Gray.
   o Fix empty-bin logic in RooUnfold::Chi2(kErrors).
 
 Tim Adye         23-Nov-2010
