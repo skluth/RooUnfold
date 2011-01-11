@@ -109,13 +109,17 @@ RooUnfoldInvert::Unfold()
 void
 RooUnfoldInvert::GetCov()
 {
-    Bool_t ok;
     TMatrixD resinv(_nt,_nm);
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,13,4)  /* TDecompSVD::Invert() didn't have ok status before 5.13/04. */
+    Bool_t ok;
     resinv=_svd->Invert(ok);
     if (!ok) {
       cerr << "response matrix inversion failed" << endl;
       return;
     }
+#else
+    resinv=_svd->Invert();
+#endif
 
     const TVectorD& vmeasured= Vmeasured();
     _cov.ResizeTo(_nt,_nt);

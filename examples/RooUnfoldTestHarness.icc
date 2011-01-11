@@ -72,9 +72,10 @@ using std::endl;
 
 void RooUnfoldTestHarness::Parms (ArgVars& args)
 {
-  TString methodHelp= TString::Format("unfolding method: %d=none, %d=Bayes, %d=SVD, %d=bin-by-bin, %d=TUnfold, %d=invert",
-                                      RooUnfold::kNone,     RooUnfold::kBayes,   RooUnfold::kSVD,
-                                      RooUnfold::kBinByBin, RooUnfold::kTUnfold, RooUnfold::kInvert);
+  TString methodHelp;
+  methodHelp.Form ("unfolding method: %d=none, %d=Bayes, %d=SVD, %d=bin-by-bin, %d=TUnfold, %d=invert",
+                   RooUnfold::kNone,     RooUnfold::kBayes,   RooUnfold::kSVD,
+                   RooUnfold::kBinByBin, RooUnfold::kTUnfold, RooUnfold::kInvert);
   args.Add ("method",  &method,       RooUnfold::kBayes, methodHelp.Data());
   args.Add ("stage",   &stage,        0, "1=train (writes RooUnfoldTest.root), 2=test (reads), 0=both (default)");
   args.Add ("ftrainx", &ftrainx,      0, "training X PDF: 0=flat, 1=top-hat, 2=Gaussian, 3=double exp, 4=B-W, 5=double B-W, 6=exp, 7=Gaussian+exp");
