@@ -2,10 +2,10 @@ History of RooUnfold     $Id$
 ====================
 
 Tim Adye         11-Jan-2011
-  o Add -lFoam -lMathMore to link.
-    Required by RooFit (and ROOT not built with --enable-explicitlink?).
-  o Fixes for ROOT versions before 5.13, which changed TDecompSVD::Invert and
-    added TString::Format.
+  o Add -lFoam -lMathMore to link (required by RooFit for some installations)
+    and only link against these extra libraries if present in $ROOTSYS/lib.
+  o Fixes for ROOT versions 5.12 and before (different TDecompSVD::Invert() and
+    no TString::Format()).
 
 Tim Adye         30-Nov-2010
   o Hack to RooUnfoldTestHarness.icc to work round CINT crash on

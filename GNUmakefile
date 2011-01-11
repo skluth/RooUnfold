@@ -90,6 +90,8 @@ LDFLAGS      += $(EXTRALDFLAGS)
 
 # === Internal configuration ===================================================
 
+ROOTSYS      ?= ERROR_RootSysIsNotDefined
+
 PACKAGE       = RooUnfold
 OBJDIR        = $(WORKDIR)obj/
 DEPDIR        = $(WORKDIR)dep/
@@ -132,16 +134,17 @@ endif
 ifneq ($(NOROOFIT),)
 CPPFLAGS     += -DNOROOFIT
 else
-ifneq ($(wildcard $(ROOTSYS)/lib/libRooFitCore.$(DllSuf)),)
-ROOFITLIBS   += -lRooFit -lRooFitCore -lThread -lMinuit -lFoam -lMathMore -lHtml
-else
-ROOFITLIBS   += -lRooFit -lMinuit -lHtml
-endif
+ROOFITLIBS   += -lRooFit
+# Different versions of ROOT require different libraries with RooFit, so
+# include all the ones that exist.
+# Note that if the ROOT shared libraries were linked against them
+# (configure --enable-explicitlink ?), as is done in the CERN AFS versions,
+# then these are not required. But they do no harm.
+ROOFITLIBS   += $(patsubst $(ROOTSYS)/lib/lib%.$(DllSuf),-l%,$(wildcard $(patsubst %,$(ROOTSYS)/lib/lib%.$(DllSuf),RooFitCore Thread Minuit Foam MathMore Html)))
 endif
 
 MAIN          = $(filter-out $(EXCLUDE),$(notdir $(wildcard $(EXESRC)*.cxx)))
 MAINEXE       = $(addprefix $(EXEDIR),$(patsubst %.cxx,%$(ExeSuf),$(MAIN)))
-ROOTSYS      ?= ERROR_RootSysIsNotDefined
 LINKDEF       = $(INCDIR)$(PACKAGE)_LinkDef.h
 HLIST         = $(filter-out $(addprefix $(INCDIR),$(EXCLUDE)) $(LINKDEF),$(wildcard $(INCDIR)*.h)) $(LINKDEF)
 CINTFILE      = $(WORKDIR)$(PACKAGE)Dict.cxx
