@@ -133,7 +133,7 @@ ifneq ($(NOROOFIT),)
 CPPFLAGS     += -DNOROOFIT
 else
 ifneq ($(wildcard $(ROOTSYS)/lib/libRooFitCore.$(DllSuf)),)
-ROOFITLIBS   += -lRooFit -lRooFitCore -lThread -lMinuit -lHtml
+ROOFITLIBS   += -lRooFit -lRooFitCore -lThread -lMinuit -lFoam -lMathMore -lHtml
 else
 ROOFITLIBS   += -lRooFit -lMinuit -lHtml
 endif
