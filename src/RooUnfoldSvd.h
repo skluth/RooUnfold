@@ -18,7 +18,7 @@ class RooUnfoldResponse;
 class TH1;
 class TH1D;
 class TH2D;
-class TUnfHisto;
+class TSVDUnfold;
 
 class RooUnfoldSvd : public RooUnfold {
 
@@ -36,19 +36,18 @@ public:
 
   // Special constructors
 
-  RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm= 0, Int_t ntoyssvd= 1000,
+  RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kreg= 0, Int_t ntoyssvd= 1000,
                 const char* name= 0, const char* title= 0);
 
-  void SetKterm (Int_t kterm) { _kterm= kterm; }
+  void SetKterm (Int_t kreg) { _kreg= kreg; }
   void SetNtoysSVD (Int_t ntoyssvd) { _ntoyssvd= ntoyssvd; }
-  Int_t GetKterm() const { return _kterm; }
+  Int_t GetKterm() const { return _kreg; }
   Int_t GetNtoysSVD() const { return _ntoyssvd; }
 
   virtual void  SetRegParm (Double_t parm) { SetKterm(Int_t(parm+0.5)); }
   virtual Double_t GetRegParm() const { return GetKterm(); }
   virtual void Reset();
-  TUnfHisto* Impl();
-  void UsePropErrors(Bool_t PE=true);
+  TSVDUnfold* Impl();
 
 protected:
   void Assign (const RooUnfoldSvd& rhs); // implementation of assignment operator
@@ -63,10 +62,9 @@ private:
 
 protected:
   // instance variables
-  TUnfHisto* _svd;
-  Int_t _kterm;
+  TSVDUnfold* _svd;
+  Int_t _kreg;
   Int_t _ntoyssvd;
-  Bool_t _prop_errors;
 
   TH1D *_meas1d, *_train1d, *_truth1d;
   TH2D *_reshist;

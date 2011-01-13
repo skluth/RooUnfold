@@ -3,7 +3,7 @@
 //      $Id$
 //
 // Description:
-//      SVD unfolding. Just an interface to RooUnfHistoSvd.
+//      SVD unfolding. Just an interface to TSVDUnfold.
 //
 // Author: Tim Adye <T.J.Adye@rl.ac.uk>
 //
@@ -11,7 +11,7 @@
 
 //____________________________________________________________
 /* BEGIN_HTML
-<p>Links to RooUnfHistoSvd class which unfolds using Singular Value Decomposition (SVD).</p>
+<p>Links to TSVDUnfold class which unfolds using Singular Value Decomposition (SVD).</p>
 <p>Regularisation parameter defines the level at which values are deemed to be due to statistical fluctuations and are cut out. (Default= number of bins/2)
 <p>Returns errors as a full matrix of covariances
 <p>Error processing is much the same as with the kCovToy setting with 1000 toys. This is quite slow but can be switched off.
@@ -33,9 +33,9 @@ END_HTML */
 #include "TH2.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
+#include "TSVDUnfold.h"
 
 #include "RooUnfoldResponse.h"
-#include "RooUnfHistoSvd.h"
 
 using std::cout;
 using std::cerr;
@@ -50,9 +50,9 @@ RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldSvd& rhs)
   CopyData (rhs);
 }
 
-RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kterm, Int_t ntoyssvd,
+RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kreg, Int_t ntoyssvd,
                             const char* name, const char* title)
-  : RooUnfold (res, meas, name, title), _kterm(kterm ? kterm : meas->GetNbinsX()/2), _ntoyssvd(ntoyssvd)
+  : RooUnfold (res, meas, name, title), _kreg(kreg ? kreg : meas->GetNbinsX()/2), _ntoyssvd(ntoyssvd)
 {
   Init();
 }
@@ -89,7 +89,6 @@ RooUnfoldSvd::Init()
   _svd= 0;
   _meas1d= _train1d= _truth1d= 0;
   _reshist= 0;
-  _prop_errors=false;
   GetSettings();
 }
 
@@ -103,12 +102,11 @@ RooUnfoldSvd::Assign (const RooUnfoldSvd& rhs)
 void
 RooUnfoldSvd::CopyData (const RooUnfoldSvd& rhs)
 {
-  _kterm= rhs._kterm;
+  _kreg= rhs._kreg;
   _ntoyssvd= rhs._ntoyssvd;
-  _prop_errors= rhs._prop_errors;
 }
 
-TUnfHisto*
+TSVDUnfold*
 RooUnfoldSvd::Impl()
 {
   return _svd;
@@ -120,9 +118,19 @@ RooUnfoldSvd::Unfold()
   if (_res->GetDimensionTruth() != 1 || _res->GetDimensionMeasured() != 1) {
     cerr << "RooUnfoldSvd may not work very well for multi-dimensional distributions" << endl;
   }
-
-  _svd= new TUnfHisto (_nt, _nm);
-  if (_prop_errors) _svd->UsePropErrors();
+  if (_nt != _nm) {
+    cerr << "RooUnfoldSvd requires the same number of bins in the truth and measured distributions" << endl;
+    return;
+  }
+  if (_kreg < 0) {
+    cerr << "RooUnfoldSvd invalid kreg: " << _kreg << endl;
+    return;
+  }
+  Int_t nb= _nm < _nt ? _nm : _nt;
+  if (_kreg > nb) {
+    cerr << "RooUnfoldSvd invalid kreg=" << _kreg << " with " << nb << " bins" << endl;
+    return;
+  }
 
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
@@ -130,31 +138,21 @@ RooUnfoldSvd::Unfold()
   _train1d= HistNoOverflow (_res->Hmeasured(), _overflow);
   _truth1d= HistNoOverflow (_res->Htruth(),    _overflow);
   _reshist= _res->HresponseNoOverflow();
-  TH1::AddDirectory (oldstat);
-  if (_nt != _nm) {
-    cerr << "RooUnfoldSvd requires the same number of bins in the truth and measured distributions" << endl;
-    return;
-  }
-  if (_kterm < 0) {
-    cerr << "RooUnfoldSvd invalid kterm: " << _kterm << endl;
-    return;
-  }
-  Int_t nb= _nm < _nt ? _nm : _nt;
-  if (_kterm > nb) {
-    cerr << "RooUnfoldSvd invalid kterm=" << _kterm << " with " << nb << " bins" << endl;
-    return;
-  }
 
-  if (_verbose>=1) cout << "SVD init " << _reshist->GetNbinsX() << " x " << _reshist->GetNbinsY() << " bins" << endl;
-  _svd->init (_meas1d, _train1d, _truth1d, _reshist, false);
+  if (_verbose>=1) cout << "SVD init " << _reshist->GetNbinsX() << " x " << _reshist->GetNbinsY()
+                        << " bins, kreg=" << _kreg << endl;
+  _svd= new TSVDUnfold (_meas1d, _train1d, _truth1d, _reshist);
+
+  TH1D* rechist= _svd->Unfold (_kreg);
 
   _rec.ResizeTo (_nt);
-  if (_verbose>=1) cout << "SVD unfold kterm=" << _kterm << endl;
-  _rec= _svd->Unfold (_kterm);
-  Double_t sf= (_truth1d->Integral() / _train1d->Integral()) * _meas1d->Integral();
   for (Int_t i= 0; i<_nt; i++) {
-    _rec[i] *= sf;
+    _rec[i]= rechist->GetBinContent(i+1);
   }
+
+  delete rechist;
+  TH1::AddDirectory (oldstat);
+
   _unfolded= true;
   _haveCov=  false;
 }
@@ -162,34 +160,32 @@ RooUnfoldSvd::Unfold()
 void
 RooUnfoldSvd::GetCov()
 {
-  TMatrixD covMeas(_nm,_nm);
+  Bool_t oldstat= TH1::AddDirectoryStatus();
+  TH1::AddDirectory (kFALSE);
+  TH2D* meascov= new TH2D ("meascov", "meascov", _nm, 0.0, 1.0, _nm, 0.0, 1.0);
   Int_t first= _overflow ? 0 : 1;
   for (Int_t i= 0; i<_nm; i++) {
     Double_t err= _meas->GetBinError(i+first);
-    covMeas(i,i)= err*err;
+    meascov->SetBinContent (i+1, i+1, err*err);
   }
 
-  //Get the covariance matrix for statistical uncertainties on measured spectrum
+  //Get the covariance matrix for statistical uncertainties on the measured distribution
+  TH2D* unfoldedCov= _svd->GetUnfoldCovMatrix (meascov, _ntoyssvd);
+  //Get the covariance matrix for statistical uncertainties on the response matrix
+  TH2D* adetCov=     _svd->GetAdetCovMatrix   (_ntoyssvd);
+
   _cov.ResizeTo (_nt, _nt);
-  TMatrixD ucovTrain(_nt,_nt);
-  if (!_prop_errors){
-      _cov= _svd->GetCov(covMeas, _meas1d, _ntoyssvd, _kterm);
-      //Get the covariance matrix for statistical uncertainties on signal MC
-      ucovTrain=_svd->GetMatStatCov (_ntoyssvd, _kterm);
-  }
-  else{
-    _cov= _svd->GetCovProp();
-  }
-  Double_t sf= (_truth1d->Integral() / _train1d->Integral()) * _meas1d->Integral();
-  Double_t sf2= sf*sf;
   for (Int_t i= 0; i<_nt; i++) {
     for (Int_t j= 0; j<_nt; j++) {
-        if (!_prop_errors){
-            _cov(i,j) += ucovTrain(i,j);
-        }
-      _cov(i,j) *= sf2;
+      _cov(i,j)= unfoldedCov->GetBinContent(i+1,j+1) + adetCov->GetBinContent(i+1,j+1);
     }
   }
+
+  delete adetCov;
+  delete unfoldedCov;
+  delete meascov;
+  TH1::AddDirectory (oldstat);
+
   _haveCov= true;
 }
 
@@ -199,12 +195,4 @@ RooUnfoldSvd::GetSettings(){
     _maxparm=_meas->GetNbinsX();
     _stepsizeparm=1;
     _defaultparm=_meas->GetNbinsX()/2;
-}
-
-void 
-RooUnfoldSvd::UsePropErrors(Bool_t PE)
-{
-    //Allows covariance matrix calculation by propagation of errors
-    //At present this produces very large error bars
-    _prop_errors=PE;
 }

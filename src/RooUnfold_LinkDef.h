@@ -13,7 +13,6 @@
 #pragma link C++ class RooUnfoldSvd+;
 #pragma link C++ class RooUnfoldBinByBin+;
 #pragma link C++ class RooUnfoldResponse-;
-#pragma link C++ class TUnfHisto;
 #pragma link C++ class RooUnfoldErrors+;
 #pragma link C++ class RooUnfoldParms+;
 #pragma link C++ class RooUnfoldInvert+;
@@ -23,6 +22,8 @@
 #ifdef HAVE_DAGOSTINI
 #pragma link C++ class RooUnfoldDagostini+;
 #endif
-
+#ifdef HAVE_TSVDUNFOLD
+#pragma link C++ class TSVDUnfold+;
+#endif
 
 #endif

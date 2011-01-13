@@ -1,6 +1,14 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         12-Jan-2011
+  o RooUnfoldSvd now uses TSVDUnfold, which is based on Kerstin Tackmann's
+    old implementation class, RooUnfHistoSvd. TSVDUnfold is included in
+    ROOT 2.28 and later, but RooUnfold has a copy which is used with older
+    versions of ROOT.
+  o Reorder settings in GNUMakefile and add some comments on the various
+    optional parts.
+
 Tim Adye         11-Jan-2011
   o Add -lFoam -lMathMore to link (required by RooFit for some installations)
     and only link against these extra libraries if present in $ROOTSYS/lib.

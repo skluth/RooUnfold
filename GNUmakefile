@@ -35,16 +35,20 @@
 #===============================================================================
 
 # === ROOT setup ===============================================================
+
+ROOTSYS      ?= ERROR_RootSysIsNotDefined
+
 -include $(ROOTSYS)/test/Makefile.arch
 ifeq ($(ROOTCONFIG),)
 ROOTCONFIG    = $(ROOTSYS)/bin/root-config
 endif
+
 ifeq ($(ARCH),)
 # === This section is just in case ROOT's test/Makefile.arch didn't work =======
 out := $(shell echo "$(ROOTSYS)/test/Makefile.arch not found - trying a basic Linux config" >&2)
-ARCH          =   $(shell $(ROOTCONFIG) --arch)
-ROOTLIBS      =   $(shell $(ROOTCONFIG) --libs)
-CXXFLAGS      =   $(shell $(ROOTCONFIG) --cflags)
+ARCH          = $(shell $(ROOTCONFIG) --arch)
+ROOTLIBS      = $(shell $(ROOTCONFIG) --libs)
+CXXFLAGS      = $(shell $(ROOTCONFIG) --cflags)
 CXX           = g++
 CXXFLAGS     += -Wall -fPIC
 LD            = g++
@@ -71,11 +75,9 @@ else
 _             = @
 endif
 
-# === RooUnfold directories and options ========================================
+# === RooUnfold directories ========================================
 
-ifneq ($(findstring g++,$(CXX)),)
-MFLAGS        = -MM
-endif
+PACKAGE       = RooUnfold
 SRCDIR        = $(CURDIR)/src/
 INCDIR        = $(SRCDIR)
 WORKDIR       = $(CURDIR)/tmp/$(ARCH)/
@@ -83,22 +85,14 @@ LIBDIR        = $(CURDIR)/
 SHLIBDIR      = $(CURDIR)/
 EXEDIR        = $(CURDIR)/
 EXESRC        = $(CURDIR)/examples/
-INCLUDES      = -I$(INCDIR)
 HTMLDOC       = htmldoc
-CXX          += $(EXTRAINCLUDES)
-LDFLAGS      += $(EXTRALDFLAGS)
-
-# === Internal configuration ===================================================
-
-ROOTSYS      ?= ERROR_RootSysIsNotDefined
-
-PACKAGE       = RooUnfold
 OBJDIR        = $(WORKDIR)obj/
 DEPDIR        = $(WORKDIR)dep/
-CPPFLAGS     += -DMAKEBUILD
-FFFLAGS      += -fPIC
-EXCLUDE       =
 
+# === RooUnfold options ===================================================
+
+# Only provide RooUnfoldTUnfold if TUnfold is available.
+# TUnfold is included in ROOT 5.22 and later. 
 ifeq ($(HAVE_TUNFOLD),)
 ifneq ($(wildcard $(ROOTINCDIR)/TUnfold.h),)
 HAVE_TUNFOLD  = 1
@@ -110,6 +104,8 @@ CPPFLAGS     += -DNOTUNFOLD
 EXCLUDE      += RooUnfoldTUnfold.cxx RooUnfoldTUnfold.h
 endif
 
+# RooUnfoldDagostini is an interface to D'Agostini's implementation
+# of his algorithm. To use this, put it in src/bayes.for and src/bayes_c.for.
 ifeq ($(HAVE_DAGOSTINI),)
 ifneq ($(wildcard $(SRCDIR)/bayes.for),)
 HAVE_DAGOSTINI = 1
@@ -124,6 +120,22 @@ else
 EXCLUDE      += RooUnfoldDagostini.cxx RooUnfoldDagostini.h
 endif
 
+# TSVDUnfold is included in ROOT 5.28 and later. In earlier versions, use our own copy.
+ifeq ($(HAVE_TSVDUNFOLD),)
+ifeq ($(wildcard $(ROOTINCDIR)/TSVDUnfold.h),)
+HAVE_TSVDUNFOLD = 1
+endif
+endif
+
+ifeq ($(HAVE_TSVDUNFOLD),1)
+CPPFLAGS     += -DHAVE_TSVDUNFOLD
+else
+EXCLUDE      += TSVDUnfold.cxx TSVDUnfold.h
+endif
+
+# RooFit is included in ROOT if ROOT was compiled with --enable-roofit.
+# We only use it for better-normalised test distributions in RooUnfoldTest
+# (uses examples/RooUnfoldTestPdfRooFit.icc instead of examples/RooUnfoldTestPdf.icc).
 ifeq ($(NOROOFIT),)
 ifneq ($(shell $(ROOTCONFIG) --has-roofit),yes)
 out := $(shell echo "This version of ROOT does not support RooFit. We will build the test programs without it." >&2)
@@ -143,6 +155,8 @@ ROOFITLIBS   += -lRooFit
 ROOFITLIBS   += $(patsubst $(ROOTSYS)/lib/lib%.$(DllSuf),-l%,$(wildcard $(patsubst %,$(ROOTSYS)/lib/lib%.$(DllSuf),RooFitCore Thread Minuit Foam MathMore Html)))
 endif
 
+# === Internal configuration ===================================================
+
 MAIN          = $(filter-out $(EXCLUDE),$(notdir $(wildcard $(EXESRC)*.cxx)))
 MAINEXE       = $(addprefix $(EXEDIR),$(patsubst %.cxx,%$(ExeSuf),$(MAIN)))
 LINKDEF       = $(INCDIR)$(PACKAGE)_LinkDef.h
@@ -154,6 +168,15 @@ STATICLIBNAME = $(PACKAGE)_static
 LIBFILE       = $(LIBDIR)lib$(LIBNAME).a
 STATICLIBFILE = $(LIBDIR)lib$(STATICLIBNAME).a
 SHLIBFILE     = $(SHLIBDIR)lib$(LIBNAME).$(DllSuf)
+
+CPPFLAGS     += -DMAKEBUILD
+FFFLAGS      += -fPIC
+ifneq ($(findstring g++,$(CXX)),)
+MFLAGS        = -MM
+endif
+INCLUDES      = -I$(INCDIR)
+CXX          += $(EXTRAINCLUDES)
+LDFLAGS      += $(EXTRALDFLAGS)
 
 ifneq ($(SHARED),)
 LIBS          = -L$(SHLIBDIR)
@@ -240,7 +263,6 @@ $(OBJDIR)%.o : $(EXESRC)%.cxx $(HDEP)
 	@mkdir -p $(OBJDIR)
 	$(_)$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ $(INCLUDES)
 
-
 # === Explicit rules ===========================================================
 
 default : shlib
@@ -264,7 +286,7 @@ $(LIBFILE) : $(OLIST) $(CINTOBJ)
 # Assumes $(LIBFILE) and $(STATICLIBFILE) are in the same directory
 $(STATICLIBFILE) : $(LIBFILE)
 	@rm -f $@
-	$(_)ln -s $(notdir $<) $@
+	$(_)ln -s $(patsubst $(dir $@)%,%,$<) $@
 
 # Rule to combine objects into a shared library
 $(SHLIBFILE) : $(OLIST) $(CINTOBJ)
