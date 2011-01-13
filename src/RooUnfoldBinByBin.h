@@ -3,7 +3,7 @@
 //      $Id$
 //
 // Description:
-//      Unfolding class using the bin by bin method of conversion factors. 
+//      Unfolding class using the bin by bin method of conversion factors.
 //
 // Authors: Richard Claridge <richard.claridge@stfc.ac.uk> & Tim Adye <T.J.Adye@rl.ac.uk>
 //
@@ -37,12 +37,40 @@ protected:
   virtual void GetSettings();
 
 public:
-  ClassDef (RooUnfoldBinByBin, 0) 
+  ClassDef (RooUnfoldBinByBin, 0)  // Bin-by-bin unfolding
 };
 
-inline RooUnfoldBinByBin::RooUnfoldBinByBin()                                           : RooUnfold()           {GetSettings();}
-inline RooUnfoldBinByBin::RooUnfoldBinByBin (const char* name, const char* title)       : RooUnfold(name,title) {GetSettings();}
-inline RooUnfoldBinByBin::RooUnfoldBinByBin (const TString& name, const TString& title) : RooUnfold(name,title) {GetSettings();}
-inline RooUnfoldBinByBin& RooUnfoldBinByBin::operator= (const RooUnfoldBinByBin& rhs) {Assign(rhs); return *this;}
+
+inline
+RooUnfoldBinByBin::RooUnfoldBinByBin()
+  : RooUnfold()
+{
+  // Default constructor. Use Setup() to prepare for unfolding.
+  GetSettings();
+}
+
+inline
+RooUnfoldBinByBin::RooUnfoldBinByBin (const char* name, const char* title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  GetSettings();
+}
+
+inline
+RooUnfoldBinByBin::RooUnfoldBinByBin (const TString& name, const TString& title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  GetSettings();
+}
+
+inline
+RooUnfoldBinByBin& RooUnfoldBinByBin::operator= (const RooUnfoldBinByBin& rhs)
+{
+  // Assignment operator for copying RooUnfoldBinByBin settings.
+  Assign(rhs);
+  return *this;
+}
 
 #endif /*ROOUNFOLDBINBYBIN_H_*/

@@ -41,6 +41,7 @@ ClassImp (RooUnfoldInvert);
 RooUnfoldInvert::RooUnfoldInvert (const RooUnfoldInvert& rhs)
   : RooUnfold (rhs)
 {
+  // Copy constructor.
   Init();
 }
 
@@ -48,6 +49,7 @@ RooUnfoldInvert::RooUnfoldInvert (const RooUnfoldResponse* res, const TH1* meas,
                             const char* name, const char* title)
   : RooUnfold (res, meas, name, title)
 {
+  // Constructor with response matrix object and measured unfolding input histogram.
   Init();
 }
 

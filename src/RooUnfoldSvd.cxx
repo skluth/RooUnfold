@@ -46,6 +46,7 @@ ClassImp (RooUnfoldSvd);
 RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldSvd& rhs)
   : RooUnfold (rhs)
 {
+  // Copy constructor.
   Init();
   CopyData (rhs);
 }
@@ -54,6 +55,8 @@ RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t
                             const char* name, const char* title)
   : RooUnfold (res, meas, name, title), _kreg(kreg ? kreg : meas->GetNbinsX()/2), _ntoyssvd(ntoyssvd)
 {
+  // Constructor with response matrix object and measured unfolding input histogram.
+  // The regularisation parameter is kreg.
   Init();
 }
 

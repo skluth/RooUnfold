@@ -145,42 +145,229 @@ public:
 
 // Inline method definitions
 
-inline RooUnfoldResponse::RooUnfoldResponse()                                           : TNamed()           {Init();}
-inline RooUnfoldResponse::RooUnfoldResponse (const char*    name, const char*    title) : TNamed(name,title) {Init();}
-inline RooUnfoldResponse::RooUnfoldResponse (const TString& name, const TString& title) : TNamed(name,title) {Init();}
-inline RooUnfoldResponse::~RooUnfoldResponse()                                                               {Reset();}
+inline
+RooUnfoldResponse::RooUnfoldResponse()
+  : TNamed()
+{
+  // RooUnfoldResponse default constructor. Use Setup() to set values.
+  Init();
+}
 
-inline RooUnfoldResponse& RooUnfoldResponse::Setup (Int_t nb, Double_t xlo, Double_t xhi) { return Setup (nb, xlo, xhi, nb, xlo, xhi); }
+inline
+RooUnfoldResponse::RooUnfoldResponse (const char*    name, const char*    title)
+  : TNamed(name,title)
+{
+  // RooUnfoldResponse default named constructor. Use Setup() to set values.
+  Init();
+}
 
-inline Int_t        RooUnfoldResponse::GetDimensionMeasured() const { return _mdim; }
-inline Int_t        RooUnfoldResponse::GetDimensionTruth()    const { return _tdim; }
-inline Int_t        RooUnfoldResponse::GetNbinsMeasured()     const { return _nm;   }
-inline Int_t        RooUnfoldResponse::GetNbinsTruth()        const { return _nt;   }
+inline
+RooUnfoldResponse::RooUnfoldResponse (const TString& name, const TString& title)
+  : TNamed(name,title)
+{
+  // RooUnfoldResponse default named constructor. Use Setup() to set values.
+  Init();
+}
 
-inline const TH1*   RooUnfoldResponse::Hmeasured()            const { return _mes;  }
-inline TH1*         RooUnfoldResponse::Hmeasured()                  { return _mes;  }
-inline const TH1*   RooUnfoldResponse::Htruth()               const { return _tru;  }
-inline TH1*         RooUnfoldResponse::Htruth()                     { return _tru;  }
-inline const TH2*   RooUnfoldResponse::Hresponse()            const { return _res;  }
-inline TH2*         RooUnfoldResponse::Hresponse()                  { return _res;  }
+inline
+RooUnfoldResponse::~RooUnfoldResponse()
+{
+  // RooUnfoldResponse destructor
+  Reset();
+}
 
-inline const TVectorD& RooUnfoldResponse::Vmeasured()         const { if (!_vMes) _cached= (_vMes= H2V  (_mes, _nm, _overflow)); return *_vMes; }
-inline const TVectorD& RooUnfoldResponse::Emeasured()         const { if (!_eMes) _cached= (_eMes= H2VE (_mes, _nm, _overflow)); return *_eMes; }
-inline const TVectorD& RooUnfoldResponse::Vtruth()            const { if (!_vTru) _cached= (_vTru= H2V  (_tru, _nt, _overflow)); return *_vTru; }
-inline const TVectorD& RooUnfoldResponse::Etruth()            const { if (!_eTru) _cached= (_eTru= H2VE (_tru, _nt, _overflow)); return *_eTru; }
-inline const TMatrixD& RooUnfoldResponse::Mresponse()         const { if (!_mRes) _cached= (_mRes= H2M  (_res, _nm, _nt, _tru, _overflow)); return *_mRes; }
-inline const TMatrixD& RooUnfoldResponse::Eresponse()         const { if (!_eRes) _cached= (_eRes= H2ME (_res, _nm, _nt, _tru, _overflow)); return *_eRes; }
 
-inline Double_t RooUnfoldResponse::operator() (Int_t r, Int_t t) const { return Mresponse()(r,t); }
-inline Int_t    RooUnfoldResponse::GetBin (const TH1* h, Int_t i, Bool_t overflow) { return (h->GetDimension()<2) ? i+(overflow ? 0 : 1) : GetBinDim(h,i); }
-inline Double_t RooUnfoldResponse::GetBinContent (const TH1* h, Int_t i, Bool_t overflow) { return h->GetBinContent (GetBin (h, i, overflow)); }
-inline Double_t RooUnfoldResponse::GetBinError   (const TH1* h, Int_t i, Bool_t overflow) { return h->GetBinError   (GetBin (h, i, overflow)); }
+inline
+RooUnfoldResponse& RooUnfoldResponse::Setup (Int_t nb, Double_t xlo, Double_t xhi)
+{
+  // constructor -  simple 1D case with same binning, measured vs truth
+  return Setup (nb, xlo, xhi, nb, xlo, xhi);
+}
 
-inline Int_t RooUnfoldResponse::Miss (Double_t xt)                          { return                                Miss1D(xt);      }
-inline Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t w)              { return _mdim==2 ? Miss2D(xt,w) :      Miss1D(xt,w);    }
-inline Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t yt, Double_t w) { return _mdim==3 ? Miss(xt,yt,w,1.0) : Miss2D(xt,yt,w); }
 
-inline void RooUnfoldResponse::UseOverflow (Bool_t set) { _overflow= (set ? 1 : 0); }
-inline Bool_t RooUnfoldResponse::UseOverflowStatus() const { return _overflow; }
+inline
+Int_t RooUnfoldResponse::GetDimensionMeasured() const
+{
+  // Dimensionality of the measured distribution (1=1D, 2=2D, 3=3D)
+  return _mdim;
+}
+
+inline
+Int_t RooUnfoldResponse::GetDimensionTruth() const
+{
+  // Dimensionality of the truth distribution (1=1D, 2=2D, 3=3D)
+  return _tdim;
+}
+
+inline
+Int_t RooUnfoldResponse::GetNbinsMeasured() const
+{
+  // Total number of bins in the measured distribution
+  return _nm;
+}
+
+inline
+Int_t RooUnfoldResponse::GetNbinsTruth() const
+{
+  // Total number of bins in the truth distribution
+  return _nt;
+}
+
+
+inline
+const TH1* RooUnfoldResponse::Hmeasured() const
+{
+  // Measured distribution, used for normalisation
+  return _mes;
+}
+
+
+inline
+TH1*         RooUnfoldResponse::Hmeasured()
+{
+  return _mes;
+}
+
+inline
+const TH1*   RooUnfoldResponse::Htruth() const
+{
+  // Truth distribution, used for normalisation
+  return _tru;
+}
+
+inline
+TH1*         RooUnfoldResponse::Htruth()
+{
+  return _tru;
+}
+
+inline
+const TH2*   RooUnfoldResponse::Hresponse() const
+{
+  // Response matrix as a 2D-histogram: (x,y)=(measured,truth)
+  return _res;
+}
+
+inline
+TH2*         RooUnfoldResponse::Hresponse()
+{
+  return _res;
+}
+
+
+inline
+const TVectorD& RooUnfoldResponse::Vmeasured() const
+{
+  // Measured distribution as a TVectorD
+  if (!_vMes) _cached= (_vMes= H2V  (_mes, _nm, _overflow));
+  return *_vMes;
+}
+
+inline
+const TVectorD& RooUnfoldResponse::Emeasured() const
+{
+  // Measured distribution errors as a TVectorD
+  if (!_eMes) _cached= (_eMes= H2VE (_mes, _nm, _overflow));
+  return *_eMes;
+}
+
+inline
+const TVectorD& RooUnfoldResponse::Vtruth() const
+{
+  // Truth distribution as a TVectorD
+  if (!_vTru) _cached= (_vTru= H2V  (_tru, _nt, _overflow)); 
+  return *_vTru;
+}
+
+inline
+const TVectorD& RooUnfoldResponse::Etruth() const
+{
+  // Truth distribution errors as a TVectorD
+  if (!_eTru) _cached= (_eTru= H2VE (_tru, _nt, _overflow)); 
+  return *_eTru;
+}
+
+inline
+const TMatrixD& RooUnfoldResponse::Mresponse() const
+{
+  // Response matrix as a TMatrixD: (row,column)=(measured,truth)
+  if (!_mRes) _cached= (_mRes= H2M  (_res, _nm, _nt, _tru, _overflow)); 
+  return *_mRes;
+}
+
+inline
+const TMatrixD& RooUnfoldResponse::Eresponse() const
+{
+  // Response matrix errors as a TMatrixD: (row,column)=(measured,truth)
+  if (!_eRes) _cached= (_eRes= H2ME (_res, _nm, _nt, _tru, _overflow)); 
+  return *_eRes;
+}
+
+
+inline
+Double_t RooUnfoldResponse::operator() (Int_t r, Int_t t) const
+{
+  // Response matrix element (measured,truth)
+  return Mresponse()(r,t);
+}
+
+inline
+Int_t    RooUnfoldResponse::GetBin (const TH1* h, Int_t i, Bool_t overflow)
+{
+  // vector index (0..nx*ny-1) -> multi-dimensional histogram
+  // global bin number (0..(nx+2)*(ny+2)-1) skipping under/overflow bins
+  return (h->GetDimension()<2) ? i+(overflow ? 0 : 1) : GetBinDim(h,i);
+}
+
+inline
+Double_t RooUnfoldResponse::GetBinContent (const TH1* h, Int_t i, Bool_t overflow)
+{
+  // Bin content by vector index
+  return h->GetBinContent (GetBin (h, i, overflow));
+}
+
+inline
+Double_t RooUnfoldResponse::GetBinError   (const TH1* h, Int_t i, Bool_t overflow)
+{
+  // Bin error   by vector index
+  return h->GetBinError   (GetBin (h, i, overflow));
+}
+
+
+inline
+Int_t RooUnfoldResponse::Miss (Double_t xt)
+{
+  // Fill missed event into 1D Response Matrix
+  return Miss1D(xt);
+}
+
+inline
+Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t w)
+{
+  // Fill missed event into 1D (with weight) or 2D Response Matrix
+  return _mdim==2 ? Miss2D(xt,w) : Miss1D(xt,w);
+}
+
+inline
+Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t yt, Double_t w)
+{
+  // Fill missed event into 2D (with weight) or 3D Response Matrix
+  return _mdim==3 ? Miss(xt,yt,w,1.0) : Miss2D(xt,yt,w);
+}
+
+
+inline
+void RooUnfoldResponse::UseOverflow (Bool_t set)
+{
+  // Specify to use overflow bins
+  _overflow= (set ? 1 : 0);
+}
+
+inline
+Bool_t RooUnfoldResponse::UseOverflowStatus() const
+{
+  // Get UseOverflow setting
+  return _overflow;
+}
 
 #endif

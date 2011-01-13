@@ -46,6 +46,7 @@ ClassImp (RooUnfoldTUnfold);
 RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldTUnfold& rhs)
   : RooUnfold (rhs)
 {
+  // Copy constructor.
   Init();
   CopyData (rhs);
 }
@@ -54,6 +55,7 @@ RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* mea
                             const char* name, const char* title)
   : RooUnfold (res, meas, name, title),_reg_method(reg)
 {
+  // Constructor with response matrix object and measured unfolding input histogram.
   Init();
 }
 
@@ -217,15 +219,16 @@ RooUnfoldTUnfold::GetCov()
 void 
 RooUnfoldTUnfold::FixTau(Double_t tau)
 {
-    _tau=tau;
-    tau_set=true;
+  // Fix regularisation parameter to a specified value
+  _tau=tau;
+  tau_set=true;
 }
 
 void
 RooUnfoldTUnfold::SetRegMethod(TUnfold::ERegMode regmethod)
 {
-    /*
-    Decides the regularisation method.
+  /*
+    Specifies the regularisation method:
 
       regemthod setting             regularisation
       ===========================   ==============
@@ -233,15 +236,15 @@ RooUnfoldTUnfold::SetRegMethod(TUnfold::ERegMode regmethod)
       TUnfold::kRegModeSize         minimize the size of (x-x0)
       TUnfold::kRegModeDerivative   minimize the 1st derivative of (x-x0)
       TUnfold::kRegModeCurvature    minimize the 2nd derivative of (x-x0)
-      kRegModeDerivative and kRegModeCurvature are the optimal settings for a 1D input
-     */
-    _reg_method=regmethod;
+   */
+  _reg_method=regmethod;
 }
 
 void
 RooUnfoldTUnfold::OptimiseTau()
 {
-    tau_set=false;
+  // Choose optimal regularisation parameter
+  tau_set=false;
 }
 
 void

@@ -32,10 +32,10 @@ public:
   virtual RooUnfoldDagostini* Clone (const char* newname= 0) const;
   RooUnfoldDagostini (const RooUnfoldResponse* res, const TH1* meas, Int_t niter= 4, const char* name=0, const char* title=0);
 
-  void SetIterations (Int_t niter= 4)  { _niter= niter; }
-  Int_t GetIterations() const { return _niter; }
-  virtual void  SetRegParm (Double_t parm) { SetIterations(Int_t(parm+0.5)); }
-  virtual Double_t GetRegParm() const { return GetIterations(); }
+  void SetIterations (Int_t niter= 4);
+  Int_t GetIterations() const;
+  virtual void  SetRegParm (Double_t parm);
+  virtual Double_t GetRegParm() const;
 
   virtual void Reset();
 
@@ -51,14 +51,72 @@ private:
 protected:
   // instance variables
   Int_t _niter;
-  
+
 public:
-  ClassDef (RooUnfoldDagostini, 0) 
+  ClassDef (RooUnfoldDagostini, 0) // Bayesian Unfolding
 };
 
-inline RooUnfoldDagostini::RooUnfoldDagostini()                                           : RooUnfold()           {Init();}
-inline RooUnfoldDagostini::RooUnfoldDagostini (const char* name, const char* title)       : RooUnfold(name,title) {Init();}
-inline RooUnfoldDagostini::RooUnfoldDagostini (const TString& name, const TString& title) : RooUnfold(name,title) {Init();}
-inline RooUnfoldDagostini& RooUnfoldDagostini::operator= (const RooUnfoldDagostini& rhs) {Assign(rhs); return *this;}
+// Inline method definitions
+
+inline
+RooUnfoldDagostini::RooUnfoldDagostini()
+  : RooUnfold()
+{
+  // Default constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldDagostini::RooUnfoldDagostini (const char* name, const char* title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldDagostini::RooUnfoldDagostini (const TString& name, const TString& title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldDagostini& RooUnfoldDagostini::operator= (const RooUnfoldDagostini& rhs)
+{
+  // Assignment operator for copying RooUnfoldDagostini settings.
+  Assign(rhs);
+  return *this;
+}
+
+
+inline
+void RooUnfoldDagostini::SetIterations (Int_t niter)
+{
+  // Set regularisation parameter (number of iterations)
+  _niter= niter;
+}
+
+inline
+Int_t RooUnfoldDagostini::GetIterations() const
+{
+  // Return regularisation parameter (number of iterations)
+  return _niter;
+}
+
+inline
+void RooUnfoldDagostini::SetRegParm (Double_t parm)
+{
+  // Set regularisation parameter (number of iterations)
+  SetIterations(Int_t(parm+0.5));
+}
+
+inline
+Double_t RooUnfoldDagostini::GetRegParm() const
+{
+  // Return regularisation parameter (number of iterations)
+  return GetIterations();
+}
 
 #endif /*ROOUNFOLDDAGOSTINI_H_*/

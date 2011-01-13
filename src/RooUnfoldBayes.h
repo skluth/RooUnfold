@@ -41,13 +41,13 @@ public:
   RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, Int_t niter= 4, Bool_t smoothit= false,
                   const char* name= 0, const char* title= 0);
 
-  void SetIterations (Int_t niter= 4)         { _niter=    niter;    }
-  void SetSmoothing  (Bool_t smoothit= false) { _smoothit= smoothit; }
-  Int_t GetIterations() const { return _niter;    }
-  Int_t GetSmoothing()  const { return _smoothit; }
+  void SetIterations (Int_t niter= 4);
+  void SetSmoothing  (Bool_t smoothit= false);
+  Int_t GetIterations() const;
+  Int_t GetSmoothing()  const;
 
-  virtual void  SetRegParm (Double_t parm) { SetIterations(Int_t(parm+0.5)); }
-  virtual Double_t GetRegParm() const { return GetIterations(); }
+  virtual void  SetRegParm (Double_t parm);
+  virtual Double_t GetRegParm() const;
   virtual void Reset();
   virtual void Print (Option_t* option= "") const;
   RooUnfoldBayesImpl* Impl();
@@ -81,9 +81,80 @@ public:
 
 // Inline method definitions
 
-inline RooUnfoldBayes::RooUnfoldBayes()                                           : RooUnfold()           {Init();}
-inline RooUnfoldBayes::RooUnfoldBayes (const char* name, const char* title)       : RooUnfold(name,title) {Init();}
-inline RooUnfoldBayes::RooUnfoldBayes (const TString& name, const TString& title) : RooUnfold(name,title) {Init();}
-inline RooUnfoldBayes& RooUnfoldBayes::operator= (const RooUnfoldBayes& rhs) {Assign(rhs); return *this;}
+inline
+RooUnfoldBayes::RooUnfoldBayes()
+  : RooUnfold()
+{
+  // Default constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldBayes::RooUnfoldBayes (const char* name, const char* title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldBayes::RooUnfoldBayes (const TString& name, const TString& title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldBayes& RooUnfoldBayes::operator= (const RooUnfoldBayes& rhs)
+{
+  // Assignment operator for copying RooUnfoldBayes settings.
+  Assign(rhs);
+  return *this;
+}
+
+
+inline
+void RooUnfoldBayes::SetIterations (Int_t niter)
+{
+  // Set regularisation parameter (number of iterations)
+  _niter= niter;
+}
+
+inline
+void RooUnfoldBayes::SetSmoothing (Bool_t smoothit)
+{
+  // Enable smoothing
+  _smoothit= smoothit;
+}
+
+inline
+Int_t RooUnfoldBayes::GetIterations() const
+{
+  // Return regularisation parameter (number of iterations)
+  return _niter;
+}
+
+inline
+Int_t RooUnfoldBayes::GetSmoothing()  const
+{
+  // Return smoothing setting
+  return _smoothit;
+}
+
+
+inline
+void  RooUnfoldBayes::SetRegParm (Double_t parm)
+{
+  // Set regularisation parameter (number of iterations)
+  SetIterations(Int_t(parm+0.5));
+}
+
+inline
+Double_t RooUnfoldBayes::GetRegParm() const
+{
+  // Return regularisation parameter (number of iterations)
+  return GetIterations();
+}
 
 #endif

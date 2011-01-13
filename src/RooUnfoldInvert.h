@@ -48,14 +48,43 @@ private:
 protected:
   // instance variables
   TDecompSVD* _svd;
-  
+
 public:
-  ClassDef (RooUnfoldInvert, 0) 
+  ClassDef (RooUnfoldInvert, 0)  // Unregularised unfolding
 };
 
-inline RooUnfoldInvert::RooUnfoldInvert()                                           : RooUnfold()           {Init();}
-inline RooUnfoldInvert::RooUnfoldInvert (const char* name, const char* title)       : RooUnfold(name,title) {Init();}
-inline RooUnfoldInvert::RooUnfoldInvert (const TString& name, const TString& title) : RooUnfold(name,title) {Init();}
-inline RooUnfoldInvert& RooUnfoldInvert::operator= (const RooUnfoldInvert& rhs) {Assign(rhs); return *this;}
+// Inline method definitions
+
+inline
+RooUnfoldInvert::RooUnfoldInvert()
+  : RooUnfold()
+{
+  // Default constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldInvert::RooUnfoldInvert (const char* name, const char* title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldInvert::RooUnfoldInvert (const TString& name, const TString& title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldInvert& RooUnfoldInvert::operator= (const RooUnfoldInvert& rhs)
+{
+  // Assignment operator for copying RooUnfoldInvert settings.
+  Assign(rhs);
+  return *this;
+}
 
 #endif /*ROOUNFOLDINVERT_H_*/

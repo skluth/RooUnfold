@@ -9,6 +9,11 @@
 //
 //==============================================================================
 
+//____________________________________________________________
+/* BEGIN_HTML
+<p>A helper class designed to store an 2 dimensional array as a 1-D array.</p>
+END_HTML */
+
 #include "Array2D.h"
 
 ClassImp(Array2D);

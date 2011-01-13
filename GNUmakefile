@@ -105,7 +105,8 @@ EXCLUDE      += RooUnfoldTUnfold.cxx RooUnfoldTUnfold.h
 endif
 
 # RooUnfoldDagostini is an interface to D'Agostini's implementation
-# of his algorithm. To use this, put it in src/bayes.for and src/bayes_c.for.
+# of his algorithm: http://www.roma1.infn.it/~dagos/bayes_distr.txt .
+# To use this, put it in src/bayes.for and src/bayes_c.for.
 ifeq ($(HAVE_DAGOSTINI),)
 ifneq ($(wildcard $(SRCDIR)/bayes.for),)
 HAVE_DAGOSTINI = 1

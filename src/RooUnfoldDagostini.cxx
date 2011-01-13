@@ -14,7 +14,7 @@
 /* BEGIN_HTML
 <p>Unfolding interface to Fortran routine, BAYES, by G. D'Agostini from
 http://www.roma1.infn.it/~dagos/bayes_distr.txt .
-This class is only compiled if bayes.for and bayes_c.for are placed in
+The Makefile only compiles this class if bayes.for and bayes_c.for are placed in
 the src directory.
 END_HTML */
 
@@ -59,6 +59,7 @@ ClassImp (RooUnfoldDagostini);
 RooUnfoldDagostini::RooUnfoldDagostini (const RooUnfoldDagostini& rhs)
   : RooUnfold (rhs)
 {
+  // Copy constructor.
   Init();
   _niter= rhs._niter;
 }
@@ -67,6 +68,8 @@ RooUnfoldDagostini::RooUnfoldDagostini (const RooUnfoldResponse* res, const TH1*
                             Int_t niter, const char* name, const char* title)
   : RooUnfold (res, meas, name, title), _niter(niter)
 {
+  // Constructor with response matrix object and measured unfolding input histogram.
+  // The regularisation parameter is niter (number of iterations).
   Init();
 }
 

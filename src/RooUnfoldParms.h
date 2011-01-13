@@ -46,6 +46,6 @@ class RooUnfoldParms : public TNamed {
     Double_t _minparm; //Minimum parameter
     Double_t _stepsizeparm; //Step size
 public:
-    ClassDef (RooUnfoldParms, 0)
+    ClassDef (RooUnfoldParms, 0)  // Optimisation of unfolding regularisation parameter
 };
 #endif /*ROOUNFOLDPARMS_H_*/

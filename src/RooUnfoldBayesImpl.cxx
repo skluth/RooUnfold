@@ -48,6 +48,11 @@
 //
 //==============================================================================
 
+//____________________________________________________________
+/* BEGIN_HTML
+<p>Implementation class for Bayesian unfolding.</p>
+END_HTML */
+
 #include "RooUnfoldBayesImpl.h"
 
 #include <vector>
@@ -78,9 +83,9 @@ using std::exit;
 ClassImp(RooUnfoldBayesImpl);
 
 //-------------------------------------------------------------------------
-// default constructor
 RooUnfoldBayesImpl::RooUnfoldBayesImpl(): TNamed()
 {
+  // default constructor
   init();
 }
 

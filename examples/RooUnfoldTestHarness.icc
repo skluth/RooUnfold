@@ -72,10 +72,12 @@ using std::endl;
 
 void RooUnfoldTestHarness::Parms (ArgVars& args)
 {
-  TString methodHelp;
-  methodHelp.Form ("unfolding method: %d=none, %d=Bayes, %d=SVD, %d=bin-by-bin, %d=TUnfold, %d=invert",
-                   RooUnfold::kNone,     RooUnfold::kBayes,   RooUnfold::kSVD,
+  TString methodHelp, methodHelp2;  // TString::Form seems to be limited to 4 parameters in CINT.
+  methodHelp.Form ("unfolding method: %d=none, %d=Bayes, %d=SVD, ",
+                   RooUnfold::kNone,     RooUnfold::kBayes,   RooUnfold::kSVD);
+  methodHelp2.Form("%d=bin-by-bin, %d=TUnfold, %d=invert",
                    RooUnfold::kBinByBin, RooUnfold::kTUnfold, RooUnfold::kInvert);
+  methodHelp += methodHelp2;
   args.Add ("method",  &method,       RooUnfold::kBayes, methodHelp.Data());
   args.Add ("stage",   &stage,        0, "1=train (writes RooUnfoldTest.root), 2=test (reads), 0=both (default)");
   args.Add ("ftrainx", &ftrainx,      0, "training X PDF: 0=flat, 1=top-hat, 2=Gaussian, 3=double exp, 4=B-W, 5=double B-W, 6=exp, 7=Gaussian+exp");

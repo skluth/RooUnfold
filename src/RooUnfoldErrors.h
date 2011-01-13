@@ -44,6 +44,6 @@ private:
   
 public:
 
-  ClassDef (RooUnfoldErrors, 0)
+  ClassDef (RooUnfoldErrors, 0)  // Show unfolding errors
 };
 #endif

@@ -50,6 +50,7 @@ ClassImp (RooUnfoldBayes);
 RooUnfoldBayes::RooUnfoldBayes (const RooUnfoldBayes& rhs)
   : RooUnfold (rhs)
 {
+  // Copy constructor.
   Init();
   CopyData (rhs);
 }
@@ -58,12 +59,15 @@ RooUnfoldBayes::RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, I
                                 const char* name, const char* title)
   : RooUnfold (res, meas, name, title), _niter(niter), _smoothit(smoothit)
 {
+  // Constructor with response matrix object and measured unfolding input histogram.
+  // The regularisation parameter is niter (number of iterations).
   Init();
 }
 
 RooUnfoldBayes*
 RooUnfoldBayes::Clone (const char* newname) const
 {
+  // Creates a copy of the RooUnfoldBayes object
   RooUnfoldBayes* unfold= new RooUnfoldBayes(*this);
   if (newname && strlen(newname)) unfold->SetName(newname);
   return unfold;

@@ -139,7 +139,7 @@ protected:
 
 public:
 
-  ClassDef (RooUnfold, 0) // Unfold
+  ClassDef (RooUnfold, 0) // Unfolding base class: implementations in RooUnfoldBayes, RooUnfoldSvd, RooUnfoldBinByBin, RooUnfoldTUnfold, and RooUnfoldInvert
 };
 
 //==============================================================================

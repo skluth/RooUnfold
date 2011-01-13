@@ -39,13 +39,13 @@ public:
   RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kreg= 0, Int_t ntoyssvd= 1000,
                 const char* name= 0, const char* title= 0);
 
-  void SetKterm (Int_t kreg) { _kreg= kreg; }
-  void SetNtoysSVD (Int_t ntoyssvd) { _ntoyssvd= ntoyssvd; }
-  Int_t GetKterm() const { return _kreg; }
-  Int_t GetNtoysSVD() const { return _ntoyssvd; }
+  void SetKterm (Int_t kreg);
+  void SetNtoysSVD (Int_t ntoyssvd);
+  Int_t GetKterm() const;
+  Int_t GetNtoysSVD() const;
 
-  virtual void  SetRegParm (Double_t parm) { SetKterm(Int_t(parm+0.5)); }
-  virtual Double_t GetRegParm() const { return GetKterm(); }
+  virtual void  SetRegParm (Double_t parm);
+  virtual Double_t GetRegParm() const;
   virtual void Reset();
   TSVDUnfold* Impl();
 
@@ -70,15 +70,91 @@ protected:
   TH2D *_reshist;
 
 public:
-  ClassDef (RooUnfoldSvd, 0) // SVD Unfolding
+  ClassDef (RooUnfoldSvd, 0) // SVD Unfolding (interface to TSVDUnfold)
 };
 
 // Inline method definitions
 
-inline RooUnfoldSvd::RooUnfoldSvd()                                           : RooUnfold()           {Init();}
-inline RooUnfoldSvd::RooUnfoldSvd (const char* name, const char* title)       : RooUnfold(name,title) {Init();}
-inline RooUnfoldSvd::RooUnfoldSvd (const TString& name, const TString& title) : RooUnfold(name,title) {Init();}
-inline RooUnfoldSvd& RooUnfoldSvd::operator= (const RooUnfoldSvd& rhs) {Assign(rhs); return *this;}
-inline RooUnfoldSvd::~RooUnfoldSvd() {Destroy();}
+inline
+RooUnfoldSvd::RooUnfoldSvd()
+  : RooUnfold()
+{
+  // Default constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldSvd::RooUnfoldSvd (const char* name, const char* title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldSvd::RooUnfoldSvd (const TString& name, const TString& title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldSvd& RooUnfoldSvd::operator= (const RooUnfoldSvd& rhs)
+{
+  // Assignment operator for copying RooUnfoldSvd settings.
+  Assign(rhs);
+  return *this;
+}
+
+inline
+RooUnfoldSvd::~RooUnfoldSvd()
+{
+  Destroy();
+}
+
+
+inline
+void RooUnfoldSvd::SetKterm (Int_t kreg)
+{
+  // Set regularisation parameter
+  _kreg= kreg;
+}
+
+inline
+void RooUnfoldSvd::SetNtoysSVD (Int_t ntoyssvd)
+{
+  // Set number of toys for error calculation
+  _ntoyssvd= ntoyssvd;
+}
+
+inline
+Int_t RooUnfoldSvd::GetKterm() const
+{
+  // Return regularisation parameter
+  return _kreg;
+}
+
+inline
+Int_t RooUnfoldSvd::GetNtoysSVD() const
+{
+  // Return number of toys for error calculation
+  return _ntoyssvd;
+}
+
+
+inline
+void  RooUnfoldSvd::SetRegParm (Double_t parm)
+{
+  // Set regularisation parameter
+  SetKterm(Int_t(parm+0.5));
+}
+
+inline
+Double_t RooUnfoldSvd::GetRegParm() const
+{
+  // Return regularisation parameter
+  return GetKterm();
+}
 
 #endif

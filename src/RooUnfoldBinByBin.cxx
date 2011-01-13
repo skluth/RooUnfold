@@ -31,6 +31,7 @@ ClassImp (RooUnfoldBinByBin);
 RooUnfoldBinByBin::RooUnfoldBinByBin (const RooUnfoldBinByBin& rhs)
   : RooUnfold (rhs)
 {
+  // Copy constructor.
   GetSettings();  
 }
 
@@ -38,6 +39,7 @@ RooUnfoldBinByBin::RooUnfoldBinByBin (const RooUnfoldResponse* res, const TH1* m
                             const char* name, const char* title)
   : RooUnfold (res, meas, name, title)
 {
+  // Constructor with response matrix object and measured unfolding input histogram.
   GetSettings();
 }
 

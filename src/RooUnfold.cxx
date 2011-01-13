@@ -169,7 +169,7 @@ RooUnfold* RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH
 
 RooUnfold* RooUnfold::Clone (const char* newname) const
 {
-    //Creates a copy of the unfold object
+  // Creates a copy of the unfold object
   RooUnfold* unfold= new RooUnfold(*this);
   if (newname && strlen(newname)) unfold->SetName(newname);
   return unfold;
@@ -253,7 +253,7 @@ void RooUnfold::SetResponse (const RooUnfoldResponse* res)
 
 void RooUnfold::Unfold()
 {
-    // Dummy unfolding - just copies input
+  // Dummy unfolding - just copies input
   cout << "********************** " << ClassName() << ": dummy unfolding - just copy input **********************" << endl;
   _rec.ResizeTo (_nt);
   Int_t nb= _nm < _nt ? _nm : _nt;

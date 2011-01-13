@@ -31,18 +31,18 @@ public:
   virtual ~RooUnfoldTUnfold(); // destructor
   RooUnfoldTUnfold& operator= (const RooUnfoldTUnfold& rhs); // assignment operator
   virtual RooUnfoldTUnfold* Clone (const char* newname= 0) const;
-  RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas,TUnfold::ERegMode reg=TUnfold::kRegModeDerivative, 
+  RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas,TUnfold::ERegMode reg=TUnfold::kRegModeDerivative,
                     const char* name= 0, const char* title= 0);
 
   void Reset();
   TUnfold* Impl();
   void FixTau(Double_t tau);
   void OptimiseTau();
-  virtual void SetRegParm(Double_t parm){FixTau(parm);}
-  Double_t GetTau() const { return _tau;    }
-  virtual Double_t GetRegParm() const { return GetTau(); }
+  virtual void SetRegParm(Double_t parm);
+  Double_t GetTau() const;
+  virtual Double_t GetRegParm() const;
   void SetRegMethod (TUnfold::ERegMode regmethod);
-  TUnfold::ERegMode GetRegMethod() const {return _reg_method;}
+  TUnfold::ERegMode GetRegMethod() const;
 
 protected:
   void Init();
@@ -54,22 +54,82 @@ protected:
   void CopyData (const RooUnfoldTUnfold& rhs);
 
 private:
-  TUnfold::ERegMode _reg_method; //Regularisation method 
+  TUnfold::ERegMode _reg_method; //Regularisation method
   TUnfold* _unf; //TUnfold object
   Bool_t tau_set;
   Double_t _tau;
-  
+
 public:
 
-  ClassDef (RooUnfoldTUnfold, 0) 
+  ClassDef (RooUnfoldTUnfold, 0)   // Interface to TUnfold
 };
 
 // Inline method definitions
 
-inline RooUnfoldTUnfold::RooUnfoldTUnfold()                                           : RooUnfold()           {Init();}
-inline RooUnfoldTUnfold::RooUnfoldTUnfold (const char* name, const char* title)       : RooUnfold(name,title) {Init();}
-inline RooUnfoldTUnfold::RooUnfoldTUnfold (const TString& name, const TString& title) : RooUnfold(name,title) {Init();}
-inline RooUnfoldTUnfold& RooUnfoldTUnfold::operator= (const RooUnfoldTUnfold& rhs) {Assign(rhs); return *this;}
-inline RooUnfoldTUnfold::~RooUnfoldTUnfold() {Destroy();}
+inline
+RooUnfoldTUnfold::RooUnfoldTUnfold()
+: RooUnfold()
+{
+  // Default constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldTUnfold::RooUnfoldTUnfold (const char* name, const char* title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldTUnfold::RooUnfoldTUnfold (const TString& name, const TString& title)
+  : RooUnfold(name,title)
+{
+  // Basic named constructor. Use Setup() to prepare for unfolding.
+  Init();
+}
+
+inline
+RooUnfoldTUnfold& RooUnfoldTUnfold::operator= (const RooUnfoldTUnfold& rhs)
+{
+  // Assignment operator for copying RooUnfoldTUnfold settings.
+  Assign(rhs);
+  return *this;
+}
+
+inline
+RooUnfoldTUnfold::~RooUnfoldTUnfold()
+{
+  Destroy();
+}
+
+
+inline
+void RooUnfoldTUnfold::SetRegParm(Double_t parm)
+{
+  // Set regularisation parameter (tau)
+  FixTau(parm);
+}
+
+inline
+Double_t RooUnfoldTUnfold::GetTau() const
+{
+  // Return regularisation parameter (tau)
+  return _tau;
+}
+
+inline
+Double_t RooUnfoldTUnfold::GetRegParm() const
+{
+  // Return regularisation parameter (tau)
+  return _tau;
+}
+
+inline
+TUnfold::ERegMode RooUnfoldTUnfold::GetRegMethod() const
+{
+  return _reg_method;
+}
 
 #endif /*ROOUNFOLDTUNFOLD_H_*/

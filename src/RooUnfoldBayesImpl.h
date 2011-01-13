@@ -146,7 +146,7 @@ private:
   const Array2D&      covariance() const { return *_Vij;   } // return unfold covariance matrix
   Double_t                error()  const { return _nCausesError; }  // return estimated error on number of unfolded events
 
-  ClassDef(RooUnfoldBayesImpl,1) // Bayes Unfolding Algorithms
+  ClassDef(RooUnfoldBayesImpl,1) // Bayesian Unfolding implementation
 };
 
 #endif

@@ -1,6 +1,11 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         13-Jan-2011
+  o Comment methods for RooUnfoldResponse and unfolding algorithm classes
+    for class documentation.
+  o Fix RooUnfoldTest help.
+
 Tim Adye         12-Jan-2011
   o RooUnfoldSvd now uses TSVDUnfold, which is based on Kerstin Tackmann's
     old implementation class, RooUnfHistoSvd. TSVDUnfold is included in
