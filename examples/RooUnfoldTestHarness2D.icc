@@ -204,7 +204,7 @@ void RooUnfoldTestHarness2D::Results()
   lTest->Draw();
   canvas->Update();
 
-  if (onepage>=2 && !ploterrors) {
+  if ((!onepage || onepage>=2) && !ploterrors) {
     canvas->cd(++ipad);
     hTrue->Draw();
     canvas->Update();
