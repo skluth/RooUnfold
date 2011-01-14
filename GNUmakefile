@@ -171,7 +171,6 @@ STATICLIBFILE = $(LIBDIR)lib$(STATICLIBNAME).a
 SHLIBFILE     = $(SHLIBDIR)lib$(LIBNAME).$(DllSuf)
 
 CPPFLAGS     += -DMAKEBUILD
-FFFLAGS      += -fPIC
 ifneq ($(findstring g++,$(CXX)),)
 MFLAGS        = -MM
 endif
@@ -256,7 +255,7 @@ $(OBJDIR)%.o : $(WORKDIR)%.cxx $(HDEP)
 $(OBJDIR)%.o : $(SRCDIR)%.for $(FDEP)
 	@echo "Compiling $<"
 	@mkdir -p $(OBJDIR)
-	$(_)$(FC) $(FFFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(_)$(FC) $(FFFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Implicit rule to compile main program
 $(OBJDIR)%.o : $(EXESRC)%.cxx $(HDEP)

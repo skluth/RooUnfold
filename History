@@ -1,6 +1,10 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         14-Jan-2011
+  o Use CXXFLAGS for Fortran compilation (if bayes.for is present), so it
+    picks up -m32 with 32-bit ROOT on 64-bit machine.
+
 Tim Adye         13-Jan-2011
   o Comment methods for RooUnfoldResponse and unfolding algorithm classes
     for class documentation.
