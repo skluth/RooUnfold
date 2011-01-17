@@ -49,7 +49,7 @@ public:
   Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain, wpaper, hpaper, regmethod;
   Int_t    ntoyssvd, nmx, onepage, doerror, dim, overflow, addbias, nbPDF, verbose, dodraw;
   Int_t    ntoys, ploterrors, plotparms;
-  Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx;
+  Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx, mscalex;
   Double_t regparm, effxlo, effxhi, xbias, xsmear, minparm,maxparm,stepsize;
 
   // Data

@@ -1,6 +1,10 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         17-Jan-2011
+  o RooUnfoldTest: scale measured histogram to match the truth if the number
+    of bins is different.
+
 Tim Adye         14-Jan-2011
   o Restore missing measured scatter plot with RooUnfoldTest2D onepage=0.
 

@@ -113,6 +113,8 @@ Int_t RooUnfoldTestHarness2D::Train ()
 
 void RooUnfoldTestHarness2D::TrainResults()
 {
+  if (mscalex!=1.0) hTrainX->Scale(mscalex);
+  if (mscaley!=1.0) hTrainY->Scale(mscaley);
   setmax (hTrainTrueX, hPDFx, hTrainX);
   setmax (hTrainTrueY, hPDFy, hTrainY);
 
@@ -173,6 +175,8 @@ Int_t RooUnfoldTestHarness2D::Test ()
 
 void RooUnfoldTestHarness2D::Results()
 {
+  if (mscalex!=1) hMeasX->Scale(mscalex);
+  if (mscaley!=1) hMeasY->Scale(mscaley);
   setmax (hTrueX, hTestPDFx, hMeasX);
   setmax (hTrueY, hTestPDFy, hMeasY);
 
@@ -355,6 +359,7 @@ void RooUnfoldTestHarness2D::Init()
     nty += 2;
     nmy += Int_t (2.0*(Double_t(nmy)/Double_t(nty)) + 0.5);
   }
+  mscaley= (nmy==nty) ? 1.0 : Double_t(nmy)/Double_t(nty);
   ntbins= ntx*nty;
   nmbins= nmx*nmy;
 }

@@ -266,6 +266,7 @@ Int_t RooUnfoldTestHarness::Train()
 
 void RooUnfoldTestHarness::TrainResults()
 {
+  if (mscalex!=1.0) hTrain->Scale(mscalex);
   setmax (hTrainTrue, hPDFx, hTrain);
   if (onepage>=4) canvas->cd(++ipad);
   if (!onepage || onepage >= 4) {
@@ -357,6 +358,7 @@ Int_t RooUnfoldTestHarness::Unfold ()
 
 void RooUnfoldTestHarness::Results()
 {
+  if (mscalex!=1) hMeas->Scale(mscalex);
   setmax (hTrue, hTestPDFx, hMeas);
   if (hReco) {
     hReco->SetLineColor(kBlack);
@@ -591,6 +593,7 @@ void RooUnfoldTestHarness::Init()
     ntx += 2;
     nmx += Int_t (2.0*(Double_t(nmx)/Double_t(ntx)) + 0.5);
   }
+  mscalex= (nmx==ntx) ? 1.0 : Double_t(nmx)/Double_t(ntx);
   ntbins= ntx;
   nmbins= nmx;
   if (onepage) {

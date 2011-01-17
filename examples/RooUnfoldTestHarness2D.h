@@ -24,7 +24,7 @@ class RooUnfoldTestHarness2D : public RooUnfoldTestHarness {
 public:
   // Parameters
   Int_t    ftrainy, ftesty, nty, nmy;
-  Double_t ylo, yhi, mtrainy, wtrainy, btrainy, mtesty, wtesty, btesty;
+  Double_t ylo, yhi, mtrainy, wtrainy, btrainy, mtesty, wtesty, btesty, mscaley;
   Double_t effylo, effyhi, rotxy, ybias, ysmear;
 
   // Data
