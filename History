@@ -1,6 +1,13 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         19-Jan-2011
+  o Delete toy unfold object at end of RooUnfold::Runtoy (memory leak noted
+    by Seth Zenz).
+  o RooUnfoldTest: rationalise use of onepage parameter so it prints all plots
+    with onepage=0 and no more than onepage otherwise.
+  o RooUnfoldTest: plot correlation matrix. Print error matrix if verbose=2.
+
 Tim Adye         17-Jan-2011
   o RooUnfoldTest: scale measured histogram to match the truth if the number
     of bins is different.

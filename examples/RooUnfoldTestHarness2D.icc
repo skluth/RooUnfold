@@ -118,14 +118,16 @@ void RooUnfoldTestHarness2D::TrainResults()
   setmax (hTrainTrueX, hPDFx, hTrainX);
   setmax (hTrainTrueY, hPDFy, hTrainY);
 
-  if (onepage>=2) canvas->cd(++ipad);
+  if (onepage && (onepage<7 || ipad>=onepage)) return;
+  if (onepage) canvas->cd(++ipad);
   hTrainTrueX->Draw();
   hPDFx      ->Draw("LSAME");
   hTrainX    ->Draw("SAME");
   if (!onepage) Legend (lTrain, hPDFx, hTrainTrueX, hTrainX);
   canvas->Update();
 
-  if (onepage>=2) canvas->cd(++ipad);
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
   hTrainTrueY->Draw();
   hPDFy      ->Draw("LSAME");
   hTrainY    ->Draw("SAME");
@@ -191,7 +193,8 @@ void RooUnfoldTestHarness2D::Results()
     setmax (hTrueY, hRecoY);
   }
 
-  if (onepage>=2) canvas->cd(++ipad);
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
   hTrueX   ->Draw();
   hTestPDFx->Draw("LSAME");
   hMeasX   ->Draw("SAME");
@@ -199,7 +202,8 @@ void RooUnfoldTestHarness2D::Results()
   Legend (lTest, hTestPDFx, hTrueX, hMeasX, hRecoX);
   canvas->Update();
 
-  if (onepage>=2) canvas->cd(++ipad);
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
   hTrueY   ->Draw();
   hTestPDFy->Draw("LSAME");
   hMeasY   ->Draw("SAME");
@@ -208,20 +212,27 @@ void RooUnfoldTestHarness2D::Results()
   lTest->Draw();
   canvas->Update();
 
-  if ((!onepage || onepage>=2) && !ploterrors) {
-    canvas->cd(++ipad);
-    hTrue->Draw();
-    canvas->Update();
-  }
+  if (onepage && (ipad>=onepage || ploterrors)) return;
+  if (onepage) canvas->cd(++ipad);
+  hTrue->Draw();
+  canvas->Update();
 
+  if (onepage && ipad>=onepage) return;
   canvas->cd(++ipad);
   hMeas->Draw();
   canvas->Update();
 
   if (!hReco) return;
 
-  if (onepage>=2) canvas->cd(++ipad);
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
   hReco->Draw();
+  canvas->Update();
+
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
+  gStyle->SetPalette(1,0);
+  hCorr->Draw("COLZ");
   canvas->Update();
 
   if (overflow==2) {
@@ -245,14 +256,14 @@ void RooUnfoldTestHarness2D::Results()
     }
   }
 
-  if (onepage>=2 && !ploterrors) {
-    canvas->cd(++ipad);
-    hPulls->Draw("COLZ");
-    canvas->Update();
-  }
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
+  canvas->cd(++ipad);
+  hPulls->Draw("COLZ");
+  canvas->Update();
 
-  if (onepage && onepage < 10) return;
-
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
   hPullsX= new TProfile ("hPullsX", "Pulls X", ntx, xlo, xhi);
   hPullsY= new TProfile ("hPullsY", "Pulls Y", nty, ylo, yhi);
   for (Int_t ix= 1; ix<=ntx; ix++) {
@@ -269,12 +280,12 @@ void RooUnfoldTestHarness2D::Results()
   hPullsX->SetMarkerStyle(kFullDotLarge);
   hPullsY->SetMarkerStyle(kFullDotLarge);
 
-  if (onepage>=2) canvas->cd(++ipad);
   hPullsX->Draw("P");
   TLine().DrawLine(hPullsX->GetBinLowEdge(1), 0.0, hPullsX->GetBinLowEdge(ntx+1), 0.0);  // draw a line at pull=0;
   canvas->Update();
 
-  if (onepage>=2) canvas->cd(++ipad);
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
   hPullsY->Draw("P");
   TLine().DrawLine(hPullsY->GetBinLowEdge(1), 0.0, hPullsY->GetBinLowEdge(nty+1), 0.0);  // draw a line at pull=0;
   canvas->Update();

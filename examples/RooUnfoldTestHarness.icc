@@ -92,7 +92,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
 #ifdef USE_TUNFOLD_H
   args.Add ("regmethod",&regmethod,   2, "TUnfold regularisation method (0=none, 1=size, 2=derivative, 3=curvature)");
 #endif
-  args.Add ("onepage", &onepage,      4, "number of pads per page");
+  args.Add ("onepage", &onepage,      4, "number of plots to include on the page, or 0 for all plots on separate pages");
   args.Add ("doerror", &doerror,     -1, "error treatment (0=none, 1=error propagation, 2=covariance propagation, 3=toy MC)", "2");
   args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
   args.Add ("mtrainx", &mtrainx,    5.0, "training signal PDF X mean");
@@ -174,8 +174,7 @@ void RooUnfoldTestHarness::SetupCanvas()
     canvas->Divide(2,(onepage+1)/2);
   } else if (onepage>=3) {
     canvas->Divide(1,onepage);
-    }
-  else if (grid)
+  } else if (grid)
     canvas->SetGrid(1);
   ipad= 0;
 }
@@ -261,6 +260,7 @@ Int_t RooUnfoldTestHarness::Train()
       response->Miss (xto);
   }
   // or:  response->Setup (hTrain, hTrainTrue, hResmat);
+  if (verbose>=2) PrintMatrix(response->Mresponse(),"","response matrix",10);
   return 1;
 }
 
@@ -268,14 +268,14 @@ void RooUnfoldTestHarness::TrainResults()
 {
   if (mscalex!=1.0) hTrain->Scale(mscalex);
   setmax (hTrainTrue, hPDFx, hTrain);
-  if (onepage>=4) canvas->cd(++ipad);
-  if (!onepage || onepage >= 4) {
-    hTrainTrue->Draw();
-    hPDFx ->Draw("LSAME");
-    hTrain->Draw("SAME");
-    if (!onepage) Legend (lTrain, hPDFx, hTrainTrue, hTrain);
-    canvas->Update();
-  }
+
+  if (onepage && (onepage<4 || ipad>=onepage)) return;
+  if (onepage) canvas->cd(++ipad);
+  hTrainTrue->Draw();
+  hPDFx ->Draw("LSAME");
+  hTrain->Draw("SAME");
+  if (!onepage) Legend (lTrain, hPDFx, hTrainTrue, hTrain);
+  canvas->Update();
 }
 
 //==============================================================================
@@ -325,6 +325,14 @@ Int_t RooUnfoldTestHarness::Unfold ()
   hReco= unfold->Hreco((RooUnfold::ErrorTreatment)doerror);
   if (!hReco) return 0;
   if (verbose>=0) unfold->PrintTable (cout, hTrue, (RooUnfold::ErrorTreatment)doerror);
+  if (verbose>=2 && doerror>=RooUnfold::kCovariance) {
+    TMatrixD covmat= unfold->Ereco((RooUnfold::ErrorTreatment)doerror);
+    TMatrixD errmat(ntbins,ntbins);
+    for (Int_t i=0; i<ntbins; i++)
+      for (Int_t j=0; j<ntbins; j++)
+        errmat(i,j)= covmat(i,j)>=0 ? sqrt(covmat(i,j)) : -sqrt(-covmat(i,j));
+    PrintMatrix(errmat,"","covariance matrix",10);
+  }
 
   // Calculate pulls and residuals
   hRes=   dynamic_cast<TH1*>(hReco->Clone ("res"));   
@@ -349,6 +357,19 @@ Int_t RooUnfoldTestHarness::Unfold ()
       }
     }
   }
+
+  TMatrixD covmat= unfold->Ereco((RooUnfold::ErrorTreatment)doerror);
+  Double_t xtlo= response->Hresponse()->GetYaxis()->GetXmin(),
+           xthi= response->Hresponse()->GetYaxis()->GetXmax();
+  hCorr= new TH2D ("corr", "Unfolding correlation matrix",
+                         ntbins, xtlo, xthi,
+                         ntbins, xtlo, xthi);
+  hCorr->SetAxisRange (-1.0, 1.0, "Z");
+
+  for(int i=0; i < ntbins; i++)
+    for(int j=0; j < ntbins; j++)
+      hCorr->SetBinContent (i+1, j+1, covmat(i,j)/sqrt(covmat(i,i)*covmat(j,j)));
+
   return 1;
 }
 
@@ -366,6 +387,7 @@ void RooUnfoldTestHarness::Results()
     setmax (hTrue, hReco);
   }
 
+  if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
   hTrue    ->Draw();
   hTestPDFx->Draw("LSAME");
@@ -377,37 +399,43 @@ void RooUnfoldTestHarness::Results()
   if (!hReco)     return;
   if (ploterrors) return;
 
-  if (onepage>=2) canvas->cd(++ipad);
-  if (!onepage || onepage >= 2) {
-    hRes->SetMarkerStyle(kFullDotLarge);
-    hRes->Draw();
-    TLine l; // draw a line at y=0;
-    l.DrawLine(hRes->GetBinLowEdge(1), 0.0, hRes->GetBinLowEdge(ntx+1), 0.0);
-    canvas->Update();
-  }
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
+  hRes->SetMarkerStyle(kFullDotLarge);
+  hRes->Draw();
+  TLine().DrawLine(hRes->GetBinLowEdge(1), 0.0, hRes->GetBinLowEdge(ntx+1), 0.0);  // draw a line at y=0;
+  canvas->Update();
 
-  if (onepage>=2) canvas->cd(++ipad);
-  if (!onepage || onepage >= 2) {
-    hPulls->SetMarkerStyle(kFullDotLarge);
-    hPulls->Draw("P");
-    TLine().DrawLine(hPulls->GetBinLowEdge(1), 0.0, hPulls->GetBinLowEdge(ntx+1), 0.0);  // draw a line at pull=0;
-    canvas->Update();
-  }
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
+  gStyle->SetPalette(1,0);
+  hCorr->Draw("COLZ");
+  canvas->Update();
+
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
+  hPulls->SetMarkerStyle(kFullDotLarge);
+  hPulls->Draw("P");
+  TLine().DrawLine(hPulls->GetBinLowEdge(1), 0.0, hPulls->GetBinLowEdge(ntx+1), 0.0);  // draw a line at pull=0;
+  canvas->Update();
 }
 
 void RooUnfoldTestHarness::PlotErrors()
 {
+  if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
   RooUnfoldErrors All(ntoys,unfold,hTrue);
   TH1* RMSRes=All.RMSResiduals();
-  setmax(RMSRes,All.UnfoldingError());
+  TH1* unferr=All.UnfoldingError();
+  setmax(RMSRes,unferr);
   RMSRes->Draw("P");
-  All.UnfoldingError()->Draw("P SAME");
-
+  unferr->Draw("P SAME");
   canvas->Update();
+
+  if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
   Double_t good_chi= All.Chi2()->Draw("chi2","abs(chi2)<1e10");
-  if (ntoys-good_chi>0){
+  if (ntoys>good_chi){
     TString chi;
     chi+=(ntoys-good_chi);
     chi += (" bad #chi^{2}s");
@@ -426,19 +454,26 @@ void RooUnfoldTestHarness::PlotErrors()
 
 void RooUnfoldTestHarness::PlotParms()
 {
+  if (onepage && ipad>=onepage) return;
+  if (onepage) canvas->cd(++ipad);
   RooUnfoldParms Parm(unfold,(RooUnfold::ErrorTreatment)doerror,hTrue);
   if (maxparm>minparm) Parm.SetMaxParm(maxparm);
   if (minparm!=-1e30)  Parm.SetMinParm(minparm);
   if (stepsize>0)      Parm.SetStepSizeParm(stepsize);
-  if (onepage) canvas->cd(++ipad);
   Parm.GetChi2()->Draw("P");    
   canvas->Update();
+
+  if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
   Parm.GetRMSError()->Draw("P");    
   canvas->Update();
+
+  if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
   Parm.GetMeanResiduals()->Draw("P"); 
   canvas->Update();
+
+  if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
   Parm.GetRMSResiduals()->Draw("P"); 
   canvas->Update();
@@ -561,7 +596,7 @@ void RooUnfoldTestHarness::Reset()
   ps= 0;
   hPDFx= hTestPDFx= 0;
   hTrain= hTrainTrue= hTrue= hMeas= hReco= hRes= hPulls= 0;
-  hResmat= 0;
+  hResmat= hCorr= 0;
   lTrain= lTest= 0;
   error= ipad= 0;
   dim= 1;
@@ -649,6 +684,63 @@ void RooUnfoldTestHarness::Legend (TLegend*& legend, TH1* pdf, TH1* truth, TH1* 
   if (reco)
   legend->AddEntry (reco,  "reconstructed", "P");
   legend->Draw();
+}
+
+void RooUnfoldTestHarness::PrintMatrix(const TMatrixD& m, const char* format,
+                                       const char* name, Int_t cols_per_sheet)
+{
+   // Print the matrix as a table of elements.
+   // Based on TMatrixTBase<>::Print, but allowing user to specify name and cols_per_sheet (also option -> format).
+   // By default the format "%11.4g" is used to print one element.
+   // One can specify an alternative format with eg
+   //  format ="%6.2f  "
+
+   if (!m.IsValid()) {
+     m.Error("PrintMatrix","Matrix %s is invalid",name);
+     return;
+   }
+
+   const Int_t ncols  = m.GetNcols();
+   const Int_t nrows  = m.GetNrows();
+   const Int_t collwb = m.GetColLwb();
+   const Int_t rowlwb = m.GetRowLwb();
+
+   char topbar[500];
+   snprintf(topbar,100,format,123.456789);
+   Int_t nch = strlen(topbar)+1;
+   if (nch > 18) nch = 18;
+   char ftopbar[20];
+   for (Int_t i = 0; i < nch; i++) ftopbar[i] = ' ';
+   Int_t nk = 1 + Int_t(log10(ncols));
+   snprintf(ftopbar+nch/2,20-nch/2,"%s%dd","%",nk);
+   Int_t nch2 = strlen(ftopbar);
+   for (Int_t i = nch2; i < nch; i++) ftopbar[i] = ' ';
+   ftopbar[nch] = '|';
+   ftopbar[nch+1] = 0;
+
+   printf("\n%dx%d %s is as follows",nrows,ncols,name);
+
+   if (cols_per_sheet == 0) {
+     cols_per_sheet = 5;
+     if (nch <= 8) cols_per_sheet =10;
+   }
+   nk = 5+nch*(cols_per_sheet<ncols ? cols_per_sheet : ncols);
+   for (Int_t i = 0; i < nk; i++) topbar[i] = '-';
+   topbar[nk] = 0;
+   for (Int_t sheet_counter = 1; sheet_counter <= ncols; sheet_counter += cols_per_sheet) {
+      printf("\n\n     |");
+      for (Int_t j = sheet_counter; j < sheet_counter+cols_per_sheet && j <= ncols; j++)
+         printf(ftopbar,j+collwb-1);
+      printf("\n%s\n",topbar);
+      if (m.GetNoElements() <= 0) continue;
+      for (Int_t i = 1; i <= nrows; i++) {
+         printf("%4d |",i+rowlwb-1);
+         for (Int_t j = sheet_counter; j < sheet_counter+cols_per_sheet && j <= ncols; j++)
+            printf(format,m(i+rowlwb-1,j+collwb-1));
+         printf("\n");
+      }
+   }
+   printf("\n");
 }
 
 //==============================================================================

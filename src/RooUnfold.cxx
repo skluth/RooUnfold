@@ -621,6 +621,7 @@ TH1* RooUnfold::Runtoy(ErrorTreatment withError,double* chi2, const TH1* hTrue) 
     if (chi2 && hTrue) *chi2=unfold_copy->Chi2(hTrue,withError);
     delete hMeas;
     return hReco;
+    delete unfold_copy;
 }
 
 
