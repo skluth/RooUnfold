@@ -696,7 +696,7 @@ void RooUnfoldTestHarness::PrintMatrix(const TMatrixD& m, const char* format,
    //  format ="%6.2f  "
 
    if (!m.IsValid()) {
-     m.Error("PrintMatrix","Matrix %s is invalid",name);
+     m.Error("PrintMatrix","%s is invalid",name);
      return;
    }
 
@@ -705,8 +705,9 @@ void RooUnfoldTestHarness::PrintMatrix(const TMatrixD& m, const char* format,
    const Int_t collwb = m.GetColLwb();
    const Int_t rowlwb = m.GetRowLwb();
 
-   char topbar[500];
-   snprintf(topbar,100,format,123.456789);
+   if (!(format && format[0])) format= "%11.4g ";
+   char topbar[1000];
+   snprintf(topbar,1000,format,123.456789);
    Int_t nch = strlen(topbar)+1;
    if (nch > 18) nch = 18;
    char ftopbar[20];
@@ -720,7 +721,7 @@ void RooUnfoldTestHarness::PrintMatrix(const TMatrixD& m, const char* format,
 
    printf("\n%dx%d %s is as follows",nrows,ncols,name);
 
-   if (cols_per_sheet == 0) {
+   if (cols_per_sheet <= 0) {
      cols_per_sheet = 5;
      if (nch <= 8) cols_per_sheet =10;
    }
