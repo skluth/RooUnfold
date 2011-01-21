@@ -95,8 +95,8 @@ public:
   static  void     setmax   (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
                              const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0);
   static  void     Legend (TLegend*& legend, TH1* pdf, TH1* truth, TH1* meas, TH1* reco= 0);
-  static  void     PrintMatrix (const TMatrixD& m, const char* format="%11.4g ",
-                                const char* name= "matrix", Int_t cols_per_sheet = 0);
+  static  void     PrintMatrix (const TMatrixD& m, const char* format= 0,
+                                const char* name= "matrix", Int_t cols_per_sheet= 0);
 };
 #ifndef NOINLINE
 #include "RooUnfoldTestHarness.icc"

@@ -1,6 +1,9 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         21-Jan-2011
+  o Fix RooUnfoldTestHarness::PrintMatrix default argument.
+
 Tim Adye         19-Jan-2011
   o Delete toy unfold object at end of RooUnfold::Runtoy (memory leak noted
     by Seth Zenz).
