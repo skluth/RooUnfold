@@ -1,6 +1,6 @@
 # ==============================================================================
 #  File and Version Information:
-#       $Id: RooUnfoldExample.py 248 2010-10-04 22:18:19Z T.J.Adye $
+#       $Id$
 #
 #  Description:
 #       Simple example usage of the RooUnfold package using toy MC.
