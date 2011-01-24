@@ -65,9 +65,13 @@ endif
 endif
 
 ROOTINCDIR    = $(shell $(ROOTCONFIG) --incdir)
+ROOTLIBDIR    = $(shell $(ROOTCONFIG) --libdir)
 ROOTINCLUDES  = -I$(ROOTINCDIR)
 ifeq ($(ROOTCINT),)
 ROOTCINT      = rootcint
+endif
+ifeq ($(RLIBMAP),)
+RLIBMAP       = rlibmap
 endif
 ifeq ($(VERBOSE),1)
 _             =
@@ -153,7 +157,7 @@ ROOFITLIBS   += -lRooFit
 # Note that if the ROOT shared libraries were linked against them
 # (configure --enable-explicitlink ?), as is done in the CERN AFS versions,
 # then these are not required. But they do no harm.
-ROOFITLIBS   += $(patsubst $(ROOTSYS)/lib/lib%.$(DllSuf),-l%,$(wildcard $(patsubst %,$(ROOTSYS)/lib/lib%.$(DllSuf),RooFitCore Thread Minuit Foam MathMore Html)))
+ROOFITLIBS   += $(patsubst $(ROOTLIBDIR)/lib%.$(DllSuf),-l%,$(wildcard $(patsubst %,$(ROOTLIBDIR)/lib%.$(DllSuf),RooFitCore Thread Minuit Foam MathMore Html)))
 endif
 
 # === Internal configuration ===================================================
@@ -169,6 +173,7 @@ STATICLIBNAME = $(PACKAGE)_static
 LIBFILE       = $(LIBDIR)lib$(LIBNAME).a
 STATICLIBFILE = $(LIBDIR)lib$(STATICLIBNAME).a
 SHLIBFILE     = $(SHLIBDIR)lib$(LIBNAME).$(DllSuf)
+ROOTMAP       = $(SHLIBDIR)lib$(LIBNAME).rootmap
 
 CPPFLAGS     += -DMAKEBUILD
 ifneq ($(findstring g++,$(CXX)),)
@@ -196,6 +201,8 @@ ifneq ($(filter %.for,$(SRCLIST)),)
 GCCLIBS       = -lg2c
 endif
 
+ROOTLIBFILES := $(wildcard $(patsubst -l%,$(ROOTLIBDIR)/lib%.$(DllSuf),$(filter -l%,$(ROOTLIBS))))
+
 ifeq ($(MFLAGS),)
 
 # Can't make dependency files, so make every compilation dependent on all headers.
@@ -203,8 +210,20 @@ HDEP          = $(HLIST)
 
 else
 
-# List of all dependency file to make
+# List of all dependency files to make
 DLIST         = $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(filter %.cxx,$(SRCLIST) $(filter-out $(EXCLUDE),$(notdir $(wildcard $(EXESRC)*.cxx))))))
+
+# If possible, limit ROOTLIBFILES to libraries that we actually use.
+DLISTLIB      = $(wildcard $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(filter %.cxx,$(SRCLIST)))))
+ifneq ($(DLISTLIB),)
+ROOTLIBMAPS  := $(wildcard $(patsubst %.$(DllSuf),%.rootmap,$(ROOTLIBFILES)))
+ifneq ($(ROOTLIBMAPS),)
+ROOTLIBFILESUSED := $(patsubst %.rootmap,%.$(DllSuf),$(shell sed -n 's,^ *$(ROOTINCDIR)[^ ]*/\([^ /]*\)\.h .*,^Library\.\1:,p' $(DLISTLIB) | sort -u | grep -l -f- $(ROOTLIBMAPS)))
+ifneq ($(ROOTLIBFILESUSED),)
+ROOTLIBFILES := $(ROOTLIBFILESUSED)
+endif
+endif
+endif
 
 endif
 
@@ -274,6 +293,10 @@ $(CINTFILE) : $(HLIST)
 	@echo "Generating dictionary from $(LINKDEF)"
 	$(_)cd $(SRC) ; $(ROOTCINT) -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)
 
+$(ROOTMAP) : $(SHLIBFILE) $(LINKDEF)
+	@echo "Making $@"
+	$(_)$(RLIBMAP) -o $@ -l $< -d $(ROOTLIBFILES) -c $(LINKDEF)
+
 # Rule to combine objects into a library
 $(LIBFILE) : $(OLIST) $(CINTOBJ)
 	@echo "Making $@"
@@ -303,7 +326,7 @@ $(MAINEXE) : $(EXEDIR)%$(ExeSuf) : $(OBJDIR)%.o $(LINKLIB)
 # Useful build targets
 include: $(DLIST)
 lib: $(LIBFILE)
-shlib: $(SHLIBFILE)
+shlib: $(SHLIBFILE) $(ROOTMAP)
 bin: shlib $(MAINEXE)
 
 commands :
@@ -322,7 +345,7 @@ clean : cleanbin
 	rm -f $(CINTFILE) $(basename $(CINTFILE)).h
 	rm -f $(OLIST) $(CINTOBJ)
 	rm -f $(LIBFILE)
-	rm -f $(SHLIBFILE)
+	rm -f $(SHLIBFILE) $(ROOTMAP)
 	rm -f $(STATICLIBFILE)
 
 cleanbin :

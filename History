@@ -1,6 +1,13 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         24-Jan-2011
+  o Makefile creates libRooUnfold.rootmap, which can be used to load RooUnfold
+    in PyROOT.
+  o Added examples/RooUnfoldExample.py, equivalent to RooUnfoldExample.cxx.
+    If ROOT was built PyROOT support and the correct version of Python is used,
+    RooUnfoldExample.py can be run with: python -i examples/RooUnfoldExample.py
+
 Tim Adye         21-Jan-2011
   o Fix RooUnfoldTestHarness::PrintMatrix default argument.
 
