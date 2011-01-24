@@ -1,12 +1,12 @@
 # ==============================================================================
 #  File and Version Information:
 #       $Id: RooUnfoldExample.py 248 2010-10-04 22:18:19Z T.J.Adye $
-# 
+#
 #  Description:
 #       Simple example usage of the RooUnfold package using toy MC.
-# 
+#
 #  Author: Tim Adye <T.J.Adye@rl.ac.uk>
-# 
+#
 # ==============================================================================
 
 from ROOT import gRandom, TH1, TH1D, cout
