@@ -1,6 +1,27 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         30-Jan-2011
+  o Rewrote RooUnfoldBayes to perform the unfolding itself instead of calling
+    RooUnfoldBayesImpl. RooUnfoldBayesImpl and Array2D removed from the package.
+    Uses TMatrixD and TVectorD (instead of Array2D and vector<double>), which is
+    faster. Further optimised code.
+  o Improved RooUnfoldBayes error calculation to take account of dependence of
+    Mij on the measurements, n(Ej), via the previous iterations which update
+    P0(Ci). The new errors now agree with the toy MC - previously they were
+    underestimated (by a factor 1.4 in the default RooUnfoldTest). Unfortunately
+    this new calculation is quite a bit slower so, overall, the new version is
+    slower than the old (even if errors aren't calculated, since the propagation
+    matrix has to be calculated in case it is needed) - but still pretty fast
+    compared to other unfolding methods.
+  o Delete toy unfold object at end of RooUnfold::Runtoy (memory leak noted
+    by Seth Zenz).
+  o Optimise RooUnfoldErrors: if the chi^2 is not required, then it does not
+    need to get the unfolding errors on the toys.
+  o RooUnfoldTest ploterrors=1 no longer calculates chi^2 distribution.
+    This allows a faster comparison of the errors. The plot now has a legend.
+    Use ploterrors=2 to include the chi^2 plot.
+
 Tim Adye         24-Jan-2011
   o Makefile creates libRooUnfold.rootmap, which can be used to load RooUnfold
     in PyROOT.
@@ -12,8 +33,6 @@ Tim Adye         21-Jan-2011
   o Fix RooUnfoldTestHarness::PrintMatrix default argument.
 
 Tim Adye         19-Jan-2011
-  o Delete toy unfold object at end of RooUnfold::Runtoy (memory leak noted
-    by Seth Zenz).
   o RooUnfoldTest: rationalise use of onepage parameter so it prints all plots
     with onepage=0 and no more than onepage otherwise.
   o RooUnfoldTest: plot correlation matrix. Print error matrix if verbose=2.

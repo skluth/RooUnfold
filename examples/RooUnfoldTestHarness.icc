@@ -396,8 +396,8 @@ void RooUnfoldTestHarness::Results()
   Legend (lTest, hTestPDFx, hTrue, hMeas, hReco);
   canvas->Update();
 
-  if (!hReco)     return;
-  if (ploterrors) return;
+  if (!hReco)        return;
+  if (ploterrors>=2) return;
 
   if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
@@ -405,6 +405,8 @@ void RooUnfoldTestHarness::Results()
   hRes->Draw();
   TLine().DrawLine(hRes->GetBinLowEdge(1), 0.0, hRes->GetBinLowEdge(ntx+1), 0.0);  // draw a line at y=0;
   canvas->Update();
+
+  if (ploterrors)    return;
 
   if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
@@ -424,14 +426,24 @@ void RooUnfoldTestHarness::PlotErrors()
 {
   if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
-  RooUnfoldErrors All(ntoys,unfold,hTrue);
+  TH1* t= 0;
+  if (ploterrors>=2) t=hTrue;
+  RooUnfoldErrors All(ntoys,unfold,t);
   TH1* RMSRes=All.RMSResiduals();
   TH1* unferr=All.UnfoldingError();
-  setmax(RMSRes,unferr);
-  RMSRes->Draw("P");
-  unferr->Draw("P SAME");
+  setmax(unferr,RMSRes);
+  unferr->Draw("HIST");
+  RMSRes->Draw("P SAME");
+
+  lErrors= new TLegend (0.75, 0.75, 0.894, 0.89);
+  lErrors->SetTextSize(0.05);
+  lErrors->SetTextFont(42);
+  lErrors->AddEntry (unferr, "Unfolding errors", "L");
+  lErrors->AddEntry (RMSRes, "Toy MC RMS",       "P");
+  lErrors->Draw();
   canvas->Update();
 
+  if (ploterrors<2) return;
   if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
   Double_t good_chi= All.Chi2()->Draw("chi2","abs(chi2)<1e10");
@@ -597,7 +609,7 @@ void RooUnfoldTestHarness::Reset()
   hPDFx= hTestPDFx= 0;
   hTrain= hTrainTrue= hTrue= hMeas= hReco= hRes= hPulls= 0;
   hResmat= hCorr= 0;
-  lTrain= lTest= 0;
+  lTrain= lTest= lErrors= 0;
   error= ipad= 0;
   dim= 1;
   nbPDF= 500;

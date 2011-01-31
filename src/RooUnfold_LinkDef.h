@@ -6,8 +6,6 @@
 
 #pragma link C++ class vector<Double_t>+;
 #pragma link C++ class vector<Int_t>+;
-#pragma link C++ class Array2D+;
-#pragma link C++ class RooUnfoldBayesImpl+;
 #pragma link C++ class RooUnfold+;
 #pragma link C++ class RooUnfoldBayes+;
 #pragma link C++ class RooUnfoldSvd+;

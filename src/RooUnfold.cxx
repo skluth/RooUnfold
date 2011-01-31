@@ -92,6 +92,7 @@ END_HTML */
 #include "RooUnfoldDagostini.h"
 #endif
 
+using std::vector;
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -620,8 +621,8 @@ TH1* RooUnfold::Runtoy(ErrorTreatment withError,double* chi2, const TH1* hTrue) 
     }
     if (chi2 && hTrue) *chi2=unfold_copy->Chi2(hTrue,withError);
     delete hMeas;
-    return hReco;
     delete unfold_copy;
+    return hReco;
 }
 
 

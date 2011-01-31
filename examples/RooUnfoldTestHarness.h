@@ -56,7 +56,7 @@ public:
   Int_t              error, ipad, ntbins, nmbins;
   TCanvas*           canvas;
   TPostScript*       ps;
-  TLegend            *lTrain, *lTest;
+  TLegend            *lTrain, *lTest, *lErrors;
   TH1                *hTrain, *hTrainTrue, *hTrue, *hMeas, *hReco, *hRes, *hPulls;
   TH1D               *hPDFx, *hTestPDFx;
   TH2D               *hResmat, *hCorr;

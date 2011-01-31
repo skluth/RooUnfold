@@ -13,14 +13,13 @@
 #define ROOUNFOLDBAYES_HH
 
 #include "RooUnfold.h"
-#include <vector>
-using std::vector;
 
-class RooUnfoldResponse;
+#include "TVectorD.h"
+#include "TMatrixD.h"
+
 class TH1;
 class TH2;
-class RooUnfoldBayesImpl;
-class Array2D;
+class RooUnfoldResponse;
 
 class RooUnfoldBayes : public RooUnfold {
 
@@ -32,7 +31,6 @@ public:
   RooUnfoldBayes (const char*    name, const char*    title); // named constructor
   RooUnfoldBayes (const TString& name, const TString& title); // named constructor
   RooUnfoldBayes (const RooUnfoldBayes& rhs); // copy constructor
-  virtual ~RooUnfoldBayes(); // destructor
   RooUnfoldBayes& operator= (const RooUnfoldBayes& rhs); // assignment operator
   virtual RooUnfoldBayes* Clone (const char* newname= 0) const;
 
@@ -50,20 +48,24 @@ public:
   virtual Double_t GetRegParm() const;
   virtual void Reset();
   virtual void Print (Option_t* option= "") const;
-  RooUnfoldBayesImpl* Impl();
 
-  static vector<Double_t>& H2VD (const TH1*  h, vector<Double_t>& v, Bool_t overflow= kFALSE);
-  static Array2D&          H2AD (const TH2* h, Array2D& m, const TH1* norm= 0, Bool_t overflow= kFALSE);
-  static TVectorD&         VD2V (const vector<Double_t>& vd, TVectorD& v);
-  static TMatrixD&         AD2M (const Array2D& ad, TMatrixD& m);
-  static TVectorD&         AD2V (const Array2D& ad, TVectorD& m);
+  static TMatrixD& H2M (const TH2* h, TMatrixD& m, Bool_t overflow);
+  static TMatrixD& ABAT (const TMatrixD& a, const TMatrixD& b, TMatrixD& c);
 
 protected:
   void Assign (const RooUnfoldBayes& rhs); // implementation of assignment operator
   virtual void Unfold();
   virtual void GetCov();
-  virtual void GetErrors();
   virtual void GetSettings();
+
+  void setup();
+  void train();
+  void getCovariance(Bool_t doUnfoldSystematic = kFALSE);
+
+  void smooth(TVectorD& PbarCi) const;
+  Double_t getChi2(const TVectorD& prob1,
+                   const TVectorD& prob2,
+                   Double_t nevents) const;
 
 private:
   void Init();
@@ -71,9 +73,23 @@ private:
 
 protected:
   // instance variables
-  RooUnfoldBayesImpl* _bayes;
   Int_t _niter;
   Int_t _smoothit;
+
+  Int_t _nc;              // number of causes  (same as _nt)
+  Int_t _ne;              // number of effects (same as _nm)
+  Double_t _nbartrue;     // best estimate of number of true events
+
+  TVectorD _nEstj;        // Number of measured events from Effect E_j
+  TVectorD _nCi;          // Number of true events from cause C_i
+  TVectorD _nbarCi;       // Estimated number of true events from cause C_i
+  TVectorD _efficiencyCi; // efficiency for detecting cause C_i
+
+  TMatrixD _Nji;          // mapping of causes to effects
+  TMatrixD _Mij;          // unfolding matrix
+  TMatrixD _Vij;          // covariance matrix
+  TMatrixD _VnEstij;      // covariance matrix of effects
+  TMatrixD _dnCidnEj;     // error propagation matrix
 
 public:
   ClassDef (RooUnfoldBayes, 0) // Bayesian Unfolding
