@@ -22,6 +22,8 @@ END_HTML */
 
 /////////////////////////////////////////////////////////////
 
+//#define OLDERRS   // restore old (incorrect) error calculation
+
 #include "RooUnfoldBayes.h"
 
 #include <iostream>
@@ -225,6 +227,7 @@ RooUnfoldBayes::train()
     TVectorD PbarCi(_nbarCi);
     PbarCi *= 1.0/_nbartrue;
 
+#ifndef OLDERRS
     if (kiter <= 0) {
       _dnCidnEj= _Mij;
     } else {
@@ -247,6 +250,7 @@ RooUnfoldBayes::train()
         }
       }
     }
+#endif
 
     // no need to smooth the last iteraction
     if (_smoothit && kiter < (_niter-1)) smooth(PbarCi);
@@ -279,7 +283,11 @@ RooUnfoldBayes::getCovariance(Bool_t doUnfoldSystematic)
   if (verbose()>=1) cout << "Calculating covariances due to number of measured events" << endl;
 
   // Create the covariance matrix of result from that of the measured distribution
+#ifdef OLDERRS
+  ABAT (_Mij,      _VnEstij, _Vij);
+#else
   ABAT (_dnCidnEj, _VnEstij, _Vij);
+#endif
 
   // error due to uncertainty on unfolding matrix M
   // This is disabled by default: I'm not sure it is correct, it is very slow, and
