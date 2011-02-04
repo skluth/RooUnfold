@@ -53,7 +53,7 @@ protected:
   Int_t _niter;
 
 public:
-  ClassDef (RooUnfoldDagostini, 0) // Bayesian Unfolding
+  ClassDef (RooUnfoldDagostini, 1) // Bayesian Unfolding
 };
 
 // Inline method definitions

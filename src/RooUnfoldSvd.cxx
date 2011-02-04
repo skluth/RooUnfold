@@ -163,6 +163,7 @@ RooUnfoldSvd::Unfold()
 void
 RooUnfoldSvd::GetCov()
 {
+  if (!_svd) return;
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
   TH2D* meascov= new TH2D ("meascov", "meascov", _nm, 0.0, 1.0, _nm, 0.0, 1.0);
@@ -195,7 +196,24 @@ RooUnfoldSvd::GetCov()
 void
 RooUnfoldSvd::GetSettings(){
     _minparm=0;
-    _maxparm=_meas->GetNbinsX();
+    _maxparm= _meas ? _meas->GetNbinsX() : 0;
     _stepsizeparm=1;
-    _defaultparm=_meas->GetNbinsX()/2;
+    _defaultparm=_maxparm/2;
+}
+
+void RooUnfoldSvd::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooUnfoldSvd.
+   if (R__b.IsReading()) {
+      // Don't add our histograms to the currect directory.
+      // We own them and we don't want them to disappear when the file is closed.
+      Bool_t oldstat= TH1::AddDirectoryStatus();
+      TH1::AddDirectory (kFALSE);
+      R__b.ReadClassBuffer(RooUnfoldSvd::Class(),this);
+      TH1::AddDirectory (oldstat);
+      _svd= 0;
+      _unfolded= 0;
+   } else {
+      R__b.WriteClassBuffer(RooUnfoldSvd::Class(),this);
+   }
 }

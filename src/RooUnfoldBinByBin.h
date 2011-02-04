@@ -37,7 +37,7 @@ protected:
   virtual void GetSettings();
 
 public:
-  ClassDef (RooUnfoldBinByBin, 0)  // Bin-by-bin unfolding
+  ClassDef (RooUnfoldBinByBin, 1)  // Bin-by-bin unfolding
 };
 
 

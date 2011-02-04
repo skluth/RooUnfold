@@ -93,7 +93,8 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("regmethod",&regmethod,   2, "TUnfold regularisation method (0=none, 1=size, 2=derivative, 3=curvature)");
 #endif
   args.Add ("onepage", &onepage,      4, "number of plots to include on the page, or 0 for all plots on separate pages");
-  args.Add ("doerror", &doerror,     -1, "error treatment (0=none, 1=error propagation, 2=covariance propagation, 3=toy MC)", "2");
+  args.Add ("doerror", &doerror,      RooUnfold::kCovariance,
+                                         "error treatment (0=none, 1=error propagation, 2=covariance propagation, 3=toy MC)");
   args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
   args.Add ("mtrainx", &mtrainx,    5.0, "training signal PDF X mean");
   args.Add ("wtrainx", &wtrainx,    1.2, "training signal PDF X width");
@@ -135,6 +136,15 @@ Int_t RooUnfoldTestHarness::Run()
     ps->Close();
     delete ps; ps= 0;
   }
+  TFile f (rootfile, "update");
+  const TNamed* objs[] = { unfold, hTrain, hTrainTrue, hTrue, hMeas,
+                           hReco, hRes, hPulls, hPDFx, hTestPDFx,
+                           hResmat, hCorr, hUnfErr, hToyErr, ntChi2,
+                           hParmChi2, hParmErr, hParmRes, hParmRms };
+  for (size_t i= 0; i<sizeof(objs)/sizeof(objs[0]); i++) {
+    if (objs[i]) f.WriteTObject (objs[i], objs[i]->GetName());
+  }
+  f.Close();
   return error;
 }
 
@@ -190,23 +200,19 @@ Int_t RooUnfoldTestHarness::RunTests()
     if (overflow==1) response->UseOverflow();
     if (verbose>=0) cout << "==================================== TRAIN ====================================" << endl;
     if (!Train()) return 4;
-    TString file (GetName());
-    file += ".root";
-    TFile f (file, "recreate");
+    TFile f (rootfile, "recreate");
     f.WriteTObject (response, "response");
     f.Close();
   }
 
   if (stage != 1) {
     if (!response) {
-      TString file (GetName());
-      file += ".root";
-      cout << "Read 'response' object from " << file << endl;
-      TFile f (file);
+      cout << "Read 'response' object from " << rootfile << endl;
+      TFile f (rootfile);
       f.GetObject ("response", response);
       f.Close();
       if (!response) {
-        cerr << "could not read 'response' object from " << file << endl;
+        cerr << "could not read 'response' object from " << rootfile << endl;
         return 5;
       }
     }
@@ -288,7 +294,7 @@ Int_t RooUnfoldTestHarness::Test()
   hTestPDFx= Generate (xtest, "pdfx", "PDF X", ntx, ftestx, ntest, xlo, xhi, mtestx, wtestx, btestx, xbias, xsmear);
   if (!hTestPDFx) return 0;
 
-  hTrue= new TH1D ("true", "Test", ntx, xlo, xhi);
+  hTrue= new TH1D ("truth", "Test", ntx, xlo, xhi);
   hTrue->SetLineColor(kBlue);
   hMeas= new TH1D ("meas", "Test Measured", nmx, xlo, xhi);
   hMeas->SetLineColor(kRed);
@@ -311,7 +317,7 @@ Int_t RooUnfoldTestHarness::Test()
 Int_t RooUnfoldTestHarness::Unfold ()
 {
   if (verbose>=0) cout << "Create RooUnfold object for method " << method << endl;
-  unfold= RooUnfold::New ((RooUnfold::Algorithm)method, response, hMeas, regparm);
+  unfold= RooUnfold::New ((RooUnfold::Algorithm)method, response, hMeas, regparm, "unfold");
   if (!unfold) return 0;
   unfold->SetVerbose (verbose);
   if (ntoys<0) ntoys= (ploterrors) ? 500 : 50;
@@ -324,6 +330,7 @@ Int_t RooUnfoldTestHarness::Unfold ()
   if (verbose>=0) {cout << "Created "; unfold->Print();}
   hReco= unfold->Hreco((RooUnfold::ErrorTreatment)doerror);
   if (!hReco) return 0;
+  hReco->SetName("reco");
   if (verbose>=0) unfold->PrintTable (cout, hTrue, (RooUnfold::ErrorTreatment)doerror);
   if (verbose>=2 && doerror>=RooUnfold::kCovariance) {
     TMatrixD covmat= unfold->Ereco((RooUnfold::ErrorTreatment)doerror);
@@ -428,25 +435,26 @@ void RooUnfoldTestHarness::PlotErrors()
   if (onepage) canvas->cd(++ipad);
   TH1* t= 0;
   if (ploterrors>=2) t=hTrue;
-  RooUnfoldErrors All(ntoys,unfold,t);
-  TH1* RMSRes=All.RMSResiduals();
-  TH1* unferr=All.UnfoldingError();
-  setmax(unferr,RMSRes);
-  unferr->Draw("HIST");
-  RMSRes->Draw("P SAME");
+  errors= new RooUnfoldErrors(ntoys,unfold,t);
+  hToyErr=errors->RMSResiduals();
+  hUnfErr=errors->UnfoldingError();
+  setmax(hUnfErr,hToyErr);
+  hUnfErr->Draw("HIST");
+  hToyErr->Draw("P SAME");
 
   lErrors= new TLegend (0.75, 0.75, 0.894, 0.89);
   lErrors->SetTextSize(0.05);
   lErrors->SetTextFont(42);
-  lErrors->AddEntry (unferr, "Unfolding errors", "L");
-  lErrors->AddEntry (RMSRes, "Toy MC RMS",       "P");
+  lErrors->AddEntry (hUnfErr, "Unfolding errors", "L");
+  lErrors->AddEntry (hToyErr, "Toy MC RMS",       "P");
   lErrors->Draw();
   canvas->Update();
 
   if (ploterrors<2) return;
   if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
-  Double_t good_chi= All.Chi2()->Draw("chi2","abs(chi2)<1e10");
+  ntChi2= errors->Chi2();
+  Double_t good_chi= ntChi2->Draw("chi2","abs(chi2)<1e10");
   if (ntoys>good_chi){
     TString chi;
     chi+=(ntoys-good_chi);
@@ -468,26 +476,30 @@ void RooUnfoldTestHarness::PlotParms()
 {
   if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
-  RooUnfoldParms Parm(unfold,(RooUnfold::ErrorTreatment)doerror,hTrue);
-  if (maxparm>minparm) Parm.SetMaxParm(maxparm);
-  if (minparm!=-1e30)  Parm.SetMinParm(minparm);
-  if (stepsize>0)      Parm.SetStepSizeParm(stepsize);
-  Parm.GetChi2()->Draw("P");    
+  parms= new RooUnfoldParms(unfold,(RooUnfold::ErrorTreatment)doerror,hTrue);
+  if (maxparm>minparm) parms->SetMaxParm(maxparm);
+  if (minparm!=-1e30)  parms->SetMinParm(minparm);
+  if (stepsize>0)      parms->SetStepSizeParm(stepsize);
+  hParmChi2= parms->GetChi2();
+  hParmChi2->Draw("P");    
   canvas->Update();
 
   if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
-  Parm.GetRMSError()->Draw("P");    
+  hParmErr= parms->GetRMSError();
+  hParmErr->Draw("P");    
   canvas->Update();
 
   if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
-  Parm.GetMeanResiduals()->Draw("P"); 
+  hParmRes= parms->GetMeanResiduals();
+  hParmRes->Draw("P"); 
   canvas->Update();
 
   if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
-  Parm.GetRMSResiduals()->Draw("P"); 
+  hParmRms= parms->GetRMSResiduals();
+  hParmRms->Draw("P"); 
   canvas->Update();
 }
 
@@ -590,6 +602,8 @@ RooUnfoldTestHarness::RooUnfoldTestHarness (const char* name, const char* args)
 
 RooUnfoldTestHarness::~RooUnfoldTestHarness()
 {
+  delete errors;   errors=   0;
+  delete parms;    parms=   0;
   delete response; response= 0;
   delete unfold;   unfold=   0;
   delete canvas;   canvas=   0;
@@ -602,13 +616,17 @@ RooUnfoldTestHarness::~RooUnfoldTestHarness()
 
 void RooUnfoldTestHarness::Reset()
 {
+  errors= 0;
+  parms= 0;
   response= 0;
   unfold= 0;
   canvas= 0;
   ps= 0;
   hPDFx= hTestPDFx= 0;
-  hTrain= hTrainTrue= hTrue= hMeas= hReco= hRes= hPulls= 0;
+  hTrain= hTrainTrue= hTrue= hMeas= hReco= hRes= hPulls=
+    hUnfErr= hToyErr= hParmChi2= hParmErr= hParmRes= hParmRms= 0;
   hResmat= hCorr= 0;
+  ntChi2= 0;
   lTrain= lTest= lErrors= 0;
   error= ipad= 0;
   dim= 1;
@@ -632,6 +650,9 @@ int RooUnfoldTestHarness::SetArgs (int argc, const char* const* argv, bool split
 
 void RooUnfoldTestHarness::Init()
 {
+  rootfile= GetName();
+  rootfile += ".root";
+
   if (nmx==-1) nmx= ntx;
   if (overflow==2) {
     Double_t xwid= (xhi-xlo) / ntx;
@@ -655,14 +676,6 @@ Int_t RooUnfoldTestHarness::CheckParms()
 {
   if (addbias==-1)
     addbias= (method==RooUnfold::kBinByBin || method==RooUnfold::kInvert) ? 0 : 1;  // bin-by-bin/invert methods can't handle bias
-  if (doerror==-1) {
-    if (method==RooUnfold::kBayes && ntbins*nmbins >= 50625) {
-      doerror= RooUnfold::kErrors;
-      cerr << "Don't calculate full covariance matrix for Bayes algorithm - there are " << ntbins*nmbins
-           << " bins in the response matrix and the calculation would a long time (set doerror=2 to override this)" << endl;
-    } else
-      doerror= RooUnfold::kCovariance;
-  }
 
   if (verbose>=0) PrintParms (cout);
 

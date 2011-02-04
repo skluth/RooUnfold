@@ -1,6 +1,17 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          4-Feb-2011
+  o Add I/O streamers for RooUnfold and its subclasses.
+  o Fix RooUnfold::New when name but not title is specified.
+  o Fix RooUnfold::PrintTable for when hTrue isn't specified.
+  o RooUnfoldTest now writes histograms and unfold object to RooUnfoldTest.root
+    (previously just response object was written there).
+  o RooUnfoldTest no longer defaults doerror=1 for Bayes. Just calculating the
+    bin-by-bin errors is no longer any faster.
+  o Add doc/bayes_errors.tex describing new (30-Jan-2011) RooUnfoldBayes
+    error calculation.
+
 Tim Adye         30-Jan-2011
   o Rewrote RooUnfoldBayes to perform the unfolding itself instead of calling
     RooUnfoldBayesImpl. RooUnfoldBayesImpl and Array2D removed from the package.

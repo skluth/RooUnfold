@@ -55,13 +55,13 @@ protected:
 
 private:
   TUnfold::ERegMode _reg_method; //Regularisation method
-  TUnfold* _unf; //TUnfold object
+  TUnfold* _unf; //! Implementation in TUnfold object (no streamer)
   Bool_t tau_set;
   Double_t _tau;
 
 public:
 
-  ClassDef (RooUnfoldTUnfold, 0)   // Interface to TUnfold
+  ClassDef (RooUnfoldTUnfold, 1)   // Interface to TUnfold
 };
 
 // Inline method definitions

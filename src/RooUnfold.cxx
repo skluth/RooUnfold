@@ -161,7 +161,8 @@ RooUnfold* RooUnfold::New (Algorithm alg, const RooUnfoldResponse* res, const TH
       cerr << "Unknown RooUnfold method " << Int_t(alg) << endl;
       return 0;
   }
-  if (name || title) unfold->SetNameTitle (name, title);
+  if (name)  unfold->SetName  (name);
+  if (title) unfold->SetTitle (title);
   if (regparm != -1e30){
     unfold->SetRegParm(regparm);
   }
@@ -172,7 +173,7 @@ RooUnfold* RooUnfold::Clone (const char* newname) const
 {
   // Creates a copy of the unfold object
   RooUnfold* unfold= new RooUnfold(*this);
-  if (newname && strlen(newname)) unfold->SetName(newname);
+  if (newname) unfold->SetName(newname);
   return unfold;
 }
 
@@ -454,39 +455,39 @@ void RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment wi
     o << std::fixed << setprecision(0);
     true_train_tot+=hTrainTrue->GetBinContent(it);
     meas_train_tot+=hTrain->GetBinContent(im);
-    true_test_tot+=hTrue->GetBinContent(it);
+    if (hTrue) true_test_tot+=hTrue->GetBinContent(it);
     meas_test_tot+=hMeas->GetBinContent(im);
     unf_tot+=hReco->GetBinContent(it);
     if (i<_nt){
       o << ' ' << setw(8) << hTrainTrue->GetBinContent(it);
     }
     else
-      o << setw(9) << " ";
+      o << setw(9) << ' ';
     if (i<_nm)
       o << ' ' << setw(8) << hTrain->GetBinContent(im);
     else
-      o << setw(9) << " ";
+      o << setw(9) << ' ';
     if (hTrue && i<_nt)
       o << ' ' << setw(8) << hTrue->GetBinContent(it);
     else
-      o << setw(9) << " ";
+      o << setw(9) << ' ';
     if (i<_nm)
       o << ' ' << setw(8) << hMeas->GetBinContent(im);
     else
-      o << setw(9) << " ";
+      o << setw(9) << ' ';
     o << setprecision(1);
     if (i<_nt) {
-      o << ' ' << setw(8) << hReco->GetBinContent(it);
+      Double_t y= hReco->GetBinContent(it), yerr = hReco->GetBinError(it);
+      o << ' ' << setw(8) << y;
+      o << ' ' << setw(9) << yerr;
       if (hTrue &&
-          ((hReco->GetBinContent(it)!=0.0 || (withError && hReco->GetBinError(it)>0.0)) &&
-           (hTrue->GetBinContent(it)!=0.0 || (withError && hTrue->GetBinError(it)>0.0)))) {
-        Double_t ydiff    = hReco->GetBinContent(it) - hTrue->GetBinContent(it);
-        Double_t ydiffErr = hReco->GetBinError(it);
-        o << " " << setw(9) << ydiffErr;
+          (                       y!=0.0 || (withError &&                   yerr>0.0)) &&
+          (hTrue->GetBinContent(it)!=0.0 || (withError && hTrue->GetBinError(it)>0.0))) {
+        Double_t ydiff= y - hTrue->GetBinContent(it);
         o << ' ' << setw(8) << ydiff;
-        if (ydiffErr>0.0) {
+        if (yerr>0.0) {
           ndf++;
-          Double_t ypull = ydiff/ydiffErr;
+          Double_t ypull = ydiff/yerr;
           chi2 += ypull*ypull;
            o << ' ' << setw(8) << ypull;
         }
@@ -503,7 +504,7 @@ void RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment wi
   if (hTrue)
     o << ' ' << setw(8) << true_test_tot;
   else
-    o << setw(9) << " ";
+    o << setw(9) << ' ';
   o << ' ' << setw(8) << meas_test_tot << setprecision(1)
     << ' ' << setw(8) << unf_tot
     << ' ' << setw(9) << sqrt(meas_test_tot)*(true_train_tot/meas_train_tot)
@@ -514,16 +515,18 @@ void RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment wi
     o<< endl
     << "===============================================================================" << xwid << endl;
   o.copyfmt (fmt);
-  Double_t chi_squ = chi2;
-  if (withError==kCovariance || withError==kCovToy) {
-    chi_squ = Chi2(hTrue,withError);
-    o << "Chi^2/NDF=" << chi_squ << "/" << ndf << " (bin-by-bin Chi^2=" << chi2 << ")";
-  } else {
-    o << "Bin-by-bin Chi^2/NDF=" << chi_squ << "/" << ndf;
-  }
-  o << endl;
-  if (chi_squ<=0){
-    cerr << "Warning: Invalid Chi^2 Value" << endl;
+  if (hTrue) {
+    Double_t chi_squ = chi2;
+    if (withError==kCovariance || withError==kCovToy) {
+      chi_squ = Chi2(hTrue,withError);
+      o << "Chi^2/NDF=" << chi_squ << "/" << ndf << " (bin-by-bin Chi^2=" << chi2 << ")";
+    } else {
+      o << "Bin-by-bin Chi^2/NDF=" << chi_squ << "/" << ndf;
+    }
+    o << endl;
+    if (chi_squ<=0){
+      cerr << "Warning: Invalid Chi^2 Value" << endl;
+    }
   }
 }
 
@@ -531,7 +534,7 @@ void RooUnfold::SetNameTitleDefault()
 {
   if (!_res) return;
   const char* s= GetName();
-  if (s[0] == '\0') SetName  (_res->GetName());
+  if (s[0] == '\0') SetName (_res->GetName());
   s= GetTitle();
   if (s[0] == '\0') {
     TString title= "Unfold ";
@@ -771,4 +774,19 @@ TH1D* RooUnfold::HistNoOverflow (const TH1* h, Bool_t overflow)
     hx->SetBinError   (i+1, h->GetBinError   (i));
   }
   return hx;
+}
+
+void RooUnfold::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooUnfold.
+   if (R__b.IsReading()) {
+      // Don't add our histograms to the currect directory.
+      // We own them and we don't want them to disappear when the file is closed.
+      Bool_t oldstat= TH1::AddDirectoryStatus();
+      TH1::AddDirectory (kFALSE);
+      R__b.ReadClassBuffer(RooUnfold::Class(),this);
+      TH1::AddDirectory (oldstat);
+   } else {
+      R__b.WriteClassBuffer(RooUnfold::Class(),this);
+   }
 }

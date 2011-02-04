@@ -62,7 +62,7 @@ private:
 
 protected:
   // instance variables
-  TSVDUnfold* _svd;
+  TSVDUnfold* _svd;  //! Implementation in TSVDUnfold object (no streamer)
   Int_t _kreg;
   Int_t _ntoyssvd;
 
@@ -70,7 +70,7 @@ protected:
   TH2D *_reshist;
 
 public:
-  ClassDef (RooUnfoldSvd, 0) // SVD Unfolding (interface to TSVDUnfold)
+  ClassDef (RooUnfoldSvd, 1) // SVD Unfolding (interface to TSVDUnfold)
 };
 
 // Inline method definitions

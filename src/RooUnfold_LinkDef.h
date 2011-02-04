@@ -6,9 +6,9 @@
 
 #pragma link C++ class vector<Double_t>+;
 #pragma link C++ class vector<Int_t>+;
-#pragma link C++ class RooUnfold+;
+#pragma link C++ class RooUnfold-;
 #pragma link C++ class RooUnfoldBayes+;
-#pragma link C++ class RooUnfoldSvd+;
+#pragma link C++ class RooUnfoldSvd-;
 #pragma link C++ class RooUnfoldBinByBin+;
 #pragma link C++ class RooUnfoldResponse-;
 #pragma link C++ class RooUnfoldErrors+;

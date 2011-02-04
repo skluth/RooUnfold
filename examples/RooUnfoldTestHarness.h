@@ -15,6 +15,7 @@
 
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include "TNamed.h"
+#include "TString.h"
 #include "RooUnfold.h"
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,0,0)
 #include "TVectorDfwd.h"
@@ -40,8 +41,11 @@ class TLegend;
 class TH1;
 class TH1D;
 class TH2D;
+class TNtuple;
 class RooUnfoldResponse;
 class RooUnfold;
+class RooUnfoldErrors;
+class RooUnfoldParms;
 
 class RooUnfoldTestHarness : public TNamed {
 public:
@@ -51,6 +55,7 @@ public:
   Int_t    ntoys, ploterrors, plotparms;
   Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx, mscalex;
   Double_t regparm, effxlo, effxhi, xbias, xsmear, minparm,maxparm,stepsize;
+  TString  rootfile;
 
   // Data
   Int_t              error, ipad, ntbins, nmbins;
@@ -58,10 +63,14 @@ public:
   TPostScript*       ps;
   TLegend            *lTrain, *lTest, *lErrors;
   TH1                *hTrain, *hTrainTrue, *hTrue, *hMeas, *hReco, *hRes, *hPulls;
+  TH1                *hUnfErr, *hToyErr, *hParmChi2, *hParmErr, *hParmRes, *hParmRms;
   TH1D               *hPDFx, *hTestPDFx;
   TH2D               *hResmat, *hCorr;
+  TNtuple            *ntChi2;
   RooUnfoldResponse* response;
   RooUnfold*         unfold;
+  RooUnfoldErrors*   errors;
+  RooUnfoldParms*    parms;
   // Constructors
   RooUnfoldTestHarness (const char* name= "RooUnfoldTest");
   RooUnfoldTestHarness (const char* name, const char* args);

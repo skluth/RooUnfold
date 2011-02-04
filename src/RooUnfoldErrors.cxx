@@ -127,8 +127,8 @@ RooUnfoldErrors::CreatePlots()
 
     Bool_t oldstat= TH1::AddDirectoryStatus();
     TH1::AddDirectory (kFALSE);
-    h_err     = new TH1D ("h_err",     "Unfolding errors", ntx, xlo, xhi); 
-    h_err_res = new TH1D ("h_err_res", "Toy MC RMS",       ntx, xlo, xhi); 
+    h_err     = new TH1D ("unferr", "Unfolding errors", ntx, xlo, xhi); 
+    h_err_res = new TH1D ("toyerr", "Toy MC RMS",       ntx, xlo, xhi); 
     TH1::AddDirectory (oldstat);
 
     TH1* reco= unfold->Hreco(RooUnfold::kErrors);
@@ -156,8 +156,8 @@ RooUnfoldErrors::CreatePlotsWithChi2()
     Bool_t oldstat= TH1::AddDirectoryStatus();
     TH1::AddDirectory (kFALSE);
 
-    h_err     = new TProfile ("h_err",     "Unfolding errors", ntx, xlo, xhi); 
-    h_err_res = new TH1D     ("h_err_res", "Toy MC RMS",       ntx, xlo, xhi); 
+    h_err     = new TProfile ("unferr", "Unfolding errors", ntx, xlo, xhi); 
+    h_err_res = new TH1D     ("toyerr", "Toy MC RMS",       ntx, xlo, xhi); 
     hchi2     = new TNtuple  ("chi2", "chi2", "chi2");
     vector<TH1D*> graph_vector;
     for (int a=0; a<=ntx+1; a++) {

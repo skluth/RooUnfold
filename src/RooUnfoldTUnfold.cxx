@@ -204,6 +204,7 @@ void
 RooUnfoldTUnfold::GetCov()
 {
   //Gets Covariance matrix
+  if (!_unf) return;
   TH2D* ematrix=_unf->GetEmatrix("ematrix","error matrix",0,0);
   _cov.ResizeTo (_nt,_nt);
   for (Int_t i= 0; i<_nt; i++) {

@@ -92,7 +92,7 @@ protected:
   TMatrixD _dnCidnEj;     // error propagation matrix
 
 public:
-  ClassDef (RooUnfoldBayes, 0) // Bayesian Unfolding
+  ClassDef (RooUnfoldBayes, 1) // Bayesian Unfolding
 };
 
 // Inline method definitions

@@ -50,7 +50,7 @@ protected:
   TDecompSVD* _svd;
 
 public:
-  ClassDef (RooUnfoldInvert, 0)  // Unregularised unfolding
+  ClassDef (RooUnfoldInvert, 1)  // Unregularised unfolding
 };
 
 // Inline method definitions
