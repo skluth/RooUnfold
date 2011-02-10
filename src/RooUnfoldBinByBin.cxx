@@ -58,30 +58,39 @@ RooUnfoldBinByBin::Clone (const char* newname) const
 
 
 
+TVectorD* RooUnfoldBinByBin::Impl()
+{
+  return &_factors;
+}
+
 void
 RooUnfoldBinByBin::Unfold()
 {
+    const TVectorD& vmeas=  Vmeasured();
     const TVectorD& vtrain= _res->Vmeasured();
     const TVectorD& vtruth= _res->Vtruth();
     _rec.ResizeTo(_nt);
-    _cov.ResizeTo(_nt,_nt);
+    _factors.ResizeTo(_nt);
     Int_t nb= _nm < _nt ? _nm : _nt;
-    for (int i=0; i<nb;i++){     
-      if (vtrain(i)!=0.0){
-        Double_t c=(vtruth(i))/(vtrain(i));
-        Double_t m= RooUnfoldResponse::GetBinContent (_meas, i, _overflow);
-        _rec(i)=     c*m;
-        _cov(i,i)= c*c*m;
-      }
+    for (int i=0; i<nb; i++) {
+      if (vtrain[i]==0.0) continue;
+      Double_t c= vtruth[i]/vtrain[i];
+      _factors[i]= c;
+      _rec(i)= c*vmeas[i];
     }
     _unfolded= true;
-    _haveCov=  true;
 }
 
 void
 RooUnfoldBinByBin::GetCov()
 {
-    // RooUnfoldBinByBin::Unfold already filled _cov
+    const TMatrixD& covmeas= GetMeasuredCov();
+    _cov.ResizeTo(_nt,_nt);
+    Int_t nb= _nm < _nt ? _nm : _nt;
+    for (int i=0; i<nb; i++)
+      for (int j=0; j<nb; j++)
+        _cov(i,j)= _factors[i]*_factors[j]*covmeas(i,j);
+    _haveCov= true;
 }
 
 void

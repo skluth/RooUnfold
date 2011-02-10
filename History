@@ -1,6 +1,15 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          9-Feb-2011
+  o RooUnfold::SetMeasured can also be passed vectors for measured distribution
+    and errors, or a matrix for the covariance matrix. SetMeasuredCov just
+    sets the covariance matrix. GetMeasuredCov retrieves it.
+    All error calculations except RooUnfoldTUnfold with error propagation
+    use the full measurement covariance matrix if specified.
+  o RooUnfold::RunToy() returns new RooUnfold object.
+    RunToy() replaces old Runtoy() method, which returned a histogram.
+
 Tim Adye          4-Feb-2011
   o Add I/O streamers for RooUnfold and its subclasses.
   o Fix RooUnfold::New when name but not title is specified.

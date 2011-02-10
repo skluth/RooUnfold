@@ -50,7 +50,6 @@ public:
   virtual void Print (Option_t* option= "") const;
 
   static TMatrixD& H2M (const TH2* h, TMatrixD& m, Bool_t overflow);
-  static TMatrixD& ABAT (const TMatrixD& a, const TMatrixD& b, TMatrixD& c);
 
 protected:
   void Assign (const RooUnfoldBayes& rhs); // implementation of assignment operator

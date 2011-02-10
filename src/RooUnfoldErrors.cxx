@@ -131,15 +131,12 @@ RooUnfoldErrors::CreatePlots()
     h_err_res = new TH1D ("toyerr", "Toy MC RMS",       ntx, xlo, xhi); 
     TH1::AddDirectory (oldstat);
 
-    TH1* reco= unfold->Hreco(RooUnfold::kErrors);
-    for (Int_t i= 0; i<=ntx+1; i++) {
-      h_err->SetBinContent(i,reco->GetBinError(i));
-    }
-
     unfold->SetNToys(toys);
-    reco= unfold->Hreco(RooUnfold::kCovToy);
-    for (Int_t i= 0; i<=ntx+1; i++) {
-      h_err_res->SetBinContent(i,reco->GetBinError(i));
+    const TVectorD& errunf= unfold->ErecoV(RooUnfold::kErrors);
+    const TVectorD& errtoy= unfold->ErecoV(RooUnfold::kCovToy);
+    for (int i= 0; i<ntx; i++) {
+      h_err    ->SetBinContent(i+1,errunf[i]);
+      h_err_res->SetBinContent(i+1,errtoy[i]);
     }
     return;
 }
@@ -159,42 +156,42 @@ RooUnfoldErrors::CreatePlotsWithChi2()
     h_err     = new TProfile ("unferr", "Unfolding errors", ntx, xlo, xhi); 
     h_err_res = new TH1D     ("toyerr", "Toy MC RMS",       ntx, xlo, xhi); 
     hchi2     = new TNtuple  ("chi2", "chi2", "chi2");
-    vector<TH1D*> graph_vector;
-    for (int a=0; a<=ntx+1; a++) {
+    vector<TH1D*> graph_vector(ntx);
+    for (int a=0; a<ntx; a++) {
       TString graph_name;
       graph_name.Form("resbin%d",a);
-      TH1D* graph = new TH1D (graph_name,graph_name, 100,0,10000);
-      graph_vector.push_back(graph);
+      graph_vector[a]= new TH1D (graph_name,graph_name, 100,0,10000);
     }
     
     TH1::AddDirectory (oldstat);
     
     int odd_ch=0;
     for (int k=0; k<toys;k++){  
-        double chi2=0;
-        TH1* hReco = unfold->Runtoy(RooUnfold::kCovariance,&chi2,hTrue);
-        for (int i=0; i<=ntx+1; i++) {    
-            Double_t res= hReco->GetBinContent(i);
-            graph_vector[i]->Fill(res);
-            Double_t u_error=hReco->GetBinError(i); 
-            h_err->Fill(h_err->GetBinCenter(i),u_error);
+        RooUnfold* toy= unfold->RunToy();
+        Double_t chi2=        toy->Chi2 (hTrue);
+        const TVectorD& reco= toy->Vreco();
+        const TVectorD& err=  toy->ErecoV();
+        for (int i=0; i<ntx; i++) {    
+            graph_vector[i]->Fill(reco[i]);
+            h_err->Fill(h_err->GetBinCenter(i+1),err[i]);
         } 
         if (hTrue){
             hchi2->Fill(chi2);
-            if (TMath::Abs(chi2)>=maxchi2 && unfold->verbose()>=1){
+            if (fabs(chi2)>=maxchi2 && toy->verbose()>=1){
                 cerr<<"Large |chi^2| value: "<< chi2 << endl;
                 odd_ch++;
             }
         }
-        delete hReco;
+        delete toy;
     }
-    for (unsigned int i=0; i<graph_vector.size(); i++){
-        Double_t n=(graph_vector[i]->GetEntries());
+    for (int i=0; i<ntx; i++){
+      TH1D* graph= graph_vector[i];
+        Double_t n= graph->GetEntries();
         if (n<=0.0) continue;
-        Double_t spr=(graph_vector[i]->GetRMS());
-        h_err_res->SetBinContent(i,spr);
-        h_err_res->SetBinError(i,spr/sqrt(2*n));
-        delete graph_vector[i];
+        Double_t spr= graph->GetRMS();
+        h_err_res->SetBinContent (i+1, spr);
+        h_err_res->SetBinError   (i+1, spr/sqrt(2*n));
+        delete graph;
     }
     
     if (odd_ch){

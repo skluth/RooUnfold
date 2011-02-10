@@ -124,18 +124,8 @@ RooUnfoldInvert::GetCov()
     resinv=_svd->Invert();
 #endif
 
-    const TVectorD& vmeasured= Vmeasured();
     _cov.ResizeTo(_nt,_nt);
-    for (int i=0;i<_nt;i++){
-        for (int j=0;j<=i;j++){
-            Double_t c= 0;
-            for (int k=0; k<_nm;k++){
-                c += resinv(i,k) * resinv(j,k) * vmeasured(k);
-            }
-            _cov(i,j)= c;
-            _cov(j,i)= c;
-        }
-    }
+    ABAT (resinv, GetMeasuredCov(), _cov);
     _haveCov= true;
 }
 

@@ -117,9 +117,7 @@ RooUnfoldBayes::Unfold()
 void
 RooUnfoldBayes::GetCov()
 {
-  _cov.ResizeTo (_nt, _nt);
   getCovariance();
-  _cov = _Vij;
   _haveCov= true;
 }
 
@@ -131,7 +129,7 @@ RooUnfoldBayes::GetSettings(){
     _defaultparm=4;
 }
 
-// TH2 -> TMatrixD with optional normalisation
+// TH2 -> TMatrixD
 TMatrixD&
 RooUnfoldBayes::H2M (const TH2* h, TMatrixD& m, Bool_t overflow)
 {
@@ -160,14 +158,10 @@ RooUnfoldBayes::setup()
   _Nji.ResizeTo(_ne,_nc); 
   _Mij.ResizeTo(_nc,_ne);
   _dnCidnEj.ResizeTo(_nc,_ne);
-  _Vij.ResizeTo(_nc,_nc);
-  _VnEstij.ResizeTo(_ne,_ne);
 
   _nCi= _res->Vtruth();
   H2M (_res->Hresponse(), _Nji, _overflow);   // don't normalise, which is what _res->Mresponse() would give us
   _nEstj= Vmeasured();
-  TVectorD emeas= Emeasured();
-  for (Int_t j = 0 ; j < _ne ; j++) _VnEstij(j,j)= emeas[j]*emeas[j];  // just fill diagonals
 }
 
 //-------------------------------------------------------------------------
@@ -267,15 +261,6 @@ RooUnfoldBayes::train()
   }
 }
 
-TMatrixD&
-RooUnfoldBayes::ABAT (const TMatrixD& a, const TMatrixD& b, TMatrixD& c)
-{
-  // Fills C such that C = A * B * A^T. Note that C cannot be the same object as A.
-  TMatrixD d (b, TMatrixD::kMultTranspose, a);
-  c.Mult (a, d);
-  return c;
-}
-
 //-------------------------------------------------------------------------
 void
 RooUnfoldBayes::getCovariance(Bool_t doUnfoldSystematic)
@@ -283,10 +268,11 @@ RooUnfoldBayes::getCovariance(Bool_t doUnfoldSystematic)
   if (verbose()>=1) cout << "Calculating covariances due to number of measured events" << endl;
 
   // Create the covariance matrix of result from that of the measured distribution
+  _cov.ResizeTo (_nt, _nt);
 #ifdef OLDERRS
-  ABAT (_Mij,      _VnEstij, _Vij);
+  ABAT (_Mij,      GetMeasuredCov(), _cov);
 #else
-  ABAT (_dnCidnEj, _VnEstij, _Vij);
+  ABAT (_dnCidnEj, GetMeasuredCov(), _cov);
 #endif
 
   // error due to uncertainty on unfolding matrix M
@@ -363,7 +349,7 @@ RooUnfoldBayes::getCovariance(Bool_t doUnfoldSystematic)
 
     // to get complete covariance add together
   Vc1 *= 1.0/(_nbartrue*_nbartrue);  // divide by _nbartrue*_nbartrue to get probability covariance matrix
-  _Vij += Vc1;
+  _cov += Vc1;
 
 }
 
@@ -432,7 +418,7 @@ RooUnfoldBayes::Print(Option_t* option) const
 
   cout << "Output (unfolded):" << endl;
   cout << "  Total Number of events : " << _rec.Sum()
-       << " +/- " << sqrt(fabs(_Vij.Sum())) <<endl;
+       << " +/- " << sqrt(fabs(_cov.Sum())) <<endl;
 
   cout << "-------------------------------------------\n" << endl;
 

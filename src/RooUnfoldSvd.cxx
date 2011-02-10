@@ -167,11 +167,10 @@ RooUnfoldSvd::GetCov()
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
   TH2D* meascov= new TH2D ("meascov", "meascov", _nm, 0.0, 1.0, _nm, 0.0, 1.0);
-  Int_t first= _overflow ? 0 : 1;
-  for (Int_t i= 0; i<_nm; i++) {
-    Double_t err= _meas->GetBinError(i+first);
-    meascov->SetBinContent (i+1, i+1, err*err);
-  }
+  const TMatrixD& cov= GetMeasuredCov();
+  for (Int_t i= 0; i<_nm; i++)
+    for (Int_t j= 0; i<_nm; i++)
+      meascov->SetBinContent (i+1, j+1, cov(i,j));
 
   //Get the covariance matrix for statistical uncertainties on the measured distribution
   TH2D* unfoldedCov= _svd->GetUnfoldCovMatrix (meascov, _ntoyssvd);

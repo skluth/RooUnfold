@@ -77,6 +77,7 @@ END_HTML */
 #include "TH3.h"
 #include "TVectorD.h"
 #include "TDecompSVD.h"
+#include "TDecompChol.h"
 #include "RooUnfoldResponse.h"
 #include "RooUnfoldErrors.h"
 #include "TRandom.h"
@@ -179,8 +180,11 @@ RooUnfold* RooUnfold::Clone (const char* newname) const
 
 void RooUnfold::Destroy()
 {
+  delete _measmine;
   delete _vMes;
   delete _eMes;
+  delete _covMes;
+  delete _covL;
 }
 
 RooUnfold::RooUnfold (const RooUnfold& rhs)
@@ -216,11 +220,12 @@ void RooUnfold::Init()
 {
   _res= 0;
   _vMes= _eMes= 0;
-  _meas= 0;
+  _covMes= _covL= 0;
+  _meas= _measmine= 0;
   _nm= _nt= 0;
   _verbose= 1;
   _overflow= 0;
-  _unfolded= _haveCov= _fail= _have_err_mat= _haveErrors= false;
+  _unfolded= _haveCov= _haveCovMes= _fail= _have_err_mat= _haveErrors= false;
   _NToys=50;
   GetSettings();
 }
@@ -235,10 +240,64 @@ RooUnfold& RooUnfold::Setup (const RooUnfoldResponse* res, const TH1* meas)
 
 void RooUnfold::SetMeasured (const TH1* meas)
 {
+  // Set measured distribution and errors. RooUnfold does not own the histogram.
   _meas= meas;
   delete _vMes; _vMes= 0;
   delete _eMes; _eMes= 0;
 }
+
+void RooUnfold::SetMeasured (const TVectorD& meas, const TVectorD& err)
+{
+  // Set measured distribution and errors. Should be called after setting response matrix.
+  if (!_measmine) {
+    Bool_t oldstat= TH1::AddDirectoryStatus();
+    TH1::AddDirectory (kFALSE);
+    _measmine= (TH1*) _res->Hmeasured()->Clone (GetName());
+    TH1::AddDirectory (oldstat);
+    _measmine->Reset();
+    _measmine->SetTitle (GetTitle());
+  }
+  for (Int_t i= 0; i<_nm; i++) {
+    Int_t j= RooUnfoldResponse::GetBin (_measmine, i, _overflow);
+    _measmine->SetBinContent(j, meas[i]);
+    _measmine->SetBinError  (j, err [i]);
+  }
+  SetMeasured (_measmine);
+}
+
+void RooUnfold::SetMeasured (const TVectorD& meas, const TMatrixD& cov)
+{
+  // Set measured distribution and errors. Should be called after setting response matrix.
+  SetMeasuredCov (cov);
+  SetMeasured (meas, Emeasured());
+}
+
+void RooUnfold::SetMeasuredCov (const TMatrixD& cov)
+{
+  delete _covL; _covL= 0;
+  delete _eMes;
+  delete _covMes;
+  _eMes= new TVectorD(_nm);
+  for (Int_t i= 0; i<_nm; i++) {
+    Double_t e= cov(i,i);
+    if (e>0.0) (*_eMes)[i]= sqrt(e);
+  }
+  _covMes= new TMatrixD (cov);
+  _haveCovMes= true;
+}
+
+const TMatrixD& RooUnfold::GetMeasuredCov() const
+{
+  if (_covMes) return *_covMes;
+  const TVectorD& err= Emeasured();
+  _covMes= new TMatrixD (_nm,_nm);
+  for (Int_t i= 0 ; i<_nm; i++) {
+    Double_t e= err[i];
+    (*_covMes)(i,i)= e*e;
+  }
+  return *_covMes;
+}
+
 
 void RooUnfold::SetResponse (const RooUnfoldResponse* res)
 {
@@ -292,27 +351,26 @@ void RooUnfold::GetCov()
 
 void RooUnfold::GetErrMat()
 {
-    //Get covariance matrix from the variation of the results in toy MC tests, using the Runtoy method.
-    TVectorD bc_vec(_nt);
-    TMatrixD bc_mat(_nt,_nt);
-    _err_mat.ResizeTo(_nt,_nt);
-    for (Int_t k=0; k<_NToys; k++){
-        TH1* res=Runtoy();
-        for (Int_t i=0; i<_nt;i++){
-            Double_t res_bci=RooUnfoldResponse::GetBinContent (res, i, _overflow);
-            bc_vec[i]+=res_bci;
-            for (Int_t j=0; j<_nt; j++){
-                bc_mat(i,j) += res_bci * RooUnfoldResponse::GetBinContent (res, j, _overflow);
-            }
-        }
-    }
+  //Get covariance matrix from the variation of the results in toy MC tests
+  TVectorD bc_vec(_nt);
+  TMatrixD bc_mat(_nt,_nt);
+  _err_mat.ResizeTo(_nt,_nt);
+  for (Int_t k=0; k<_NToys; k++){
+    RooUnfold* unfold= RunToy();
+    const TVectorD& res= unfold->Vreco();
     for (Int_t i=0; i<_nt;i++){
-        for (Int_t j=0; j<_nt; j++){
-            _err_mat(i,j)=(bc_mat(i,j)-(bc_vec[i]*bc_vec[j])/_NToys)/_NToys;
-
-        }
+      Double_t res_bci= res[i];
+      bc_vec[i] += res_bci;
+      for (Int_t j=0; j<_nt; j++) bc_mat(i,j) += res_bci * res[j];
     }
-    _have_err_mat=true;
+    delete unfold;
+  }
+  for (Int_t i=0; i<_nt; i++){
+    for (Int_t j=0; j<_nt; j++){
+      _err_mat(i,j)= (bc_mat(i,j) - (bc_vec[i]*bc_vec[j])/_NToys) / _NToys;
+    }
+  }
+  _have_err_mat=true;
 }
 
 Bool_t RooUnfold::UnfoldWithErrors (ErrorTreatment withError)
@@ -605,44 +663,41 @@ Double_t RooUnfold::GetDefaultParm() const
     return _defaultparm;
 }
 
-TH1* RooUnfold::Runtoy(ErrorTreatment withError,double* chi2, const TH1* hTrue) const
+RooUnfold* RooUnfold::RunToy() const
 {
-    /*
-    Returns unfolded distribution for one iteration of unfolding. Use multiple toys to find residuals
-    Can also return chi squared if a truth distribution is available.
-     */
-    RooUnfold* unfold_copy = Clone("unfold_toy");
-    const TH1* hMeas_AR = Hmeasured();
-    Bool_t oldstat= TH1::AddDirectoryStatus();
-    TH1::AddDirectory (kFALSE);
-    TH1* hMeas=Add_Random(hMeas_AR);
-    TH1::AddDirectory (oldstat);
-    unfold_copy->SetMeasured(hMeas);
-    TH1* hReco= unfold_copy->Hreco ((withError==kCovToy) ? kNoError : withError);
-    if (chi2 && !hTrue){
-        cerr<<"Error: can't calculate chi^2 without a truth distribution"<<endl;
-    }
-    if (chi2 && hTrue) *chi2=unfold_copy->Chi2(hTrue,withError);
-    delete hMeas;
-    delete unfold_copy;
-    return hReco;
-}
+  // Returns new RooUnfold object with smeared measurements for use as a toy.
+  // Use multiple toys to find spread of unfolding results.
+  TString name= GetName();
+  name += "_toy";
+  RooUnfold* unfold = Clone(name);
+  if (_haveCovMes) {
 
-
-TH1* RooUnfold::Add_Random(const TH1* hMeas_AR)
-{
-    //Adds a random number to the measured distribution before the unfolding//
-    TH1* hMeas2= dynamic_cast<TH1*>(hMeas_AR->Clone());
-    hMeas2->Reset();
-    Int_t nb= (hMeas_AR->GetNbinsX()+2) * (hMeas_AR->GetNbinsY()+2) * (hMeas_AR->GetNbinsZ()+2);
-    for (Int_t i=0; i<nb ; i++){
-            Double_t err=hMeas_AR->GetBinError(i);
-            Double_t new_x = hMeas_AR->GetBinContent(i);
-            if (err>0.0) new_x += gRandom->Gaus(0,err);
-            hMeas2->SetBinContent(i,new_x);
-            hMeas2->SetBinError(i,err);
+    // _covL is a lower triangular matrix for which the covariance matrix, V = _covL * _covL^T.
+    if (!_covL) {
+      TDecompChol c(*_covMes);
+      c.Decompose();
+      TMatrixD U(c.GetU());
+      _covL= new TMatrixD (TMatrixD::kTransposed, U);
+      _covL->Print();
     }
-    return hMeas2;
+    TVectorD newmeas(_nm);
+    for (Int_t i= 0; i<_nm; i++) newmeas[i]= gRandom->Gaus(0.0,1.0);
+    newmeas *= *_covL;
+    newmeas += Vmeasured();
+    unfold->SetMeasured(newmeas,*_covMes);
+
+  } else {
+
+    TVectorD newmeas= Vmeasured();
+    const TVectorD& err= Emeasured();
+    for (Int_t i= 0; i<_nm; i++) {
+      Double_t e= err[i];
+      if (e>0.0) newmeas[i] += gRandom->Gaus(0,e);
+    }
+    unfold->SetMeasured(newmeas,err);
+
+  }
+  return unfold;
 }
 
 void RooUnfold::Print(Option_t *opt) const
@@ -774,6 +829,14 @@ TH1D* RooUnfold::HistNoOverflow (const TH1* h, Bool_t overflow)
     hx->SetBinError   (i+1, h->GetBinError   (i));
   }
   return hx;
+}
+
+TMatrixD& RooUnfold::ABAT (const TMatrixD& a, const TMatrixD& b, TMatrixD& c)
+{
+  // Fills C such that C = A * B * A^T. Note that C cannot be the same object as A.
+  TMatrixD d (b, TMatrixD::kMultTranspose, a);
+  c.Mult (a, d);
+  return c;
 }
 
 void RooUnfold::Streamer(TBuffer &R__b)
