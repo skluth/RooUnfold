@@ -340,12 +340,12 @@ void RooUnfold::GetErrors()
 void RooUnfold::GetCov()
 {
     //Dummy routine to get covariance matrix. It should be overridden by derived classes.
-  _cov.ResizeTo (_nt, _nt);
+  const TMatrixD& covmeas= GetMeasuredCov();
   Int_t nb= _nm < _nt ? _nm : _nt;
-  for (Int_t i= 0; i < nb; i++) {
-    Double_t err= Emeasured()(i);
-    _cov(i,i)= err*err;
-  }
+  _cov.ResizeTo (_nt, _nt);
+  for (int i=0; i<nb; i++)
+    for (int j=0; j<nb; j++)
+      _cov(i,j)= covmeas(i,j);
   _haveCov= true;
 }
 
