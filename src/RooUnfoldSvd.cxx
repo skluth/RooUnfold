@@ -28,6 +28,7 @@ END_HTML */
 #include <iostream>
 #include <iomanip>
 
+#include "TClass.h"
 #include "TNamed.h"
 #include "TH1.h"
 #include "TH2.h"

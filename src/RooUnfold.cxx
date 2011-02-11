@@ -70,6 +70,7 @@ END_HTML */
 #include <cmath>
 #include <vector>
 
+#include "TClass.h"
 #include "TMatrixD.h"
 #include "TNamed.h"
 #include "TH1.h"
