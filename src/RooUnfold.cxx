@@ -839,17 +839,17 @@ TMatrixD& RooUnfold::ABAT (const TMatrixD& a, const TMatrixD& b, TMatrixD& c)
   return c;
 }
 
-void RooUnfold::Streamer(TBuffer &R__b)
+void RooUnfold::Streamer (TBuffer &R__b)
 {
-   // Stream an object of class RooUnfold.
-   if (R__b.IsReading()) {
-      // Don't add our histograms to the currect directory.
-      // We own them and we don't want them to disappear when the file is closed.
-      Bool_t oldstat= TH1::AddDirectoryStatus();
-      TH1::AddDirectory (kFALSE);
-      R__b.ReadClassBuffer(RooUnfold::Class(),this);
-      TH1::AddDirectory (oldstat);
-   } else {
-      R__b.WriteClassBuffer(RooUnfold::Class(),this);
-   }
+  // Stream an object of class RooUnfold.
+  if (R__b.IsReading()) {
+    // Don't add our histograms to the currect directory.
+    // We own them and we don't want them to disappear when the file is closed.
+    Bool_t oldstat= TH1::AddDirectoryStatus();
+    TH1::AddDirectory (kFALSE);
+    RooUnfold::Class()->ReadBuffer  (R__b, this);
+    TH1::AddDirectory (oldstat);
+  } else {
+    RooUnfold::Class()->WriteBuffer (R__b, this);
+  }
 }

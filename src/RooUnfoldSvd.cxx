@@ -200,19 +200,17 @@ RooUnfoldSvd::GetSettings(){
     _defaultparm=_maxparm/2;
 }
 
-void RooUnfoldSvd::Streamer(TBuffer &R__b)
+void RooUnfoldSvd::Streamer (TBuffer &R__b)
 {
-   // Stream an object of class RooUnfoldSvd.
-   if (R__b.IsReading()) {
-      // Don't add our histograms to the currect directory.
-      // We own them and we don't want them to disappear when the file is closed.
-      Bool_t oldstat= TH1::AddDirectoryStatus();
-      TH1::AddDirectory (kFALSE);
-      R__b.ReadClassBuffer(RooUnfoldSvd::Class(),this);
-      TH1::AddDirectory (oldstat);
-      _svd= 0;
-      _unfolded= 0;
-   } else {
-      R__b.WriteClassBuffer(RooUnfoldSvd::Class(),this);
-   }
+  // Stream an object of class RooUnfoldSvd.
+  if (R__b.IsReading()) {
+    // Don't add our histograms to the currect directory.
+    // We own them and we don't want them to disappear when the file is closed.
+    Bool_t oldstat= TH1::AddDirectoryStatus();
+    TH1::AddDirectory (kFALSE);
+    RooUnfoldSvd::Class()->ReadBuffer  (R__b, this);
+    TH1::AddDirectory (oldstat);
+  } else {
+    RooUnfoldSvd::Class()->WriteBuffer (R__b, this);
+  }
 }
