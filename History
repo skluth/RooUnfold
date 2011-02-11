@@ -3,6 +3,7 @@ History of RooUnfold     $Id$
 
 Tim Adye         11-Feb-2011
   o Adjust streamer methods for compatibility with ROOT 5.14 and before.
+  o Remove obsolete RooUnfold::Add_Random from header file.
   o Move doc/bayes_errors.tex to subdirectory doc/bayes_errors/ and add
     plots to demonstrate the fix.
 

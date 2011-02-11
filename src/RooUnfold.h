@@ -108,7 +108,6 @@ protected:
   virtual void GetSettings();
   virtual Bool_t UnfoldWithErrors (ErrorTreatment withError);
 
-  static TH1*     Add_Random   (const TH1* meas);
   static TMatrixD CutZeros     (const TMatrixD& ereco);
   static TH1D*    HistNoOverflow (const TH1* h, Bool_t overflow);
   static TMatrixD& ABAT (const TMatrixD& a, const TMatrixD& b, TMatrixD& c);
