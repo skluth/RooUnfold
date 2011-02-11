@@ -1,4 +1,5 @@
 \documentclass[12pt,a4paper]{article}
+\usepackage{graphicx}
 \setlength{\textwidth}{190mm}
 \setlength{\textheight}{253mm}
 \setlength{\oddsidemargin}{-14mm}
@@ -65,6 +66,7 @@ To take this into account, we compute the error propagation matrix
 \begin{equation}
 \dd{\hat{n}(\C_i)}{n(\E_j)} = M_{ij} + \sum_{k=1}^{n_{\E}} M_{ik} n(\E_k)
 \left( \frac{1}{n_0(\C_i)} \dd{n_0(\C_i)}{n(\E_j)} - \sum_{l=1}^{n_{\C}} \frac{\epsilon_l}{n_0(\C_l)} \dd{n_0(\C_l)}{n(\E_j)} M_{lk} \right)
+\label{eq:dnCidnEj}
 \end{equation}
 
 This depends upon the matrix $\dd{n_0(\C_i)}{n(\E_j)}$ which is $\dd{\hat{n}(\C_i)}{n(\E_j)}$ from the previous iteration.
@@ -79,9 +81,21 @@ V(\hat{n}(\C_k),\hat{n}(\C_l)) = \sum_{i,j=1}^{n_{\E}} \dd{\hat{n}(\C_k)}{n(\E_i
 
 \noindent from the covariance matrix of the measurements, $V(n(\E_i),n(\E_j))$.
 
-This new formula has been compared to the results of toy MC tests and agrees well.
-Without the new second term, the error is underestimated if more than one iteration
-is used --- by around 20\% per iteration in some cases.
+Without the new second term in eq.~\ref{eq:dnCidnEj},
+the error is underestimated if more than one iteration
+is used, but agrees well with toy Monte Carlo tests if the full error propagation is used
+(see figure~\ref{fig:bayes_errors}).%
+\begin{figure}[ht]
+\makebox[\textwidth]{\includegraphics[width=.47\textwidth,clip]{bayes_errors_old.eps}\hfill
+                     \includegraphics[width=.47\textwidth,clip]{bayes_errors_new.eps}}%
+\caption
+[Bayesian unfolding errors compared to toy MC]%
+{Bayesian unfolding errors compared to toy MC RMS for 1, 2, 3, and 9 iterations.
+The left-hand plot shows the errors using D'Agostini's original method,
+ignoring any dependence on previous iterations (only the first term of eq.~\ref{eq:dnCidnEj}).
+The right-hand plot shows the full error propagation.}%
+\label{fig:bayes_errors}%
+\end{figure}
 
 D'Agostini takes a multinomial distribution for the bin contents, and hence
 

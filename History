@@ -1,6 +1,10 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         11-Feb-2011
+  o Move doc/bayes_errors.tex to subdirectory doc/bayes_errors/ and add
+    plots to demonstrate the fix.
+
 Tim Adye          9-Feb-2011
   o RooUnfold::SetMeasured can also be passed vectors for measured distribution
     and errors, or a matrix for the covariance matrix. SetMeasuredCov just

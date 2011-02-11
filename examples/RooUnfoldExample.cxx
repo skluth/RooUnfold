@@ -19,8 +19,8 @@ using std::endl;
 
 #include "RooUnfoldResponse.h"
 #include "RooUnfoldBayes.h"
-//#include "RooUnfoldSvd.h"
-//#include "RooUnfoldTUnfold.h"
+#include "RooUnfoldSvd.h"
+#include "RooUnfoldTUnfold.h"
 #endif
 
 //==============================================================================
@@ -48,6 +48,7 @@ Double_t smear (Double_t xt)
 
 void RooUnfoldExample()
 {
+  TH1::AddDirectory (kFALSE);
 #ifdef __CINT__
   gSystem->Load("libRooUnfold");
 #endif
@@ -76,17 +77,21 @@ void RooUnfoldExample()
   }
 
   cout << "==================================== UNFOLD ===================================" << endl;
-  RooUnfoldBayes   unfold (&response, hMeas, 4);    // OR
-//RooUnfoldSvd     unfold (&response, hMeas, 20);   // OR
+//RooUnfoldBayes   unfold (&response, hMeas, 4);    // OR
+  RooUnfoldSvd     unfold (&response, hMeas, 20, 20);   // OR
 //RooUnfoldTUnfold unfold (&response, hMeas);
 
+  TH1::AddDirectory (kFALSE);
   TH1D* hReco= (TH1D*) unfold.Hreco();
 
   unfold.PrintTable (cout, hTrue);
-  hReco->Draw();
-  hMeas->Draw("SAME");
-  hTrue->SetLineColor(8);
-  hTrue->Draw("SAME");
+  delete hReco;
+  delete hMeas;
+  delete hTrue;
+  //  hReco->Draw();
+  //  hMeas->Draw("SAME");
+  //  hTrue->SetLineColor(8);
+  //  hTrue->Draw("SAME");
 }
 
 #ifndef __CINT__
