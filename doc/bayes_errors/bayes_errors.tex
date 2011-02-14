@@ -18,7 +18,7 @@
 \begin{document}
 \title{Corrected error calculation for iterative Bayesian unfolding}
 \author{Tim Adye, Rutherford Appleton Laboratory}
-\date{4th February 2011}
+\date{14th February 2011}
 \maketitle
 
 The unfolding method based on iterative application of Bayes' theorem
@@ -47,19 +47,21 @@ as the result of applying the unfolding matrix, $M_{ij}$, to the measurements (`
 \noindent where
 
 \begin{equation}
-M_{ij} = \frac{P(\E_j|\C_i) P_0(\C_i)}{[\sum_{l=1}^{n_{\E}} P(\E_l|\C_i)] [\sum_{l=1}^{n_{\C}} P(\E_j|\C_l) P_0(C_l)]}
+M_{ij} = \frac{P(\E_j|\C_i) n_0(\C_i)}{\epsilon_i f_j}
 \end{equation}
 
-\noindent and $P(\E_j|\C_i)$ is the response matrix, $\epsilon_i \equiv \sum_{j=1}^{n_{\E}} P(\E_j|\C_i)$ are the efficiencies,
-and $P_0(C_l)$ is the prior distribution --- initially arbitrary (eg. flat or MC model), but updated on
+\noindent and
+$P(\E_j|\C_i)$ is the response matrix,
+$\epsilon_i \equiv \sum_{j=1}^{n_{\E}} P(\E_j|\C_i)$ are the efficiencies, and
+$f_j \equiv \sum_{l=1}^{n_{\C}} P(\E_j|\C_l) n_0(C_l)$ is the folded
+prior distribution, $n_0(C_l)$ --- initially arbitrary (eg. flat or MC model), but updated on
 subsequent iterations.
 
 D'Agostini then calculates the covariance matrix, which here we call $V(\hat{n}(\C_k),\hat{n}(\C_l))$,
 by error propagation from $n(\E_j)$,
 but assumes that $M_{ij}$ is itself independent of $n(\E_j)$. That is only true for the first iteration.
-For subsequent iterations, $P_0(\C_i)$ is replaced by $\hat{n}(\C_i) / \hat{N}_{\mathrm{true}}$
-($\hat{N}_{\mathrm{true}} \equiv \sum_{i=1}^{n_{\C}} \hat{n}(\C_i)$) from the
-previous iteration, and $\hat{n}(\C_i)$ depends on $n(\E_j)$ (eq.~\ref{eq:nCi}).
+For subsequent iterations, $n_0(\C_i)$ is replaced by $\hat{n}(\C_i)$ from the
+previous iteration, and $\hat{n}(\C_i)$ depends on $n(\E_j)$ (Eq.~(\ref{eq:nCi})).
 
 To take this into account, we compute the error propagation matrix
 
@@ -81,10 +83,10 @@ V(\hat{n}(\C_k),\hat{n}(\C_l)) = \sum_{i,j=1}^{n_{\E}} \dd{\hat{n}(\C_k)}{n(\E_i
 
 \noindent from the covariance matrix of the measurements, $V(n(\E_i),n(\E_j))$.
 
-Without the new second term in eq.~\ref{eq:dnCidnEj},
+Without the new second term in Eq.~(\ref{eq:dnCidnEj}),
 the error is underestimated if more than one iteration
-is used, but agrees well with toy Monte Carlo tests if the full error propagation is used
-(see figure~\ref{fig:bayes_errors}).%
+is used, but agrees well with toy Monte Carlo tests if the full error propagation is used,
+as shown in Fig.~\ref{fig:bayes_errors}.%
 \begin{figure}[ht]
 \makebox[\textwidth]{\includegraphics[width=.47\textwidth,clip]{bayes_errors_old.eps}\hfill
                      \includegraphics[width=.47\textwidth,clip]{bayes_errors_new.eps}}%
@@ -92,7 +94,7 @@ is used, but agrees well with toy Monte Carlo tests if the full error propagatio
 [Bayesian unfolding errors compared to toy MC]%
 {Bayesian unfolding errors compared to toy MC RMS for 1, 2, 3, and 9 iterations.
 The left-hand plot shows the errors using D'Agostini's original method,
-ignoring any dependence on previous iterations (only the first term of eq.~\ref{eq:dnCidnEj}).
+ignoring any dependence on previous iterations (only the first term of Eq.~(\ref{eq:dnCidnEj})).
 The right-hand plot shows the full error propagation.}%
 \label{fig:bayes_errors}%
 \end{figure}
@@ -103,6 +105,7 @@ D'Agostini takes a multinomial distribution for the bin contents, and hence
 V(n(\E_i),n(\E_j)) = n(\E_i) \delta_{ij} - \frac{n(\E_i) n(\E_j)}{\hat{N}_{\mathrm{true}}}
 \end{equation}
 
+where $\hat{N}_{\mathrm{true}} \equiv \sum_{i=1}^{n_{\C}} \hat{n}(\C_i)$.
 That describes a histogram with the fixed normalisation, ie. fixed total number of measured events.
 On the other hand, in counting experiments common in particle physics, each bin is independently Poisson distributed, with
 
@@ -110,7 +113,7 @@ On the other hand, in counting experiments common in particle physics, each bin 
 V(n(\E_i),n(\E_j)) = n(\E_i) \delta_{ij}
 \end{equation}
 
-Other, arbitrary, bin errors (perhaps even correlated) may also be used in equation~\ref{eq:Vij}.
+Other, arbitrary, bin errors (perhaps even correlated) may also be used in Eq.~(\ref{eq:Vij}).
 
 \subsection{Response matrix uncertainties}
 
@@ -121,8 +124,7 @@ are available, then there will be uncertainties on these terms. Their effect can
 \dd{\hat{n}(\C_i)}{P(\E_j|\C_k)} = \frac{n_0(\C_i) n(\E_j)}{f_j \epsilon_i} \left( \delta_{ik} - \frac{n_0(\C_k)}{f_j} \right)
 \end{equation}
 
-where here $f_j \equiv \sum_{l=1}^{n_{\C}} P(\E_j|\C_l) n_0(\C_l)$ is the folded prior. The covariance matrix due to these errors is
-given by
+The covariance matrix due to these errors is given by
 
 \begin{equation}
 V(\hat{n}(\C_k),\hat{n}(\C_l)) = \sum_{i,r=1}^{n_{\E}} \sum_{j,s=1}^{n_{\C}} \dd{\hat{n}(\C_k)}{P(\E_i|\C_j)} V(P(\E_i|\C_j),P(\E_r|\C_s)) \dd{\hat{n}(\C_l)}{P(\E_r|\C_s)}
