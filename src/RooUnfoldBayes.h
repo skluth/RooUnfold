@@ -43,6 +43,7 @@ public:
   void SetSmoothing  (Bool_t smoothit= false);
   Int_t GetIterations() const;
   Int_t GetSmoothing()  const;
+  const TMatrixD& UnfoldingMatrix() const;
 
   virtual void  SetRegParm (Double_t parm);
   virtual Double_t GetRegParm() const;
@@ -157,6 +158,12 @@ Int_t RooUnfoldBayes::GetSmoothing()  const
   return _smoothit;
 }
 
+inline
+const TMatrixD& RooUnfoldBayes::UnfoldingMatrix() const
+{
+  // Access unfolding matrix (Mij)
+  return _Mij;
+}
 
 inline
 void  RooUnfoldBayes::SetRegParm (Double_t parm)

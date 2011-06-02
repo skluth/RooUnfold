@@ -1,6 +1,9 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          2-Jun-2011
+  o Add RooUnfoldBayes::UnfoldingMatrix accessor.
+
 Tim Adye          6-Apr-2011
   o Add doc/phystat2011 conference write-up.
 
