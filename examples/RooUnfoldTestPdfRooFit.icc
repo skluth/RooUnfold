@@ -66,11 +66,11 @@ Int_t mcgenpdf2 (const RooAbsPdf& pdf, RooRealVar& xvar, Int_t nx,
   if (h) {
     Int_t nb= h->GetNbinsX();
     RooArgSet a(xvar);
-    Double_t norm= nx * ((h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin()) / nb) / pdf.getNorm (a);
+    Double_t norm= nx * ((h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin()) / nb);
     if (verbose>=1) cout << "fill histogram " << h->GetName() << ": norm=" << norm << ", offset=" << offset << endl;
     for (Int_t i= 1; i<=nb; i++) {
       xvar.setVal (h->GetBinCenter(i)-offset);
-      Double_t v= pdf.getVal();
+      Double_t v= pdf.getVal(&a);
       h->SetBinContent(i, norm*v);
     }
     if (verbose>=1) cout << "histogram " << h->GetName() << " filled" << endl;

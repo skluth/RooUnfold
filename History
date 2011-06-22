@@ -7,6 +7,8 @@ Tim Adye         22-Jun-2011
     due to a mismatch between the old header and the ROOT library with an
     updated class.
   o Added "make help" target.
+  o Work round RooFit PDF normalisation bug in ROOT 5.29.02 (bug #83534)
+    for RooUnfoldTest.
 
 Tim Adye          2-Jun-2011
   o Add RooUnfoldBayes::UnfoldingMatrix accessor.
