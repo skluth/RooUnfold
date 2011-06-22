@@ -21,6 +21,7 @@
 #        - Add VERBOSE=1 to show main commands as they are executed
 #
 # Build targets:
+#      help    - give brief help
 #      shlib   - make libRooUnfold.so (default target)
 #      include - make dependency files (*.d)
 #      lib     - make libRooUnfold.a
@@ -135,7 +136,7 @@ endif
 ifeq ($(HAVE_TSVDUNFOLD),1)
 CPPFLAGS     += -DHAVE_TSVDUNFOLD
 else
-EXCLUDE      += TSVDUnfold.cxx TSVDUnfold.h
+EXCLUDE      += TSVDUnfold.cxx TSVDUnfold_local.h
 endif
 
 # RooFit is included in ROOT if ROOT was compiled with --enable-roofit.
@@ -285,6 +286,10 @@ $(OBJDIR)%.o : $(EXESRC)%.cxx $(HDEP)
 # === Explicit rules ===========================================================
 
 default : shlib
+
+help        :
+	@echo "Usage: $(MAKE) [TARGET] [ROOTBUILD=debug] [VERBOSE=1] [NOROOFIT=1] [SHARED=1]"
+	@echo "Some TARGETs are: 'bin', 'html', 'clean', and 'commands'"
 
 # Rule to make ROOTCINT output file
 $(CINTFILE) : $(HLIST)

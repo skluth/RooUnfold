@@ -1,6 +1,13 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         22-Jun-2011
+  o Rename local copy of TSVDUnfold.h to TSVDUnfold_local.h so as not to
+    override ROOT's version if that exists. That caused a crash in ROOT 5.30
+    due to a mismatch between the old header and the ROOT library with an
+    updated class.
+  o Added "make help" target.
+
 Tim Adye          2-Jun-2011
   o Add RooUnfoldBayes::UnfoldingMatrix accessor.
 
