@@ -511,7 +511,7 @@ void RooUnfoldTestHarness::PlotParms()
 TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char* title,
                                       Int_t nt, Int_t fpdf, Int_t nx, Double_t lo, Double_t hi,
                                       Double_t mean, Double_t width, Double_t bkg,
-                                      Double_t bias, Double_t smear)
+                                      Double_t /* bias */, Double_t /* smear */)
 {
   TH1D* hPDF= new TH1D (name, title, nbPDF, lo, hi);
   hPDF->SetLineColor(kGreen);

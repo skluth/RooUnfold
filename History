@@ -1,6 +1,11 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          9-Sep-2011
+  o Work round stupid shared library option for MacOSX in Makefile.arch.
+    This prevented libRooUnfold.so from being loaded, eg. by ACLiC.
+  o Fix "unused parameter" warnings in RooUnfoldTestHarness.icc.
+
 Tim Adye         22-Jun-2011
   o Rename local copy of TSVDUnfold.h to TSVDUnfold_local.h so as not to
     override ROOT's version if that exists. That caused a crash in ROOT 5.30

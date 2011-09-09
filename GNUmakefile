@@ -65,6 +65,12 @@ LDFLAGS      += -g
 endif
 endif
 
+ifeq ($(PLATFORM),macosx)
+# Fix stupid shared library option on MacOSX. This doesn't work (and we don't
+# need it) because our linker output file specifies the full path.
+SOFLAGS      := $(subst -install_name $(CURDIR)/,,$(SOFLAGS))
+endif
+
 ROOTINCDIR    = $(shell $(ROOTCONFIG) --incdir)
 ROOTLIBDIR    = $(shell $(ROOTCONFIG) --libdir)
 ROOTINCLUDES  = -I$(ROOTINCDIR)
@@ -97,7 +103,7 @@ DEPDIR        = $(WORKDIR)dep/
 # === RooUnfold options ===================================================
 
 # Only provide RooUnfoldTUnfold if TUnfold is available.
-# TUnfold is included in ROOT 5.22 and later. 
+# TUnfold is included in ROOT 5.22 and later.
 ifeq ($(HAVE_TUNFOLD),)
 ifneq ($(wildcard $(ROOTINCDIR)/TUnfold.h),)
 HAVE_TUNFOLD  = 1
