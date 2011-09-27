@@ -268,13 +268,14 @@ void RooUnfold::SetMeasured (const TVectorD& meas, const TVectorD& err)
 
 void RooUnfold::SetMeasured (const TVectorD& meas, const TMatrixD& cov)
 {
-  // Set measured distribution and errors. Should be called after setting response matrix.
+  // Set measured distribution and its covariance matrix. Should be called after setting response matrix.
   SetMeasuredCov (cov);
   SetMeasured (meas, Emeasured());
 }
 
 void RooUnfold::SetMeasuredCov (const TMatrixD& cov)
 {
+  // Set covariance matrix on measured distribution.
   delete _covL; _covL= 0;
   delete _eMes;
   delete _covMes;
@@ -289,6 +290,7 @@ void RooUnfold::SetMeasuredCov (const TMatrixD& cov)
 
 const TMatrixD& RooUnfold::GetMeasuredCov() const
 {
+  // Get covariance matrix on measured distribution.
   if (_covMes) return *_covMes;
   const TVectorD& err= Emeasured();
   _covMes= new TMatrixD (_nm,_nm);
@@ -302,6 +304,7 @@ const TMatrixD& RooUnfold::GetMeasuredCov() const
 
 void RooUnfold::SetResponse (const RooUnfoldResponse* res)
 {
+  // Set response matrix for unfolding.
   _res= res;
   _overflow= _res->UseOverflowStatus() ? 1 : 0;
   _nm= _res->GetNbinsMeasured();
