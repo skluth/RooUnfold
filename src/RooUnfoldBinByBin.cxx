@@ -21,6 +21,7 @@ END_HTML */
 
 #include "RooUnfoldBinByBin.h"
 
+#include <iostream>
 #include "TH1.h"
 #include "TH2.h"
 
@@ -69,14 +70,24 @@ RooUnfoldBinByBin::Unfold()
     const TVectorD& vmeas=  Vmeasured();
     const TVectorD& vtrain= _res->Vmeasured();
     const TVectorD& vtruth= _res->Vtruth();
+
+    TVectorD fakes= _res->Vfakes();
+    Double_t fac= 0.0;
+    if (_res->FakeEntries()) {
+      fac= vtrain.Sum();
+      if (fac!=0.0) fac= vmeas.Sum() / fac;
+      if (_verbose>=1) std::cout << "Subtract " << fac*fakes.Sum() << " fakes from measured distribution" << std::endl;
+    }
+
     _rec.ResizeTo(_nt);
     _factors.ResizeTo(_nt);
     Int_t nb= _nm < _nt ? _nm : _nt;
     for (int i=0; i<nb; i++) {
-      if (vtrain[i]==0.0) continue;
-      Double_t c= vtruth[i]/vtrain[i];
+      Double_t train= vtrain[i]-fakes[i];
+      if (train==0.0) continue;
+      Double_t c= vtruth[i]/train;
       _factors[i]= c;
-      _rec(i)= c*vmeas[i];
+      _rec[i]= c * (vmeas[i]-fac*fakes[i]);
     }
     _unfolded= true;
 }

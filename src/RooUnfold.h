@@ -111,6 +111,7 @@ protected:
   static TMatrixD CutZeros     (const TMatrixD& ereco);
   static TH1D*    HistNoOverflow (const TH1* h, Bool_t overflow);
   static TMatrixD& ABAT (const TMatrixD& a, const TMatrixD& b, TMatrixD& c);
+  static TH1*     Resize (TH1* h, Int_t nx, Int_t ny=-1, Int_t nz=-1);
 
 private:
   void Init();

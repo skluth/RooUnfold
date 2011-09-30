@@ -25,11 +25,11 @@ public:
   // Parameters
   Int_t    ftrainy, ftesty, nty, nmy;
   Double_t ylo, yhi, mtrainy, wtrainy, btrainy, mtesty, wtesty, btesty, mscaley;
-  Double_t effylo, effyhi, rotxy, ybias, ysmear;
+  Double_t effylo, effyhi, fakeylo, fakeyhi, rotxy, ybias, ysmear;
 
   // Data
-  TH1D *hTrainX, *hTrainTrueX, *hTrueX, *hMeasX, *hRecoX, *hPullsX;
-  TH1D *hTrainY, *hTrainTrueY, *hTrueY, *hMeasY, *hRecoY, *hPullsY, *hPDFy, *hTestPDFy;
+  TH1D *hTrainX, *hTrainTrueX, *hTrainFakeX, *hTrueX, *hMeasX, *hRecoX, *hFakeX, *hPullsX;
+  TH1D *hTrainY, *hTrainTrueY, *hTrainFakeY, *hTrueY, *hMeasY, *hRecoY, *hFakeY, *hPullsY, *hPDFy, *hTestPDFy;
 
   // Constructors
   RooUnfoldTestHarness2D (const char* name= "RooUnfoldTest2D");
@@ -45,6 +45,7 @@ public:
   virtual void  Results();
   static  void  Rot     (Double_t& x, Double_t& y, Double_t angle, Double_t x0, Double_t y0);
   virtual bool  Eff2D   (Double_t  x, Double_t  y) const;
+  virtual Int_t Fakes2D (TVectorD& xfake, TVectorD& yfake, Int_t nfake) const;
   virtual void  Smear2D (Double_t& x, Double_t& y) const;
   virtual void  Reset();
   virtual void  Init();

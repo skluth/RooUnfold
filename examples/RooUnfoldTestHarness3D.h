@@ -27,10 +27,10 @@ public:
   // Parameters
   Int_t    ftrainz, ftestz, ntz, nmz;
   Double_t zlo, zhi, mtrainz, wtrainz, btrainz, mtestz, wtestz, btestz, mscalez;
-  Double_t effzlo, effzhi, rotxz, rotyz, zbias, zsmear;
+  Double_t effzlo, effzhi, fakezlo, fakezhi, rotxz, rotyz, zbias, zsmear;
 
   // Data
-  TH1D *hTrainZ, *hTrainTrueZ, *hTrueZ, *hMeasZ, *hRecoZ, *hPullsZ, *hPDFz, *hTestPDFz;
+  TH1D *hTrainZ, *hTrainTrueZ, *hTrainFakeZ, *hTrueZ, *hMeasZ, *hRecoZ, *hFakeZ, *hPullsZ, *hPDFz, *hTestPDFz;
 
   // Constructors
   RooUnfoldTestHarness3D (const char* name= "RooUnfoldTest3D");
@@ -46,6 +46,7 @@ public:
   virtual void  Results();
   virtual void  Smear3D (Double_t& x, Double_t& y, Double_t& z) const;
   virtual bool  Eff3D   (Double_t  x, Double_t  y, Double_t  z) const;
+  virtual Int_t Fakes3D (TVectorD& xfake, TVectorD& yfake, TVectorD& zfake, Int_t nfake) const;
   virtual void  Reset();
   virtual void  Init();
   virtual Int_t CheckParms();

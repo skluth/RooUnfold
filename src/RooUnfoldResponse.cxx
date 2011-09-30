@@ -105,10 +105,12 @@ RooUnfoldResponse::Add (const RooUnfoldResponse& rhs)
   assert (_mdim==rhs._mdim);
   assert (_tdim==rhs._tdim);
   assert (_mes != 0 && rhs._mes != 0);
+  assert (_fak != 0 && rhs._fak != 0);
   assert (_tru != 0 && rhs._tru != 0);
   assert (_res != 0 && rhs._res != 0);
   if (_cached) ClearCache();
   _mes->Add (rhs._mes);
+  _fak->Add (rhs._fak);
   _tru->Add (rhs._tru);
   _res->Add (rhs._res);
 }
@@ -119,6 +121,7 @@ RooUnfoldResponse::Reset()
   // Resets object to initial state.
   ClearCache();
   delete _mes;
+  delete _fak;
   delete _tru;
   delete _res;
   return Setup();
@@ -134,7 +137,7 @@ RooUnfoldResponse::Init()
 RooUnfoldResponse&
 RooUnfoldResponse::Setup()
 {
-  _tru= _mes= 0;
+  _tru= _mes= _fak= 0;
   _res= 0;
   _vMes= _eMes= _vTru= _eTru= 0;
   _mRes= _eRes= 0;
@@ -159,13 +162,14 @@ RooUnfoldResponse::Setup (Int_t nm, Double_t mlo, Double_t mhi, Int_t nt, Double
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
   _mes= new TH1D ("measured", "Measured", nm, mlo, mhi);
+  _fak= new TH1D ("fakes",    "Fakes",    nm, mlo, mhi);
   _tru= new TH1D ("truth",    "Truth",    nt, tlo, thi);
   _mdim= _tdim= 1;
   _nm= nm;
   _nt= nt;
+  SetNameTitleDefault ("response", "Response");
   _res= new TH2D (GetName(), GetTitle(), nm, mlo, mhi, nt, tlo, thi);
   TH1::AddDirectory (oldstat);
-  SetNameTitleDefault ("response", "Response");
   return *this;
 }
 
@@ -185,8 +189,10 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
   _mes= (TH1*) measured ->Clone();
-  _tru= (TH1*) truth    ->Clone();
   _mes->Reset();
+  _fak= (TH1*) _mes     ->Clone("fakes");
+  _fak->SetTitle("Fakes");
+  _tru= (TH1*) truth    ->Clone();
   _tru->Reset();
   _mdim= _mes->GetDimension();
   _tdim= _tru->GetDimension();
@@ -194,13 +200,13 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
     cerr << "UseOverflow setting ignored for multi-dimensional distributions" << endl;
     _overflow= 0;
   }
+  SetNameTitleDefault();
   _nm= _mes->GetNbinsX() * _mes->GetNbinsY() * _mes->GetNbinsZ();
   _nt= _tru->GetNbinsX() * _tru->GetNbinsY() * _tru->GetNbinsZ();
   _res= new TH2D (GetName(), GetTitle(), _nm, 0.0, Double_t(_nm), _nt, 0.0, Double_t(_nt));
   if (_mdim==1) ReplaceAxis (_res, _res->GetXaxis(), _mes->GetXaxis());
   if (_tdim==1) ReplaceAxis (_res, _res->GetYaxis(), _tru->GetXaxis());
   TH1::AddDirectory (oldstat);
-  SetNameTitleDefault();
   return *this;
 }
 
@@ -212,6 +218,9 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2* resp
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
   _mes= (TH1*)  measured->Clone();
+  _fak= (TH1*)  measured->Clone("fakes");
+  _fak->Reset();
+  _fak->SetTitle("Fakes");
   _tru= (TH1*)  truth   ->Clone();
   _res= (TH2*)  response->Clone();
   TH1::AddDirectory (oldstat);
@@ -227,6 +236,22 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2* resp
     cerr << "Warning: RooUnfoldResponse measured X truth is " << _nm << " X " << _nt
          << ", but matrix is " << _res->GetNbinsX()<< " X " << _res->GetNbinsY() << endl;
   }
+
+  // Fill fakes from the difference of measured-colsum(response)
+  Int_t first=1, nx= _nm, ny= _nt;
+  if (_overflow) {
+    first= 0;
+    nx += 2;
+    ny += 2;
+  }
+  for (Int_t i= 0; i<nx; i++) {
+    Double_t nmes= 0.0;
+    for (Int_t j= 0; j<ny; j++) nmes += _res->GetBinContent(i+first,j+first);
+    Int_t bin= GetBin (_fak, i, _overflow);
+    Double_t fake= _mes->GetBinContent(bin) - nmes;
+    if (fake!=0.0) _fak->SetBinContent (bin, fake);  // only update entry count if non-zero
+  }
+
   SetNameTitleDefault();
   return *this;
 }
@@ -335,7 +360,7 @@ RooUnfoldResponse::Miss1D (Double_t xt, Double_t w)
 {
   // Fill missed event (not reconstructed due to detection inefficiencies) into 1D Response Matrix (with weight)
   assert (_tru != 0);
-  assert (_mdim==1 && _tdim==1);
+  assert (_tdim==1);
   if (_cached) ClearCache();
   return _tru->Fill (xt, w);
 }
@@ -345,7 +370,7 @@ RooUnfoldResponse::Miss2D (Double_t xt, Double_t yt, Double_t w)
 {
   // Fill missed event (not reconstructed due to detection inefficiencies) into 2D Response Matrix (with weight)
   assert (_tru != 0);
-  assert (_mdim==2 && _tdim==2);
+  assert (_tdim==2);
   if (_cached) ClearCache();
   return ((TH2*)_tru)->Fill (xt, yt, w);
 }
@@ -355,9 +380,42 @@ RooUnfoldResponse::Miss (Double_t xt, Double_t yt, Double_t zt, Double_t w)
 {
   // Fill missed event (not reconstructed due to detection inefficiencies) into 3D Response Matrix
   assert (_tru != 0);
-  assert (_mdim==3 && _tdim==3);
+  assert (_tdim==3);
   if (_cached) ClearCache();
   return ((TH3*)_tru)->Fill (xt, yt, zt, w);
+}
+
+Int_t
+RooUnfoldResponse::Fake1D (Double_t xr, Double_t w)
+{
+  // Fill fake event (reconstructed event with no truth) into 1D Response Matrix (with weight)
+  assert (_fak != 0 && _mes != 0);
+  assert (_mdim==1);
+  if (_cached) ClearCache();
+         _mes->Fill (xr, w);
+  return _fak->Fill (xr, w);
+}
+
+Int_t
+RooUnfoldResponse::Fake2D (Double_t xr, Double_t yr, Double_t w)
+{
+  // Fill fake event (reconstructed event with no truth) into 2D Response Matrix (with weight)
+  assert (_mes != 0);
+  assert (_mdim==2);
+  if (_cached) ClearCache();
+         ((TH2*)_fak)->Fill (xr, yr, w);
+  return ((TH2*)_mes)->Fill (xr, yr, w);
+}
+
+Int_t
+RooUnfoldResponse::Fake (Double_t xr, Double_t yr, Double_t zr, Double_t w)
+{
+  // Fill fake event (reconstructed event with no truth) into 3D Response Matrix
+  assert (_mes != 0);
+  assert (_mdim==3);
+  if (_cached) ClearCache();
+         ((TH3*)_mes)->Fill (xr, yr, zr, w);
+  return ((TH3*)_fak)->Fill (xr, yr, zr, w);
 }
 
 TH1D*

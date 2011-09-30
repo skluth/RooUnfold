@@ -63,8 +63,7 @@ RooUnfoldBayes::RooUnfoldBayes (const RooUnfoldResponse* res, const TH1* meas, I
   Init();
 }
 
-RooUnfoldBayes*
-RooUnfoldBayes::Clone (const char* newname) const
+RooUnfoldBayes* RooUnfoldBayes::Clone (const char* newname) const
 {
   // Creates a copy of the RooUnfoldBayes object
   RooUnfoldBayes* unfold= new RooUnfoldBayes(*this);
@@ -72,67 +71,62 @@ RooUnfoldBayes::Clone (const char* newname) const
   return unfold;
 }
 
-void
-RooUnfoldBayes::Init()
+void RooUnfoldBayes::Init()
 {
   _nc= _ne= 0;
   GetSettings();
 }
 
-void
-RooUnfoldBayes::Reset()
+void RooUnfoldBayes::Reset()
 {
   Init();
   RooUnfold::Reset();
 }
 
-void
-RooUnfoldBayes::Assign (const RooUnfoldBayes& rhs)
+void RooUnfoldBayes::Assign (const RooUnfoldBayes& rhs)
 {
   RooUnfold::Assign (rhs);
   CopyData (rhs);
 }
 
-void
-RooUnfoldBayes::CopyData (const RooUnfoldBayes& rhs)
+void RooUnfoldBayes::CopyData (const RooUnfoldBayes& rhs)
 {
   _niter=    rhs._niter;
   _smoothit= rhs._smoothit;
 }
 
-void
-RooUnfoldBayes::Unfold()
+void RooUnfoldBayes::Unfold()
 {
   setup();
   if (verbose() >= 2) Print();
   if (verbose() >= 1) cout << "Now unfolding..." << endl;
   train();
-  _rec.ResizeTo(_nt);
-  _rec = _nbarCi;
   if (verbose() >= 2) Print();
+  _rec.ResizeTo(_nc);
+  _rec = _nbarCi;
+  _rec.ResizeTo(_nt);  // drop fakes in final bin
   _unfolded= true;
   _haveCov=  false;
 }
 
-void
-RooUnfoldBayes::GetCov()
+void RooUnfoldBayes::GetCov()
 {
   getCovariance();
+  _cov.ResizeTo (_nt, _nt);  // drop fakes in final bin
   _haveCov= true;
 }
 
-void
-RooUnfoldBayes::GetSettings(){
+void RooUnfoldBayes::GetSettings()
+{
     _minparm=1;
     _maxparm=15;
     _stepsizeparm=1;
     _defaultparm=4;
 }
 
-// TH2 -> TMatrixD
-TMatrixD&
-RooUnfoldBayes::H2M (const TH2* h, TMatrixD& m, Bool_t overflow)
+TMatrixD& RooUnfoldBayes::H2M (const TH2* h, TMatrixD& m, Bool_t overflow)
 {
+  // TH2 -> TMatrixD
   if (!h) return m;
   Int_t first= overflow ? 0 : 1;
   Int_t nm= m.GetNrows(), nt= m.GetNcols();
@@ -143,30 +137,39 @@ RooUnfoldBayes::H2M (const TH2* h, TMatrixD& m, Bool_t overflow)
 }
 
 //-------------------------------------------------------------------------
-void
-RooUnfoldBayes::setup()
+void RooUnfoldBayes::setup()
 {
   _nc = _nt;
   _ne = _nm;
 
-  _nCi.ResizeTo(_nc);
-  _nbarCi.ResizeTo(_nc);
   _nEstj.ResizeTo(_ne);
-  _efficiencyCi.ResizeTo(_nc);
-  _rec.ResizeTo (_nt);
+  _nEstj= Vmeasured();
 
-  _Nji.ResizeTo(_ne,_nc); 
+  _nCi.ResizeTo(_nt);
+  _nCi= _res->Vtruth();
+
+  _Nji.ResizeTo(_ne,_nt);
+  H2M (_res->Hresponse(), _Nji, _overflow);   // don't normalise, which is what _res->Mresponse() would give us
+
+  if (_res->FakeEntries()) {
+    TVectorD fakes= _res->Vfakes();
+    Double_t nfakes= fakes.Sum();
+    if (verbose()>=0) cout << "Add truth bin for " << nfakes << " fakes" << endl;
+    _nc++;
+    _nCi.ResizeTo(_nc);
+    _nCi[_nc-1]= nfakes;
+    _Nji.ResizeTo(_ne,_nc);
+    for (Int_t i= 0; i<_nm; i++) _Nji(i,_nc-1)= fakes[i];
+  }
+
+  _nbarCi.ResizeTo(_nc);
+  _efficiencyCi.ResizeTo(_nc);
   _Mij.ResizeTo(_nc,_ne);
   _dnCidnEj.ResizeTo(_nc,_ne);
-
-  _nCi= _res->Vtruth();
-  H2M (_res->Hresponse(), _Nji, _overflow);   // don't normalise, which is what _res->Mresponse() would give us
-  _nEstj= Vmeasured();
 }
 
 //-------------------------------------------------------------------------
-void
-RooUnfoldBayes::train()
+void RooUnfoldBayes::train()
 {
   // After accumulating the training sample, calculate the unfolding matrix.
   // _niter = number of iterations to perform (3 by default).
@@ -262,13 +265,12 @@ RooUnfoldBayes::train()
 }
 
 //-------------------------------------------------------------------------
-void
-RooUnfoldBayes::getCovariance(Bool_t doUnfoldSystematic)
+void RooUnfoldBayes::getCovariance(Bool_t doUnfoldSystematic)
 {
   if (verbose()>=1) cout << "Calculating covariances due to number of measured events" << endl;
 
   // Create the covariance matrix of result from that of the measured distribution
-  _cov.ResizeTo (_nt, _nt);
+  _cov.ResizeTo (_nc, _nc);
 #ifdef OLDERRS
   ABAT (_Mij,      GetMeasuredCov(), _cov);
 #else
@@ -354,8 +356,7 @@ RooUnfoldBayes::getCovariance(Bool_t doUnfoldSystematic)
 }
 
 //-------------------------------------------------------------------------
-void
-RooUnfoldBayes::smooth(TVectorD& PbarCi) const
+void RooUnfoldBayes::smooth(TVectorD& PbarCi) const
 {
   // Smooth unfolding distribution. PbarCi is the array of proababilities
   // to be smoothed PbarCi; nevts is the numbers of events
@@ -372,10 +373,9 @@ RooUnfoldBayes::smooth(TVectorD& PbarCi) const
 }
 
 //-------------------------------------------------------------------------
-Double_t
-RooUnfoldBayes::getChi2(const TVectorD& prob1,
-                        const TVectorD& prob2,
-                        Double_t nevents) const
+Double_t RooUnfoldBayes::getChi2(const TVectorD& prob1,
+                                 const TVectorD& prob2,
+                                 Double_t nevents) const
 {
   // calculate the chi^2. prob1 and prob2 are the probabilities
   // and nevents is the number of events used to calculate the probabilities
@@ -395,8 +395,7 @@ RooUnfoldBayes::getChi2(const TVectorD& prob1,
 }
 
 //-------------------------------------------------------------------------
-void
-RooUnfoldBayes::Print(Option_t* option) const
+void RooUnfoldBayes::Print(Option_t* option) const
 {
   RooUnfold::Print (option);
   if (_nc<=0 || _ne<=0) return;
@@ -417,8 +416,7 @@ RooUnfoldBayes::Print(Option_t* option) const
   cout << "  Total Number of events : " << _nEstj.Sum() << endl;
 
   cout << "Output (unfolded):" << endl;
-  cout << "  Total Number of events : " << _rec.Sum()
-       << " +/- " << sqrt(fabs(_cov.Sum())) <<endl;
+  cout << "  Total Number of events : " << _nbarCi.Sum() <<endl;
 
   cout << "-------------------------------------------\n" << endl;
 
@@ -431,9 +429,9 @@ RooUnfoldBayes::Print(Option_t* option) const
       ic = i / _ne;
       ir = i - (ic*_ne);
       if ((_nCi[i] == 0) && (_nEstj[i] == 0) &&
-          (_nEstj[i] == 0) && (_rec[i]==0)) continue;
+          (_nEstj[i] == 0) && (_nbarCi[i]==0)) continue;
       cout << i << "\t" << _nCi[i]                                      \
-           << "\t " << _nEstj[i] << "\t " << _rec[i] << endl;
+           << "\t " << _nEstj[i] << "\t " << _nbarCi[i] << endl;
     }
 
     // if the number of bins is different
@@ -445,7 +443,7 @@ RooUnfoldBayes::Print(Option_t* option) const
 
     cout << "--------------------------------------------------------" << endl;
     cout << " \t" << (_nCi.Sum())
-         << "\t " << (_nEstj.Sum()) << "\t " << (_rec.Sum()) << endl;
+         << "\t " << (_nEstj.Sum()) << "\t " << (_nbarCi.Sum()) << endl;
     cout << "--------------------------------------------------------\n" << endl;
   }
 }

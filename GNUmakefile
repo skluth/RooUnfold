@@ -365,10 +365,13 @@ cleanbin :
 
 $(HTMLDOC)/index.html : $(SHLIBFILE)
 	@echo "Making HTML documentation in $(HTMLDOC)"
-	@( echo 'gSystem->Load("libRooUnfold");'; \
-	   echo 'THtml h; h.SetOutputDir("$(HTMLDOC)");'; \
-	   echo 'h.MakeAll();';\
-	   echo '.q') \
+	@( echo 'gSystem->Load("lib$(LIBNAME)");'; \
+	   echo 'THtml h;';                        \
+	   echo 'h.SetProductName("$(PACKAGE)");'; \
+	   echo 'h.SetInputDir("$(SRCDIR)");';     \
+	   echo 'h.SetOutputDir("$(HTMLDOC)");';   \
+	   echo 'h.MakeAll();';                    \
+	   echo '.q' )                             \
 	 | root -l -b
 
 html : $(HTMLDOC)/index.html

@@ -106,6 +106,8 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("effxhi",  &effxhi,     0.9, "efficiency at xhi");
   args.Add ("xbias",   &xbias,     -1.0, "shift in X");
   args.Add ("xsmear",  &xsmear,     0.5, "X smearing width in bins");
+  args.Add ("fakexlo", &fakexlo,    0.0, "fraction of fakes at xlo");
+  args.Add ("fakexhi", &fakexhi,    0.0, "fraction of fakes at xhi");
   args.Add ("overflow",&overflow,     0, "0=unfolding ignores under/overflow bins, 1=unfolding uses under/overflow bins, 2=fill under/overflows into first/last bins");
   args.Add ("addbias", &addbias,     -1, "apply systematic shift/rotation (disabled by default for bin-by-bin/invert methods)", "1");
   args.Add ("wpaper",  &wpaper,       0, "paper width", "");
@@ -137,7 +139,7 @@ Int_t RooUnfoldTestHarness::Run()
     delete ps; ps= 0;
   }
   TFile f (rootfile, "update");
-  const TNamed* objs[] = { unfold, hTrain, hTrainTrue, hTrue, hMeas,
+  const TNamed* objs[] = { unfold, hTrain, hTrainTrue, hTrainFake, hTrue, hMeas, hFake,
                            hReco, hRes, hPulls, hPDFx, hTestPDFx,
                            hResmat, hCorr, hUnfErr, hToyErr, ntChi2,
                            hParmChi2, hParmErr, hParmRes, hParmRms };
@@ -258,29 +260,49 @@ Int_t RooUnfoldTestHarness::Train()
     Double_t xto= Overflow (xt, ntx, xlo, xhi);
     hTrainTrue->Fill (xto);
     if (Eff (xt, xlo, xhi, effxlo, effxhi)) {    
-      Double_t x= Smear (xt, ntx, xlo, xhi, xbias, xsmear), xo= Overflow (x, ntx, xlo, xhi);
+      Double_t x= Smear (xt, ntx, xlo, xhi, xbias, xsmear);
+      Double_t xo= Overflow (x, ntx, xlo, xhi);
       hTrain  ->Fill (xo);
       hResmat ->Fill (xo, xto);
       response->Fill (xo, xto);
-    } else
+    } else {
       response->Miss (xto);
+    }
+  }
+
+  TVectorD xfake;
+  Int_t nfake= Fakes (xfake, nmx, ntrain, xlo, xhi, fakexlo, fakexhi);
+  if (nfake>0) {
+    hTrainFake= new TH1D ("trainfake", "Training Fakes", nmx, xlo, xhi);
+    hTrainFake->SetLineColor(kOrange);
+    for (Int_t i= 0; i<nfake; i++) {
+      Double_t xf= (*&xfake)[i];
+      hTrain    ->Fill (xf);
+      hTrainFake->Fill (xf);
+      response  ->Fake (xf);
+    }
   }
   // or:  response->Setup (hTrain, hTrainTrue, hResmat);
+
   if (verbose>=2) PrintMatrix(response->Mresponse(),"","response matrix",10);
   return 1;
 }
 
 void RooUnfoldTestHarness::TrainResults()
 {
-  if (mscalex!=1.0) hTrain->Scale(mscalex);
-  setmax (hTrainTrue, hPDFx, hTrain);
+  if (mscalex!=1.0) {
+    hTrain->Scale(mscalex);
+    if (hTrainFake) hTrainFake->Scale(mscalex);
+  }
+  setmax (hTrainTrue, hPDFx, hTrain, hTrainFake);
 
   if (onepage && (onepage<4 || ipad>=onepage)) return;
   if (onepage) canvas->cd(++ipad);
   hTrainTrue->Draw();
   hPDFx ->Draw("LSAME");
   hTrain->Draw("SAME");
-  if (!onepage) Legend (lTrain, hPDFx, hTrainTrue, hTrain);
+  if (hTrainFake) hTrainFake->Draw("SAME");
+  if (!onepage) Legend (lTrain, hPDFx, hTrainTrue, hTrainFake, hTrain);
   canvas->Update();
 }
 
@@ -305,6 +327,18 @@ Int_t RooUnfoldTestHarness::Test()
     if (Eff (xt, xlo, xhi, effxlo, effxhi)) {
       Double_t x = Smear (xt, ntx, xlo, xhi, xbias, xsmear), xo= Overflow (x, ntx, xlo, xhi);
       hMeas->Fill(xo);
+    }
+  }
+
+  TVectorD xfake;
+  Int_t nfake= Fakes (xfake, nmx, ntest, xlo, xhi, fakexlo, fakexhi);
+  if (nfake>0) {
+    hFake= new TH1D ("fake", "Test Fakes", nmx, xlo, xhi);
+    hFake->SetLineColor(kOrange);
+    for (Int_t i= 0; i<nfake; i++) {
+      Double_t xf= (*&xfake)[i];
+      hMeas->Fill (xf);
+      hFake->Fill (xf);
     }
   }
   return 1;
@@ -386,8 +420,11 @@ Int_t RooUnfoldTestHarness::Unfold ()
 
 void RooUnfoldTestHarness::Results()
 {
-  if (mscalex!=1) hMeas->Scale(mscalex);
-  setmax (hTrue, hTestPDFx, hMeas);
+  if (mscalex!=1.0) {
+    hMeas->Scale(mscalex);
+    if (hFake) hFake->Scale(mscalex);
+  }
+  setmax (hTrue, hTestPDFx, hMeas, hFake);
   if (hReco) {
     hReco->SetLineColor(kBlack);
     hReco->SetMarkerStyle(kFullDotLarge);
@@ -399,8 +436,9 @@ void RooUnfoldTestHarness::Results()
   hTrue    ->Draw();
   hTestPDFx->Draw("LSAME");
   hMeas    ->Draw("SAME");
+  if (hFake) hFake->Draw("SAME");
   if (hReco) hReco->Draw("SAME P");
-  Legend (lTest, hTestPDFx, hTrue, hMeas, hReco);
+  Legend (lTest, hTestPDFx, hTrue, hFake, hMeas, hReco);
   canvas->Update();
 
   if (!hReco)        return;
@@ -529,6 +567,83 @@ TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char*
 }
 
 //==============================================================================
+// Generate fakes using a linear PDF from (x0,y0) to (x1,y1)
+//==============================================================================
+
+Int_t RooUnfoldTestHarness::Fakes (TVectorD& x, Int_t nm, Int_t nx, Double_t x0, Double_t x1, Double_t y0, Double_t y1) const
+{
+  if (y0<=0.0 && y1<=0.0) return 0;
+  if (overflow == 1) {
+    // Fill under/overflow bins too
+    Double_t xw= x1-x0;
+    if (xw<=0) return 0;
+    Double_t xbin= xw / Double_t(nm), ybin= (y1-y0)*(xbin/xw);
+    x0 -= xbin;
+    x1 += xbin;
+    y0 -= ybin;
+    y1 += ybin;
+  }
+
+  // Reduce x-range to remove negative PDF
+  Double_t yw= y1-y0;
+  if (y0<0.0) {
+    x0= (x0*y1-x1*y0) / yw;
+    y0= 0.0;
+    yw= y1;
+  }
+  if (y1<0.0) {
+    x1= (x0*y1-x1*y0) / yw;
+    y1= 0.0;
+    yw= -y0;
+  }
+
+  Double_t xw= x1-x0;
+  if (xw<=0.0) return 0;
+
+  if (yw==0.0) {
+
+    // uniform PDF
+    nx= Int_t(nx*y0+0.5);  // scale number of events by y0
+    if (nx<=0) return 0;
+    if (verbose >= 1) cout << "Generate " << nx << " fakes in range " << x0 << " to " << x1 << endl;
+    x.ResizeTo(nx);
+    for (Int_t i=0; i<nx; i++)
+      (*&x)[i]= x0 + xw*gRandom->Rndm();
+    return nx;
+
+  } else {
+
+    // linear PDF
+    Double_t c= x1*y0-x0*y1;
+    Double_t N= 0.5*yw*(x1+x0) + c;
+    Double_t xa= -c/yw, xb= (c*c)/(yw*yw) + x0*x0 + 2.0*c*x0/yw, yb= 2.0*N*(xw/yw);
+    nx= Int_t(nx*(N/xw)+0.5);  // scale number of events by integral/xw
+    if (nx<=0) return 0;
+    if (verbose >= 1) cout << "Generate " << nx << " fakes in range " << x0 << " to " << x1 << endl;
+    x.ResizeTo(nx);
+    Int_t nnx= 0;
+    for (Int_t i=0; i<nx; i++) {
+      Double_t u= gRandom->Rndm();
+      Double_t xc2= xb + yb*u;
+      if (xc2<0.0) continue;
+      Double_t xc= sqrt(xc2), xp= xa+xc, xn= xa-xc;
+      Double_t xv;
+      if      (xp>=x0 && xp<x1) xv= xp;   // which root to take? Maybe always this +ve one.
+      else if (xn>=x0 && xn<x1) xv= xn;
+      else continue;
+      (*&x)[nnx++]= xv;
+    }
+    if (nnx < nx) {
+      if (verbose >= 0) cout << "Trouble generating " << nx-nnx << " fakes (of " << nx << ")" << endl;
+      nx= nnx;
+      x.ResizeTo(nx);
+    }
+
+  }
+  return nx;
+}
+
+//==============================================================================
 // Gaussian smearing, systematic translation, and variable inefficiency
 //==============================================================================
 
@@ -623,7 +738,7 @@ void RooUnfoldTestHarness::Reset()
   canvas= 0;
   ps= 0;
   hPDFx= hTestPDFx= 0;
-  hTrain= hTrainTrue= hTrue= hMeas= hReco= hRes= hPulls=
+  hTrain= hTrainTrue= hTrainFake= hTrue= hMeas= hFake= hReco= hRes= hPulls=
     hUnfErr= hToyErr= hParmChi2= hParmErr= hParmRes= hParmRms= 0;
   hResmat= hCorr= 0;
   ntChi2= 0;
@@ -698,13 +813,15 @@ void RooUnfoldTestHarness::PrintParms (std::ostream& o) const
   o << endl;
 }
 
-void RooUnfoldTestHarness::Legend (TLegend*& legend, TH1* pdf, TH1* truth, TH1* meas, TH1* reco)
+void RooUnfoldTestHarness::Legend (TLegend*& legend, TH1* pdf, TH1* truth, TH1* fake, TH1* meas, TH1* reco)
 {
   legend= new TLegend (0.79, (reco ? 0.72 : 0.75), 0.894, 0.89);
   legend->SetTextSize(0.035);
   legend->SetTextFont(42);
   legend->AddEntry (pdf,   "PDF",           "L");
   legend->AddEntry (truth, "truth",         "L");
+  if (fake)
+  legend->AddEntry (fake,  "fakes",         "L");
   legend->AddEntry (meas,  "measured",      "L");
   if (reco)
   legend->AddEntry (reco,  "reconstructed", "P");

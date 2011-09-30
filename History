@@ -1,6 +1,19 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         29-Sep-2011
+  o RooUnfoldResponse can now account for fakes (or background: measured entries
+    with no truth). Use Fake(xmeas) to fill or add fakes to measured input
+    histogram.
+  o RooUnfoldTest can test fakes: specify fakexlo and fakexhi (and similarly
+    for y and z) for linearly varying background level.
+  o Allow RooUnfoldSVD to have different numbers of truth and measured bins.
+    This is done by calling TSVDUnfold with a symmetric matrices with zeroes
+    in the extra bins.
+  o Fix RooUnfoldResponse::Miss, which should depend on measured dimensionality.
+  o make html sets the product name, source directory, and library name from
+    Makefile settings.
+
 Tim Adye          9-Sep-2011
   o Work round stupid shared library option for MacOSX in Makefile.arch.
     This prevented libRooUnfold.so from being loaded, eg. by ACLiC.

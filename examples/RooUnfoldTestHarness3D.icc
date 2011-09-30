@@ -62,6 +62,8 @@ void RooUnfoldTestHarness3D::Parms (ArgVars& args)
   args.Add ("btestz",  &btestz,     0.3, "test Z PDF background fraction");
   args.Add ("effzlo",  &effzlo,     0.9, "efficiencz at zlo");
   args.Add ("effzhi",  &effzhi,     1.0, "efficiencz at zhi");
+  args.Add ("fakezlo", &fakezlo,    0.0, "fraction of fakes at zlo");
+  args.Add ("fakezhi", &fakezhi,    0.0, "fraction of fakes at zhi");
   args.Add ("rotxz",   &rotxz,      0.4, "rotation angle in XZ plane");
   args.Add ("rotyz",   &rotyz,      0.4, "rotation angle in YZ plane");
   args.Add ("zbias",   &zbias,     -1.0, "shift in Z");
@@ -104,6 +106,22 @@ Int_t RooUnfoldTestHarness3D::Train()
     }
   }
 
+  TVectorD xfake, yfake, zfake;
+  Int_t nfake= Fakes3D (xfake, yfake, zfake, ntrain);
+  if (nfake>0) {
+    hTrainFake= new TH3D ("trainfake", "Training Fakes", nmx, xlo, xhi, nmy, ylo, yhi, nmz, zlo, zhi);
+    hTrainFake->SetLineColor(kOrange);
+    for (Int_t i= 0; i<nfake; i++) {
+      Double_t xf= (*&xfake)[i], yf= (*&yfake)[i], zf= (*&zfake)[i];
+      Fill (hTrain,     xf, yf, zf);
+      Fill (hTrainFake, xf, yf, zf);
+      response  ->Fake (xf, yf, zf);
+    }
+    hTrainFakeX= ProjectionX (hTrainFake, "hTrainFakeX", "Training Fakes X");
+    hTrainFakeY= ProjectionY (hTrainFake, "hTrainFakeY", "Training Fakes Y");
+    hTrainFakeZ= ProjectionZ (hTrainFake, "hTrainFakeZ", "Training Fakes Z");
+  }
+
   hTrainTrueX= ProjectionX (hTrainTrue, "hTrainTrueX", "Training X");
   hTrainTrueY= ProjectionY (hTrainTrue, "hTrainTrueY", "Training Y");
   hTrainTrueZ= ProjectionZ (hTrainTrue, "hTrainTrueZ", "Training Z");
@@ -118,19 +136,29 @@ Int_t RooUnfoldTestHarness3D::Train()
 
 void RooUnfoldTestHarness3D::TrainResults()
 {
-  if (mscalex!=1.0) hTrainX->Scale(mscalex);
-  if (mscaley!=1.0) hTrainY->Scale(mscaley);
-  if (mscalez!=1.0) hTrainZ->Scale(mscalez);
-  setmax (hTrainTrueX, hPDFx, hTrainX);
-  setmax (hTrainTrueY, hPDFy, hTrainY);
-  setmax (hTrainTrueZ, hPDFz, hTrainZ);
+  if (mscalex!=1.0) {
+    hTrainX->Scale(mscalex);
+    if (hTrainFakeX) hTrainFakeX->Scale(mscalex);
+  }
+  if (mscaley!=1.0) {
+    hTrainY->Scale(mscaley);
+    if (hTrainFakeY) hTrainFakeY->Scale(mscaley);
+  }
+  if (mscalez!=1.0) {
+    hTrainZ->Scale(mscalez);
+    if (hTrainFakeZ) hTrainFakeZ->Scale(mscalez);
+  }
+  setmax (hTrainTrueX, hPDFx, hTrainX, hTrainFakeX);
+  setmax (hTrainTrueY, hPDFy, hTrainY, hTrainFakeY);
+  setmax (hTrainTrueZ, hPDFz, hTrainZ, hTrainFakeZ);
 
   if (onepage && (onepage<6 || ipad>=onepage)) return;
   if (onepage) canvas->cd(++ipad);
   hTrainTrueX->Draw();
   hPDFx      ->Draw("LSAME");
   hTrainX    ->Draw("SAME");
-  if (!onepage) Legend (lTrain, hPDFx, hTrainTrueX, hTrainX);
+  if (hTrainFakeX) hTrainFakeX->Draw("SAME");
+  if (!onepage) Legend (lTrain, hPDFx, hTrainTrueX, hTrainFakeX, hTrainX);
   canvas->Update();
 
   if (onepage && ipad>=onepage) return;
@@ -138,6 +166,7 @@ void RooUnfoldTestHarness3D::TrainResults()
   hTrainTrueY->Draw();
   hPDFy      ->Draw("LSAME");
   hTrainY    ->Draw("SAME");
+  if (hTrainFakeY) hTrainFakeY->Draw("SAME");
   if (!onepage) lTrain->Draw();
   canvas->Update();
 
@@ -146,6 +175,7 @@ void RooUnfoldTestHarness3D::TrainResults()
   hTrainTrueZ->Draw();
   hPDFz      ->Draw("LSAME");
   hTrainZ    ->Draw("SAME");
+  if (hTrainFakeZ) hTrainFakeZ->Draw("SAME");
   if (!onepage) lTrain->Draw();
   canvas->Update();
 }
@@ -180,6 +210,21 @@ Int_t RooUnfoldTestHarness3D::Test()
     }
   }
 
+  TVectorD xfake, yfake, zfake;
+  Int_t nfake= Fakes3D (xfake, yfake, zfake, ntrain);
+  if (nfake>0) {
+    hFake= new TH3D ("fake", "Test Fakes", nmx, xlo, xhi, nmy, ylo, yhi, nmz, zlo, zhi);
+    hFake->SetLineColor(kOrange);
+    for (Int_t i= 0; i<nfake; i++) {
+      Double_t xf= (*&xfake)[i], yf= (*&yfake)[i], zf= (*&zfake)[i];
+      Fill (hMeas,    xf, yf, zf);
+      Fill (hFake,    xf, yf, zf);
+    }
+    hFakeX= ProjectionX (hFake, "hFakeX", "Test Fakes X");
+    hFakeY= ProjectionY (hFake, "hFakeY", "Test Fakes Y");
+    hFakeZ= ProjectionZ (hFake, "hFakeZ", "Test Fakes Z");
+  }
+
   hTrueX= ProjectionX (hTrue, "hTrueX", "Test X");
   hMeasX= ProjectionX (hMeas, "hMeasX", "Test Measured X");
   hTrueY= ProjectionY (hTrue, "hTrueY", "Test Y");
@@ -196,12 +241,21 @@ Int_t RooUnfoldTestHarness3D::Test()
 
 void RooUnfoldTestHarness3D::Results()
 {
-  if (mscalex!=1) hMeasX->Scale(mscalex);
-  if (mscaley!=1) hMeasY->Scale(mscaley);
-  if (mscalez!=1) hMeasZ->Scale(mscalez);
-  setmax (hTrueX, hTestPDFx, hMeasX);
-  setmax (hTrueY, hTestPDFy, hMeasY);
-  setmax (hTrueZ, hTestPDFz, hMeasZ);
+  if (mscalex!=1.0) {
+    hMeasX->Scale(mscalex);
+    if (hFakeX) hFakeX->Scale(mscalex);
+  }
+  if (mscaley!=1.0) {
+    hMeasY->Scale(mscaley);
+    if (hFakeY) hFakeY->Scale(mscaley);
+  }
+  if (mscalez!=1.0) {
+    hMeasZ->Scale(mscalez);
+    if (hFakeZ) hFakeZ->Scale(mscalez);
+  }
+  setmax (hTrueX, hTestPDFx, hMeasX, hFakeX);
+  setmax (hTrueY, hTestPDFy, hMeasY, hFakeX);
+  setmax (hTrueZ, hTestPDFz, hMeasZ, hFakeZ);
 
   if (hReco) {
     hRecoX= ProjectionX (hReco, "hRecoX", "Reconstructed X", "E");
@@ -223,8 +277,9 @@ void RooUnfoldTestHarness3D::Results()
   hTrueX   ->Draw();
   hTestPDFx->Draw("LSAME");
   hMeasX   ->Draw("SAME");
+  if (hFakeX) hFakeX->Draw("SAME");
   if (hRecoX) hRecoX->Draw("SAME");
-  Legend (lTest, hTestPDFx, hTrueX, hMeasX, hRecoX);
+  Legend (lTest, hTestPDFx, hTrueX, hFakeX, hMeasX, hRecoX);
   canvas->Update();
 
   if (onepage && ipad>=onepage) return;
@@ -232,6 +287,7 @@ void RooUnfoldTestHarness3D::Results()
   hTrueY   ->Draw();
   hTestPDFy->Draw("LSAME");
   hMeasY   ->Draw("SAME");
+  if (hFakeY) hFakeY->Draw("SAME");
   if (hRecoY) hRecoY->Draw("SAME");
   lTest->Draw();
   canvas->Update();
@@ -241,6 +297,7 @@ void RooUnfoldTestHarness3D::Results()
   hTrueZ   ->Draw();
   hTestPDFz->Draw("LSAME");
   hMeasZ   ->Draw("SAME");
+  if (hFakeZ) hFakeZ->Draw("SAME");
   if (hRecoZ) hRecoZ->Draw("SAME");
   lTest->Draw();
   canvas->Update();
@@ -309,6 +366,20 @@ bool RooUnfoldTestHarness3D::Eff3D (Double_t x, Double_t y, Double_t z) const
          Eff (z, zlo, zhi, effzlo, effzhi);
 }
 
+Int_t RooUnfoldTestHarness3D::Fakes3D (TVectorD& xfake, TVectorD& yfake, TVectorD& zfake, Int_t nfake) const
+{
+  Int_t nfakex= Fakes2D (xfake, yfake, nfake);
+  Int_t nfakez= Fakes (zfake, nmz, nfake, zlo, zhi, fakezlo, fakezhi);
+  if        (nfakex<nfakez) {
+    zfake.ResizeTo(nfakex);
+  } else if (nfakez<nfakex) {
+    xfake.ResizeTo(nfakez);
+    yfake.ResizeTo(nfakez);
+    nfakex= nfakez;
+  }
+  return nfakex;
+}
+
 void RooUnfoldTestHarness3D::Smear3D (Double_t& x, Double_t& y, Double_t& z) const
 {
   x= Smear (x, ntx, xlo, xhi, xbias, xsmear);
@@ -353,7 +424,7 @@ RooUnfoldTestHarness3D::RooUnfoldTestHarness3D (const char* name, const char* ar
 void RooUnfoldTestHarness3D::Reset()
 {
   RooUnfoldTestHarness2D::Reset();
-  hTrainZ= hTrainTrueZ= hTrueZ= hMeasZ= hRecoZ= hPDFz= hTestPDFz= hPullsZ= 0;
+  hTrainZ= hTrainTrueZ= hTrueZ= hTrainFakeZ= hFakeZ= hMeasZ= hRecoZ= hPDFz= hTestPDFz= hPullsZ= 0;
   dim= 3;
 }
 

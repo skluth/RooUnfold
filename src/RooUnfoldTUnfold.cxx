@@ -130,14 +130,24 @@ RooUnfoldTUnfold::Unfold()
   TH2D* Hres=_res->HresponseNoOverflow();
   TH1::AddDirectory (oldstat);
 
-  // Add inefficiencies to underflow bin
-  const TH1* Htru= _res->Htruth();
-  for (Int_t i= 1; i<=_nt; i++) {
-    Double_t nmeas= 0.0;
-    for (Int_t j= 1; j<=_nm; j++) {
-      nmeas += Hres->GetBinContent(j,i); 
+  // Add inefficiencies to measured overflow bin
+  TVectorD tru= _res->Vtruth();
+  for (Int_t j= 1; j<=_nt; j++) {
+    Double_t ntru= 0.0;
+    for (Int_t i= 1; i<=_nm; i++) {
+      ntru += Hres->GetBinContent(i,j);
     }
-    Hres->SetBinContent (0, i, Htru->GetBinContent(i)-nmeas);
+    Hres->SetBinContent (_nm+1, j, tru[j-1]-ntru);
+  }
+
+  // Subtract fakes from measured distribution
+  if (_res->FakeEntries()) {
+    TVectorD fakes= _res->Vfakes();
+    Double_t fac= _res->Vmeasured().Sum();
+    if (fac!=0.0) fac=  Vmeasured().Sum() / fac;
+    if (_verbose>=1) cout << "Subtract " << fac*fakes.Sum() << " fakes from measured distribution" << endl;
+    for (Int_t i= 1; i<=_nm; i++)
+      meas->SetBinContent (i, meas->GetBinContent(i)-(fac*fakes[i-1]));
   }
 
   Int_t ndim= _meas->GetDimension();

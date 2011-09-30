@@ -15,14 +15,14 @@
 #include "TNamed.h"
 #include "TMatrixD.h"
 #include "TH1.h"
-
-class TH2;
-class TH2D;
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,0,0)
 #include "TVectorDfwd.h"
 #else
 class TVectorD;
 #endif
+class TH2;
+class TH2D;
+class TAxis;
 
 class RooUnfoldResponse : public TNamed {
 
@@ -64,6 +64,11 @@ public:
           Int_t Miss (Double_t xt, Double_t yt, Double_t w);  // Fill missed event into 2D (with weight) or 3D Response Matrix
   virtual Int_t Miss (Double_t xt, Double_t yt, Double_t zt, Double_t w);  // Fill missed event into 3D Response Matrix
 
+          Int_t Fake (Double_t xr);  // Fill fake event into 1D Response Matrix
+          Int_t Fake (Double_t xr, Double_t w);  // Fill fake event into 1D (with weight) or 2D Response Matrix
+          Int_t Fake (Double_t xr, Double_t yr, Double_t w);  // Fill fake event into 2D (with weight) or 3D Response Matrix
+  virtual Int_t Fake (Double_t xr, Double_t yr, Double_t zr, Double_t w);  // Fill fake event into 3D Response Matrix
+
   virtual void Add (const RooUnfoldResponse& rhs);
 
   // Accessors
@@ -73,8 +78,10 @@ public:
   Int_t        GetNbinsMeasured()     const;   // Total number of bins in the measured distribution
   Int_t        GetNbinsTruth()        const;   // Total number of bins in the truth distribution
 
-  const TH1*   Hmeasured()            const;   // Measured distribution, used for normalisation
-  TH1*         Hmeasured();                    // Measured distribution, used for normalisation
+  const TH1*   Hmeasured()            const;   // Measured distribution, including fakes
+  TH1*         Hmeasured();                    // Measured distribution, including fakes
+  const TH1*   Hfakes()               const;   // Fakes distribution
+  TH1*         Hfakes();                       // Fakes distribution
   const TH1*   Htruth()               const;   // Truth distribution, used for normalisation
   TH1*         Htruth();                       // Truth distribution, used for normalisation
   const TH2*   Hresponse()            const;   // Response matrix as a 2D-histogram: (x,y)=(measured,truth)
@@ -83,6 +90,7 @@ public:
 
   const TVectorD& Vmeasured()         const;   // Measured distribution as a TVectorD
   const TVectorD& Emeasured()         const;   // Measured distribution errors as a TVectorD
+  const TVectorD& Vfakes()            const;   // Fakes distribution as a TVectorD
   const TVectorD& Vtruth()            const;   // Truth distribution as a TVectorD
   const TVectorD& Etruth()            const;   // Truth distribution errors as a TVectorD
   const TMatrixD& Mresponse()         const;   // Response matrix as a TMatrixD: (row,column)=(measured,truth)
@@ -92,6 +100,7 @@ public:
 
   void   UseOverflow (Bool_t set= kTRUE);      // Specify to use overflow bins
   Bool_t UseOverflowStatus() const;            // Get UseOverflow setting
+  Double_t FakeEntries() const;                // Return number of bins with fakes
 
   static TH1D*     H2H1D(const TH1*  h, Int_t nb);
   static TVectorD* H2V  (const TH1*  h, Int_t nb, Bool_t overflow= kFALSE);
@@ -113,6 +122,8 @@ private:
   virtual void SetNameTitleDefault (const char* defname= 0, const char* deftitle= 0);
   virtual Int_t Miss1D (Double_t xt, Double_t w= 1.0);  // Fill missed event into 1D Response Matrix (with weight)
   virtual Int_t Miss2D (Double_t xt, Double_t yt, Double_t w= 1.0);  // Fill missed event into 2D Response Matrix (with weight)
+  virtual Int_t Fake1D (Double_t xr, Double_t w= 1.0);  // Fill fake event into 1D Response Matrix (with weight)
+  virtual Int_t Fake2D (Double_t xr, Double_t yr, Double_t w= 1.0);  // Fill fake event into 2D Response Matrix (with weight)
 
   static Int_t FindBin   (const TH1* h, Double_t x, Double_t y);
   static Int_t FindBin   (const TH1* h, Double_t x, Double_t y, Double_t z);
@@ -126,12 +137,14 @@ private:
   Int_t _nm;       // Total number of measured  bins (not counting under/overflows)
   Int_t _nt;       // Total number of truth     bins (not counting under/overflows)
   TH1*  _mes;      // Measured histogram
+  TH1*  _fak;      // Fakes    histogram
   TH1*  _tru;      // Truth    histogram
   TH2*  _res;      // Response histogram
   Int_t _overflow; // Use histogram under/overflows if 1
 
   mutable TVectorD* _vMes;   //! Cached measured vector
   mutable TVectorD* _eMes;   //! Cached measured error
+  mutable TVectorD* _vFak;   //! Cached fakes    vector
   mutable TVectorD* _vTru;   //! Cached truth    vector
   mutable TVectorD* _eTru;   //! Cached truth    error
   mutable TMatrixD* _mRes;   //! Cached response matrix
@@ -217,7 +230,7 @@ Int_t RooUnfoldResponse::GetNbinsTruth() const
 inline
 const TH1* RooUnfoldResponse::Hmeasured() const
 {
-  // Measured distribution, used for normalisation
+  // Measured distribution, including fakes
   return _mes;
 }
 
@@ -226,6 +239,21 @@ inline
 TH1*         RooUnfoldResponse::Hmeasured()
 {
   return _mes;
+}
+
+
+inline
+const TH1* RooUnfoldResponse::Hfakes() const
+{
+  // Fakes distribution
+  return _fak;
+}
+
+
+inline
+TH1*         RooUnfoldResponse::Hfakes()
+{
+  return _fak;
 }
 
 inline
@@ -261,6 +289,14 @@ const TVectorD& RooUnfoldResponse::Vmeasured() const
   // Measured distribution as a TVectorD
   if (!_vMes) _cached= (_vMes= H2V  (_mes, _nm, _overflow));
   return *_vMes;
+}
+
+inline
+const TVectorD& RooUnfoldResponse::Vfakes() const
+{
+  // Fakes distribution as a TVectorD
+  if (!_vFak) _cached= (_vFak= H2V  (_fak, _nm, _overflow));
+  return *_vFak;
 }
 
 inline
@@ -345,14 +381,36 @@ inline
 Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t w)
 {
   // Fill missed event into 1D (with weight) or 2D Response Matrix
-  return _mdim==2 ? Miss2D(xt,w) : Miss1D(xt,w);
+  return _tdim==2 ? Miss2D(xt,w) : Miss1D(xt,w);
 }
 
 inline
 Int_t RooUnfoldResponse::Miss (Double_t xt, Double_t yt, Double_t w)
 {
   // Fill missed event into 2D (with weight) or 3D Response Matrix
-  return _mdim==3 ? Miss(xt,yt,w,1.0) : Miss2D(xt,yt,w);
+  return _tdim==3 ? Miss(xt,yt,w,1.0) : Miss2D(xt,yt,w);
+}
+
+
+inline
+Int_t RooUnfoldResponse::Fake (Double_t xr)
+{
+  // Fill fake event into 1D Response Matrix
+  return Fake1D(xr);
+}
+
+inline
+Int_t RooUnfoldResponse::Fake (Double_t xr, Double_t w)
+{
+  // Fill fake event into 1D (with weight) or 2D Response Matrix
+  return _mdim==2 ? Fake2D(xr,w) : Fake1D(xr,w);
+}
+
+inline
+Int_t RooUnfoldResponse::Fake (Double_t xr, Double_t yr, Double_t w)
+{
+  // Fill fake event into 2D (with weight) or 3D Response Matrix
+  return _mdim==3 ? Fake(xr,yr,w,1.0) : Fake2D(xr,yr,w);
 }
 
 
@@ -368,6 +426,13 @@ Bool_t RooUnfoldResponse::UseOverflowStatus() const
 {
   // Get UseOverflow setting
   return _overflow;
+}
+
+inline
+Double_t RooUnfoldResponse::FakeEntries() const
+{
+  // Return number of fake entries
+  return _fak->GetEntries();
 }
 
 #endif

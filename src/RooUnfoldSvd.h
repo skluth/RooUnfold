@@ -64,6 +64,7 @@ protected:
   // instance variables
   TSVDUnfold* _svd;  //! Implementation in TSVDUnfold object (no streamer)
   Int_t _kreg;
+  Int_t _nb;
   Int_t _ntoyssvd;
 
   TH1D *_meas1d, *_train1d, *_truth1d;

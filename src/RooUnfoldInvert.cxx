@@ -46,7 +46,7 @@ RooUnfoldInvert::RooUnfoldInvert (const RooUnfoldInvert& rhs)
 }
 
 RooUnfoldInvert::RooUnfoldInvert (const RooUnfoldResponse* res, const TH1* meas,
-                            const char* name, const char* title)
+                                  const char* name, const char* title)
   : RooUnfold (res, meas, name, title)
 {
   // Constructor with response matrix object and measured unfolding input histogram.
@@ -91,6 +91,10 @@ RooUnfoldInvert::Impl()
 void
 RooUnfoldInvert::Unfold()
 {
+  if (_nt>_nm) {
+    cerr << "More truth bins ("<<_nt<<") than measured bin ("<<_nm<<") - cannot invert using TDecompSVD"<<endl;
+    return;
+  }
   _svd= new TDecompSVD (_res->Mresponse());
   if (_svd->Condition()<0){
     cerr <<"Warning: response matrix bad condition= "<<_svd->Condition()<<endl;
@@ -98,7 +102,18 @@ RooUnfoldInvert::Unfold()
 
   _rec.ResizeTo(_nm);
   _rec= Vmeasured();
+
+  if (_res->FakeEntries()) {
+    TVectorD fakes= _res->Vfakes();
+    Double_t fac= _res->Vmeasured().Sum();
+    if (fac!=0.0) fac=  Vmeasured().Sum() / fac;
+    if (_verbose>=1) cout << "Subtract " << fac*fakes.Sum() << " fakes from measured distribution" << endl;
+    fakes *= fac;
+    _rec -= fakes;
+  }
+
   Bool_t ok= _svd->Solve (_rec);
+  _rec.ResizeTo(_nt);
   if (!ok) {
     cerr << "Response matrix Solve failed" << endl;
     return;

@@ -40,7 +40,9 @@ using std::endl;
 #define SIZE_E 100
 
 extern "C" {
+  // bayes_ arguments must agree with the BAYES subroutine in bayes.for.
   extern void bayes_ (const int* noc, const int* noe, int* nsteps, const int* mode, const int* er_mode, const int* keep, int* ier);
+  // bayesc_ must agree with the /BAYESC/ common block in bayes_c.for.
   extern struct {
     float pec[SIZE_C][SIZE_E], pce[SIZE_E][SIZE_C], 
           pc[SIZE_C], ne[SIZE_E], nc[SIZE_C], 
@@ -130,13 +132,27 @@ RooUnfoldDagostini::Unfold()
     for (Int_t j= 0; j < nm; j++)
       bayesc_.nec_mc[i][j]= tru(i) * res(j,i);
   }
-  for (Int_t i= 0; i < nt; i++)
+
+  Int_t ntf= nt;
+  if (_res->FakeEntries()) {
+    TVectorD fakes= _res->Vfakes();
+    Double_t nfakes= fakes.Sum();
+    if (_verbose>=1) cout << "Add truth bin for " << nfakes << " fakes" << endl;
+    ntf++;
+    ntrue +=              nfakes;
+    bayesc_.pc[ntf-1]=    nfakes;
+    bayesc_.nc_mc[ntf-1]= nfakes;
+    for (Int_t j= 0; j < nm; j++)
+      bayesc_.nec_mc[ntf-1][j]= fakes[j];
+  }
+
+  for (Int_t i= 0; i < ntf; i++)
     bayesc_.pc[i] /= ntrue;
   for (Int_t j= 0; j < nm; j++)
     bayesc_.ne[j]= meas(j);
 
   int mode= 2, er_mode= 20, keep= 0, ier= 0;
-  bayes_ (&_nt, &_nm, &_niter, &mode, &er_mode, &keep, &ier);
+  bayes_ (&ntf, &nm, &_niter, &mode, &er_mode, &keep, &ier);
   if (ier != 0) cerr << "BAYES returned error " << ier << endl;
 
   _rec.ResizeTo (_nt);

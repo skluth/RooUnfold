@@ -58,7 +58,7 @@ RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldSvd& rhs)
 
 RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kreg, Int_t ntoyssvd,
                             const char* name, const char* title)
-  : RooUnfold (res, meas, name, title), _kreg(kreg ? kreg : meas->GetNbinsX()/2), _ntoyssvd(ntoyssvd)
+  : RooUnfold (res, meas, name, title), _kreg(kreg ? kreg : res->GetNbinsTruth()/2), _ntoyssvd(ntoyssvd)
 {
   // Constructor with response matrix object and measured unfolding input histogram.
   // The regularisation parameter is kreg.
@@ -126,17 +126,20 @@ RooUnfoldSvd::Unfold()
   if (_res->GetDimensionTruth() != 1 || _res->GetDimensionMeasured() != 1) {
     cerr << "RooUnfoldSvd may not work very well for multi-dimensional distributions" << endl;
   }
-  if (_nt != _nm) {
-    cerr << "RooUnfoldSvd requires the same number of bins in the truth and measured distributions" << endl;
-    return;
-  }
   if (_kreg < 0) {
     cerr << "RooUnfoldSvd invalid kreg: " << _kreg << endl;
     return;
   }
-  Int_t nb= _nm < _nt ? _nm : _nt;
-  if (_kreg > nb) {
-    cerr << "RooUnfoldSvd invalid kreg=" << _kreg << " with " << nb << " bins" << endl;
+
+  if (_res->FakeEntries()) {
+    _nb= _nt+1;
+    if (_nm>_nb) _nb= _nm;
+  } else {
+    _nb= _nm > _nt ? _nm : _nt;
+  }
+
+  if (_kreg > _nb) {
+    cerr << "RooUnfoldSvd invalid kreg=" << _kreg << " with " << _nb << " bins" << endl;
     return;
   }
 
@@ -146,6 +149,17 @@ RooUnfoldSvd::Unfold()
   _train1d= HistNoOverflow (_res->Hmeasured(), _overflow);
   _truth1d= HistNoOverflow (_res->Htruth(),    _overflow);
   _reshist= _res->HresponseNoOverflow();
+  Resize (_meas1d,  _nb);
+  Resize (_train1d, _nb);
+  Resize (_truth1d, _nb);
+  Resize (_reshist, _nb, _nb);
+  if (_res->FakeEntries()) {
+    TVectorD fakes= _res->Vfakes();
+    Double_t nfakes= fakes.Sum();
+    if (_verbose>=1) cout << "Add truth bin for " << nfakes << " fakes" << endl;
+    for (Int_t i= 0; i<_nm; i++) _reshist->SetBinContent(i+1,_nt+1,fakes[i]);
+    _truth1d->SetBinContent(_nt+1,nfakes);
+  }
 
   if (_verbose>=1) cout << "SVD init " << _reshist->GetNbinsX() << " x " << _reshist->GetNbinsY()
                         << " bins, kreg=" << _kreg << endl;
@@ -171,7 +185,7 @@ RooUnfoldSvd::GetCov()
   if (!_svd) return;
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
-  TH2D* meascov= new TH2D ("meascov", "meascov", _nm, 0.0, 1.0, _nm, 0.0, 1.0);
+  TH2D* meascov= new TH2D ("meascov", "meascov", _nb, 0.0, 1.0, _nb, 0.0, 1.0);
   const TMatrixD& cov= GetMeasuredCov();
   for (Int_t i= 0; i<_nm; i++)
     for (Int_t j= 0; i<_nm; i++)
