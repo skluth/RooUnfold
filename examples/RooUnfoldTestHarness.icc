@@ -274,7 +274,7 @@ Int_t RooUnfoldTestHarness::Train()
   Int_t nfake= Fakes (xfake, nmx, ntrain, xlo, xhi, fakexlo, fakexhi);
   if (nfake>0) {
     hTrainFake= new TH1D ("trainfake", "Training Fakes", nmx, xlo, xhi);
-    hTrainFake->SetLineColor(kOrange);
+    hTrainFake->SetLineColor(93);
     for (Int_t i= 0; i<nfake; i++) {
       Double_t xf= (*&xfake)[i];
       hTrain    ->Fill (xf);
@@ -334,7 +334,7 @@ Int_t RooUnfoldTestHarness::Test()
   Int_t nfake= Fakes (xfake, nmx, ntest, xlo, xhi, fakexlo, fakexhi);
   if (nfake>0) {
     hFake= new TH1D ("fake", "Test Fakes", nmx, xlo, xhi);
-    hFake->SetLineColor(kOrange);
+    hFake->SetLineColor(93);
     for (Int_t i= 0; i<nfake; i++) {
       Double_t xf= (*&xfake)[i];
       hMeas->Fill (xf);

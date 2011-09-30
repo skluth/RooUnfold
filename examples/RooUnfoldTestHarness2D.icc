@@ -109,7 +109,7 @@ Int_t RooUnfoldTestHarness2D::Train ()
   Int_t nfake= Fakes2D (xfake, yfake, ntrain);
   if (nfake>0) {
     hTrainFake= new TH2D ("trainfake", "Training Fakes", nmx, xlo, xhi, nmy, ylo, yhi);
-    hTrainFake->SetLineColor(kOrange);
+    hTrainFake->SetLineColor(93);
     for (Int_t i= 0; i<nfake; i++) {
       Double_t xf= (*&xfake)[i], yf= (*&yfake)[i];
       hTrain    ->Fill (xf, yf);
@@ -192,7 +192,7 @@ Int_t RooUnfoldTestHarness2D::Test ()
   Int_t nfake= Fakes2D (xfake, yfake, ntest);
   if (nfake>0) {
     hFake= new TH2D ("fake", "Test Fakes", nmx, xlo, xhi, nmy, ylo, yhi);
-    hFake->SetLineColor(kOrange);
+    hFake->SetLineColor(93);
     for (Int_t i= 0; i<nfake; i++) {
       Double_t xf= (*&xfake)[i], yf= (*&yfake)[i];
       hMeas->Fill (xf, yf);
