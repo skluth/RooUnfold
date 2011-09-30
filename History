@@ -1,7 +1,7 @@
 History of RooUnfold     $Id$
 ====================
 
-Tim Adye         30-Sep-2011
+Tim Adye         30-Sep-2011 V01-01-00
   o Fix return of errors in RooUnfoldSvd.
   o Add warnings in RooUnfoldTUnfold and RooUnfoldDagostini if a full
     measurement covariance matrix was specified. These algorithms don't
