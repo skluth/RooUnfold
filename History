@@ -13,6 +13,7 @@ Tim Adye         30-Sep-2011 V01-01-00
     (bincorr=-0.5 gives an anti-correlation of 0.5 between neighbouring bins,
     0.25 between next-to-neighbours, etc). Input correlation matrix is also
     plotted.
+  o Make examples/RooUnfoldExample.py directly executable.
 
 Tim Adye         29-Sep-2011
   o RooUnfoldResponse can now account for fakes (or background: measured entries
