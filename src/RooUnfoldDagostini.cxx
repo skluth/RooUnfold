@@ -120,6 +120,7 @@ RooUnfoldDagostini::Unfold()
     cerr << nm << " measured bins is too large - maximum is "  << SIZE_E << endl;
     nm= SIZE_E;
   }
+  if (_haveCovMes) cerr << "Warning: BAYES does not account for bin-bin correlations on measured input" << endl;
   
   const TMatrixD& res= _res->Mresponse();
   const TVectorD& tru= _res->Vtruth();

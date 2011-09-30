@@ -19,8 +19,10 @@
 #include "RooUnfold.h"
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,0,0)
 #include "TVectorDfwd.h"
+#include "TMatrixDfwd.h"
 #else
 class TVectorD;
+class TMatrixD;
 #endif
 #endif
 
@@ -53,7 +55,7 @@ public:
   Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain, wpaper, hpaper, regmethod;
   Int_t    ntoyssvd, nmx, onepage, doerror, dim, overflow, addbias, nbPDF, verbose, dodraw;
   Int_t    ntoys, ploterrors, plotparms;
-  Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx, mscalex;
+  Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx, mscalex, bincorr;
   Double_t regparm, effxlo, effxhi, xbias, xsmear, fakexlo, fakexhi, minparm, maxparm, stepsize;
   TString  rootfile;
 
@@ -65,7 +67,7 @@ public:
   TH1                *hTrain, *hTrainTrue, *hTrainFake, *hTrue, *hMeas, *hReco, *hFake, *hRes, *hPulls;
   TH1                *hUnfErr, *hToyErr, *hParmChi2, *hParmErr, *hParmRes, *hParmRms;
   TH1D               *hPDFx, *hTestPDFx;
-  TH2D               *hResmat, *hCorr;
+  TH2D               *hResmat, *hCorr, *hMeasCorr;
   TNtuple            *ntChi2;
   RooUnfoldResponse* response;
   RooUnfold*         unfold;
@@ -85,6 +87,7 @@ public:
   virtual Int_t    Train();
   virtual void     TrainResults();
   virtual Int_t    Test();
+  virtual void     SetMeasuredCov();
   virtual Int_t    Unfold();
   virtual void     Results();
   virtual void     PlotErrors();
@@ -105,6 +108,9 @@ public:
   static  void     setmax   (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
                              const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0);
   static  void     Legend (TLegend*& legend, TH1* pdf, TH1* truth, TH1* fake, TH1* meas, TH1* reco= 0);
+  static  TH2D*    CorrelationHist (const TMatrixD& cov,
+                                    const char* name="rho", const char* title="Correlation matrix",
+                                    Double_t lo=0.0, Double_t hi=1.0);
   static  void     PrintMatrix (const TMatrixD& m, const char* format= 0,
                                 const char* name= "matrix", Int_t cols_per_sheet= 0);
 };

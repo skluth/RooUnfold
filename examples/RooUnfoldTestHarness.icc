@@ -108,6 +108,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("xsmear",  &xsmear,     0.5, "X smearing width in bins");
   args.Add ("fakexlo", &fakexlo,    0.0, "fraction of fakes at xlo");
   args.Add ("fakexhi", &fakexhi,    0.0, "fraction of fakes at xhi");
+  args.Add ("bincorr", &bincorr,    0.0, "correlation between neighbouring measured bins");
   args.Add ("overflow",&overflow,     0, "0=unfolding ignores under/overflow bins, 1=unfolding uses under/overflow bins, 2=fill under/overflows into first/last bins");
   args.Add ("addbias", &addbias,     -1, "apply systematic shift/rotation (disabled by default for bin-by-bin/invert methods)", "1");
   args.Add ("wpaper",  &wpaper,       0, "paper width", "");
@@ -141,7 +142,7 @@ Int_t RooUnfoldTestHarness::Run()
   TFile f (rootfile, "update");
   const TNamed* objs[] = { unfold, hTrain, hTrainTrue, hTrainFake, hTrue, hMeas, hFake,
                            hReco, hRes, hPulls, hPDFx, hTestPDFx,
-                           hResmat, hCorr, hUnfErr, hToyErr, ntChi2,
+                           hResmat, hCorr, hMeasCorr, hUnfErr, hToyErr, ntChi2,
                            hParmChi2, hParmErr, hParmRes, hParmRms };
   for (size_t i= 0; i<sizeof(objs)/sizeof(objs[0]); i++) {
     if (objs[i]) f.WriteTObject (objs[i], objs[i]->GetName());
@@ -155,6 +156,7 @@ void RooUnfoldTestHarness::SetupCanvas()
 {
   gROOT->SetStyle("Plain");
   gStyle->SetOptStat(0);
+  gStyle->SetPalette(1,0);
   if (!onepage)    gStyle->SetOptTitle(0);
   if (onepage < 3) gStyle->SetHistLineWidth(2);
   if (onepage) {
@@ -260,7 +262,7 @@ Int_t RooUnfoldTestHarness::Train()
     Double_t xto= Overflow (xt, ntx, xlo, xhi);
     hTrainTrue->Fill (xto);
     if (Eff (xt, xlo, xhi, effxlo, effxhi)) {    
-      Double_t x= Smear (xt, ntx, xlo, xhi, xbias, xsmear);
+      Double_t x=  Smear   (xt, ntx, xlo, xhi, xbias, xsmear);
       Double_t xo= Overflow (x, ntx, xlo, xhi);
       hTrain  ->Fill (xo);
       hResmat ->Fill (xo, xto);
@@ -325,7 +327,8 @@ Int_t RooUnfoldTestHarness::Test()
     Double_t xto= Overflow (xt, ntx, xlo, xhi);
     hTrue->Fill(xto);
     if (Eff (xt, xlo, xhi, effxlo, effxhi)) {
-      Double_t x = Smear (xt, ntx, xlo, xhi, xbias, xsmear), xo= Overflow (x, ntx, xlo, xhi);
+      Double_t x = Smear   (xt, ntx, xlo, xhi, xbias, xsmear);
+      Double_t xo= Overflow (x, ntx, xlo, xhi);
       hMeas->Fill(xo);
     }
   }
@@ -345,6 +348,27 @@ Int_t RooUnfoldTestHarness::Test()
 }
 
 //==============================================================================
+// Add bin correlations to measured errors
+//==============================================================================
+
+void RooUnfoldTestHarness::SetMeasuredCov ()
+{
+  if (bincorr==0.0) return;
+  TMatrixD cov= unfold->GetMeasuredCov();  // initially diagonal
+  Double_t corr= bincorr;
+  for (Int_t k=1; k<nmbins; k++) {
+    for (Int_t i=k; i<nmbins; i++)
+      cov(i,i-k)= cov(i-k,i)= corr*cov(i,i);
+    corr *= bincorr;
+    if (corr==0.0) break;
+  }
+  unfold->SetMeasuredCov (cov);
+  hMeasCorr= CorrelationHist (cov, "measCor", "Measured correlation matrix",
+                              response->Hresponse()->GetXaxis()->GetXmin(),
+                              response->Hresponse()->GetXaxis()->GetXmax());
+}
+
+//==============================================================================
 // Unfold
 //==============================================================================
 
@@ -356,6 +380,7 @@ Int_t RooUnfoldTestHarness::Unfold ()
   unfold->SetVerbose (verbose);
   if (ntoys<0) ntoys= (ploterrors) ? 500 : 50;
   unfold->SetNToys(ntoys);
+  SetMeasuredCov();
   
   if (method == RooUnfold::kSVD)     (dynamic_cast<RooUnfoldSvd*    >(unfold))->SetNtoysSVD(ntoyssvd);
 #ifdef USE_TUNFOLD_H
@@ -399,18 +424,10 @@ Int_t RooUnfoldTestHarness::Unfold ()
     }
   }
 
-  TMatrixD covmat= unfold->Ereco((RooUnfold::ErrorTreatment)doerror);
-  Double_t xtlo= response->Hresponse()->GetYaxis()->GetXmin(),
-           xthi= response->Hresponse()->GetYaxis()->GetXmax();
-  hCorr= new TH2D ("corr", "Unfolding correlation matrix",
-                         ntbins, xtlo, xthi,
-                         ntbins, xtlo, xthi);
-  hCorr->SetAxisRange (-1.0, 1.0, "Z");
-
-  for(int i=0; i < ntbins; i++)
-    for(int j=0; j < ntbins; j++)
-      hCorr->SetBinContent (i+1, j+1, covmat(i,j)/sqrt(covmat(i,i)*covmat(j,j)));
-
+  hCorr= CorrelationHist (unfold->Ereco((RooUnfold::ErrorTreatment)doerror),
+                          "corr", "Unfolded correlation matrix",
+                          response->Hresponse()->GetYaxis()->GetXmin(),
+                          response->Hresponse()->GetYaxis()->GetXmax());
   return 1;
 }
 
@@ -455,7 +472,13 @@ void RooUnfoldTestHarness::Results()
 
   if (onepage && ipad>=onepage) return;
   if (onepage) canvas->cd(++ipad);
-  gStyle->SetPalette(1,0);
+  gPad->Divide(2,1);
+  gPad->cd(1);
+  if (hMeasCorr) {
+    hMeasCorr->Draw("COLZ");
+    canvas->cd(ipad);
+    gPad->cd(2);
+  }
   hCorr->Draw("COLZ");
   canvas->Update();
 
@@ -740,7 +763,7 @@ void RooUnfoldTestHarness::Reset()
   hPDFx= hTestPDFx= 0;
   hTrain= hTrainTrue= hTrainFake= hTrue= hMeas= hFake= hReco= hRes= hPulls=
     hUnfErr= hToyErr= hParmChi2= hParmErr= hParmRes= hParmRms= 0;
-  hResmat= hCorr= 0;
+  hResmat= hCorr= hMeasCorr= 0;
   ntChi2= 0;
   lTrain= lTest= lErrors= 0;
   error= ipad= 0;
@@ -811,6 +834,19 @@ void RooUnfoldTestHarness::PrintParms (std::ostream& o) const
   o << GetName() << " ";
   args.Print (o);
   o << endl;
+}
+
+TH2D* RooUnfoldTestHarness::CorrelationHist (const TMatrixD& cov,
+                                             const char* name, const char* title,
+                                             Double_t lo, Double_t hi)
+{
+  Int_t nb= cov.GetNrows();
+  TH2D* h= new TH2D (name, title, nb, lo, hi, nb, lo, hi);
+  h->SetAxisRange (-1.0, 1.0, "Z");
+  for(int i=0; i < nb; i++)
+    for(int j=0; j < nb; j++)
+      h->SetBinContent (i+1, j+1, cov(i,j)/sqrt(cov(i,i)*cov(j,j)));
+  return h;
 }
 
 void RooUnfoldTestHarness::Legend (TLegend*& legend, TH1* pdf, TH1* truth, TH1* fake, TH1* meas, TH1* reco)

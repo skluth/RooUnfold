@@ -188,7 +188,7 @@ RooUnfoldSvd::GetCov()
   TH2D* meascov= new TH2D ("meascov", "meascov", _nb, 0.0, 1.0, _nb, 0.0, 1.0);
   const TMatrixD& cov= GetMeasuredCov();
   for (Int_t i= 0; i<_nm; i++)
-    for (Int_t j= 0; i<_nm; i++)
+    for (Int_t j= 0; j<_nm; j++)
       meascov->SetBinContent (i+1, j+1, cov(i,j));
 
   //Get the covariance matrix for statistical uncertainties on the measured distribution

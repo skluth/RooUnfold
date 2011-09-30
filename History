@@ -1,6 +1,19 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         30-Sep-2011
+  o Fix return of errors in RooUnfoldSvd.
+  o Add warnings in RooUnfoldTUnfold and RooUnfoldDagostini if a full
+    measurement covariance matrix was specified. These algorithms don't
+    support the bin-bin correlations.
+  o Add Bessel's correction (N/(N-1)) to error calculation from toys.
+  o Don't usually print decomposed measurement covariance matrix when
+    running toys.
+  o RooUnfoldTest bincorr parameter sets test measurement bin-bin correlations
+    (bincorr=-0.5 gives an anti-correlation of 0.5 between neighbouring bins,
+    0.25 between next-to-neighbours, etc). Input correlation matrix is also
+    plotted.
+
 Tim Adye         29-Sep-2011
   o RooUnfoldResponse can now account for fakes (or background: measured entries
     with no truth). Use Fake(xmeas) to fill or add fakes to measured input

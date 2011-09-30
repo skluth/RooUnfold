@@ -356,23 +356,24 @@ void RooUnfold::GetCov()
 
 void RooUnfold::GetErrMat()
 {
-  //Get covariance matrix from the variation of the results in toy MC tests
-  TVectorD bc_vec(_nt);
-  TMatrixD bc_mat(_nt,_nt);
+  // Get covariance matrix from the variation of the results in toy MC tests
+  if (_NToys<=1) return;
   _err_mat.ResizeTo(_nt,_nt);
+  TVectorD xisum (_nt);
+  TMatrixD xijsum(_nt,_nt);
   for (Int_t k=0; k<_NToys; k++){
     RooUnfold* unfold= RunToy();
-    const TVectorD& res= unfold->Vreco();
+    const TVectorD& x= unfold->Vreco();
     for (Int_t i=0; i<_nt;i++){
-      Double_t res_bci= res[i];
-      bc_vec[i] += res_bci;
-      for (Int_t j=0; j<_nt; j++) bc_mat(i,j) += res_bci * res[j];
+      Double_t xi= x[i];
+      xisum[i] += xi;
+      for (Int_t j=0; j<_nt; j++) xijsum(i,j) += xi * x[j];
     }
     delete unfold;
   }
   for (Int_t i=0; i<_nt; i++){
     for (Int_t j=0; j<_nt; j++){
-      _err_mat(i,j)= (bc_mat(i,j) - (bc_vec[i]*bc_vec[j])/_NToys) / _NToys;
+      _err_mat(i,j)= (xijsum(i,j) - (xisum[i]*xisum[j])/_NToys) / (_NToys-1);
     }
   }
   _have_err_mat=true;
@@ -684,7 +685,10 @@ RooUnfold* RooUnfold::RunToy() const
       c.Decompose();
       TMatrixD U(c.GetU());
       _covL= new TMatrixD (TMatrixD::kTransposed, U);
-      _covL->Print();
+      if (_verbose>=2) {
+        cout << "Decomposed measurement covariance matrix:-" << endl;
+        _covL->Print();
+      }
     }
     TVectorD newmeas(_nm);
     for (Int_t i= 0; i<_nm; i++) newmeas[i]= gRandom->Gaus(0.0,1.0);
