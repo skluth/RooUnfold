@@ -81,6 +81,7 @@ public:
   virtual TVectorD&  Vreco();
   virtual TMatrixD   Ereco  (ErrorTreatment witherror=kCovariance);
   virtual TVectorD   ErecoV (ErrorTreatment witherror=kErrors);
+  virtual TMatrixD   Wreco  (ErrorTreatment witherror=kCovariance);
 
   virtual Int_t      verbose() const;
   virtual void       SetVerbose (Int_t level);
@@ -105,13 +106,15 @@ protected:
   virtual void GetErrors();
   virtual void GetCov(); // Get covariance matrix using errors on measured distribution
   virtual void GetErrMat(); // Get covariance matrix using errors from residuals on reconstructed distribution
+  virtual void GetWgt(); // Get weight matrix using errors on measured distribution
   virtual void GetSettings();
-  virtual Bool_t UnfoldWithErrors (ErrorTreatment withError);
+  virtual Bool_t UnfoldWithErrors (ErrorTreatment withError, bool getWeights=false);
 
   static TMatrixD CutZeros     (const TMatrixD& ereco);
   static TH1D*    HistNoOverflow (const TH1* h, Bool_t overflow);
   static TMatrixD& ABAT (const TMatrixD& a, const TMatrixD& b, TMatrixD& c);
   static TH1*     Resize (TH1* h, Int_t nx, Int_t ny=-1, Int_t nz=-1);
+  static Int_t    InvertMatrix (const TMatrixD& mat, TMatrixD& inv, const char* name="matrix");
 
 private:
   void Init();
@@ -131,6 +134,7 @@ protected:
   Int_t    _NToys;         // Number of toys to be used
   Bool_t   _unfolded;      // unfolding done
   Bool_t   _haveCov;       // have _cov
+  Bool_t   _haveWgt;       // have _wgt
   Bool_t   _have_err_mat;  // have _err_mat
   Bool_t   _fail;          // unfolding failed
   Bool_t   _haveErrors;    // have _variances
@@ -140,6 +144,7 @@ protected:
   TH1*     _measmine;      // Owned measured histogram
   TVectorD _rec;           // Reconstructed distribution
   TMatrixD _cov;           // Reconstructed distribution covariance
+  TMatrixD _wgt;           // Reconstructed distribution weights (inverse of _cov)
   TVectorD _variances;     // Error matrix diagonals
   TMatrixD _err_mat;       // Error matrix from toys
   mutable TVectorD* _vMes; //! Cached measured vector

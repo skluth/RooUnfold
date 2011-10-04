@@ -1,6 +1,19 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         04-Oct-2011
+  o Update local copy of TSVDUnfold to ROOT trunk revision 40495 (similar to
+    ROOT 5.30.00). This doesn't compile with ROOT 5.28 (need to fix this).
+  o RooUnfoldSvd uses propagation of errors rather than toys (TSVDUnfold::GetXtau)
+    and doesn't include errors on response matrix.
+  o New RooUnfold::Wreco() method returns weight matrix of unfolded result.
+    This is normally just the inverse of the covariance matrix, but can be
+    calculated directly for RooUnfoldSvd using TSVDUnfold::GetXinv.
+    The weights are used to calulcate the chi^2.
+  o RooUnfoldInverse now works even if there are more truth than measured bins.
+    This is done by transposing the response matrix, inverting, and transposing
+    back ((A^-1)^T = (A^T)^-1 for pseudo-inverse).
+
 Tim Adye         30-Sep-2011 V01-01-00
   o Fix return of errors in RooUnfoldSvd.
   o Add warnings in RooUnfoldTUnfold and RooUnfoldDagostini if a full

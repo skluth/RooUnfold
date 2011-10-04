@@ -524,15 +524,14 @@ RooUnfoldResponse::H2M  (const TH2* h, Int_t nx, Int_t ny, const TH1* norm, Bool
   TMatrixD* m= new TMatrixD (nx, ny);
   if (!h) return m;
   for (Int_t j= 0; j < ny; j++) {
-    Double_t nTrue= norm ? GetBinContent (norm, j, overflow) : 1.0;
-    if (nTrue == 0.0) {
-      for (Int_t i= 0; i < nx; i++) {
-        (*m)(i,j)= 0.0;
-      }
-    } else {
-      for (Int_t i= 0; i < nx; i++) {
-        (*m)(i,j)= h->GetBinContent(i+first,j+first) / nTrue;
-      }
+    Double_t fac;
+    if (!norm) fac= 1.0;
+    else {
+      fac= GetBinContent (norm, j, overflow);
+      if (fac != 0.0) fac= 1.0/fac;
+    }
+    for (Int_t i= 0; i < nx; i++) {
+      (*m)(i,j)= h->GetBinContent(i+first,j+first) * fac;
     }
   }
   return m;
@@ -550,16 +549,15 @@ RooUnfoldResponse::H2ME (const TH2* h, Int_t nx, Int_t ny, const TH1* norm, Bool
   TMatrixD* m= new TMatrixD (nx, ny);
   if (!h) return m;
   for (Int_t j= 0; j < ny; j++) {
-    Double_t nTrue= norm ? GetBinContent (norm, j, overflow) : 1.0;
-    if (nTrue == 0.0) {
-      for (Int_t i= 0; i < nx; i++) {
-        (*m)(i,j)= 0.0;
-      }
-    } else {
-      for (Int_t i= 0; i < nx; i++) {
-        // Assume Poisson nTrue, Multinomial P(mes|tru)
-        (*m)(i,j)= h->GetBinError(i+first,j+first) / nTrue;
-      }
+    Double_t fac;
+    if (!norm) fac= 1.0;
+    else {
+      fac= GetBinContent (norm, j, overflow);
+      if (fac != 0.0) fac= 1.0/fac;
+    }
+    for (Int_t i= 0; i < nx; i++) {
+      // Assume Poisson norm, Multinomial P(mes|tru)
+      (*m)(i,j)= h->GetBinError(i+first,j+first) * fac;
     }
   }
   return m;

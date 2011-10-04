@@ -65,12 +65,14 @@ RooUnfoldInvert::Clone (const char* newname) const
 RooUnfoldInvert::~RooUnfoldInvert()
 {
   delete _svd;
+  delete _resinv;
 }
 
 void
 RooUnfoldInvert::Init()
 {
   _svd= 0;
+  _resinv= 0;
   GetSettings();
 }
 
@@ -78,6 +80,7 @@ void
 RooUnfoldInvert::Reset()
 {
   delete _svd;
+  delete _resinv;
   Init();
   RooUnfold::Reset();
 }
@@ -92,10 +95,11 @@ void
 RooUnfoldInvert::Unfold()
 {
   if (_nt>_nm) {
-    cerr << "More truth bins ("<<_nt<<") than measured bin ("<<_nm<<") - cannot invert using TDecompSVD"<<endl;
-    return;
-  }
-  _svd= new TDecompSVD (_res->Mresponse());
+    TMatrixD resT (TMatrixD::kTransposed, _res->Mresponse());
+    _svd= new TDecompSVD (resT);
+    delete _resinv; _resinv= 0;
+  } else
+    _svd= new TDecompSVD (_res->Mresponse());
   if (_svd->Condition()<0){
     cerr <<"Warning: response matrix bad condition= "<<_svd->Condition()<<endl;
   }
@@ -112,7 +116,13 @@ RooUnfoldInvert::Unfold()
     _rec -= fakes;
   }
 
-  Bool_t ok= _svd->Solve (_rec);
+  Bool_t ok;
+  if (_nt>_nm) {
+    ok= InvertResponse();
+    if (ok) _rec *= *_resinv;
+  } else
+    ok= _svd->Solve (_rec);
+
   _rec.ResizeTo(_nt);
   if (!ok) {
     cerr << "Response matrix Solve failed" << endl;
@@ -126,22 +136,31 @@ RooUnfoldInvert::Unfold()
 void
 RooUnfoldInvert::GetCov()
 {
-    if (!_svd) return;
-    TMatrixD resinv(_nt,_nm);
+    if (!InvertResponse()) return;
+    _cov.ResizeTo(_nt,_nt);
+    ABAT (*_resinv, GetMeasuredCov(), _cov);
+    _haveCov= true;
+}
+
+Bool_t
+RooUnfoldInvert::InvertResponse()
+{
+    if (!_svd)   return false;
+    if (_resinv) return true;
+    if (_nt>_nm) _resinv= new TMatrixD(_nm,_nt);
+    else         _resinv= new TMatrixD(_nt,_nm);
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,13,4)  /* TDecompSVD::Invert() didn't have ok status before 5.13/04. */
     Bool_t ok;
-    resinv=_svd->Invert(ok);
+    *_resinv=_svd->Invert(ok);
     if (!ok) {
       cerr << "response matrix inversion failed" << endl;
-      return;
+      return false;
     }
 #else
-    resinv=_svd->Invert();
+    *_resinv=_svd->Invert();
 #endif
-
-    _cov.ResizeTo(_nt,_nt);
-    ABAT (resinv, GetMeasuredCov(), _cov);
-    _haveCov= true;
+    if (_nt>_nm) _resinv->T();
+    return true;
 }
 
 void
