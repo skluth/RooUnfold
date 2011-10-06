@@ -1,6 +1,10 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         05-Oct-2011
+  o Add warning if the number of measured bins doesn't match the
+    response matrix.
+
 Tim Adye         04-Oct-2011
   o Update local copy of TSVDUnfold to ROOT trunk revision 40495 (similar to
     ROOT 5.30.00). This doesn't compile with ROOT 5.28 (need to fix this).

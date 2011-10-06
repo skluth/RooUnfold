@@ -393,6 +393,19 @@ Bool_t RooUnfold::UnfoldWithErrors (ErrorTreatment withError, bool getWeights)
 {
   if (!_unfolded) {
     if (_fail) return false;
+    const TH1* rmeas= _res->Hmeasured();
+    if (_meas->GetDimension() != rmeas->GetDimension() ||
+        _meas->GetNbinsX()    != rmeas->GetNbinsX()    ||
+        _meas->GetNbinsY()    != rmeas->GetNbinsY()    ||
+        _meas->GetNbinsZ()    != rmeas->GetNbinsZ()) {
+      cerr << "Warning: measured "              << _meas->GetNbinsX();
+      if (_meas->GetDimension()>=2) cerr << "x" << _meas->GetNbinsY();
+      if (_meas->GetDimension()>=3) cerr << "x" << _meas->GetNbinsZ();
+      cerr << "-bin histogram does not match "  << rmeas->GetNbinsX();
+      if (rmeas->GetDimension()>=2) cerr << "x" << rmeas->GetNbinsY();
+      if (rmeas->GetDimension()>=3) cerr << "x" << rmeas->GetNbinsZ();
+      cerr << "-bin measured histogram from RooUnfoldResponse" << endl;
+    }
     Unfold();
     if (!_unfolded) {
       _fail= true;
