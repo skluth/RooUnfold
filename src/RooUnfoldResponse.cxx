@@ -139,7 +139,7 @@ RooUnfoldResponse::Setup()
 {
   _tru= _mes= _fak= 0;
   _res= 0;
-  _vMes= _eMes= _vTru= _eTru= 0;
+  _vMes= _eMes= _vFak= _vTru= _eTru= 0;
   _mRes= _eRes= 0;
   _nm= _nt= _mdim= _tdim= 0;
   _cached= false;
@@ -248,7 +248,7 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2* resp
     Double_t nmes= 0.0;
     for (Int_t j= 0; j<ny; j++) nmes += _res->GetBinContent(i+first,j+first);
     Int_t bin= GetBin (_fak, i, _overflow);
-    Double_t fake= _mes->GetBinContent(bin) - nmes;
+    Double_t fake= _mes->GetBinContent (bin) - nmes;
     if (fake!=0.0) _fak->SetBinContent (bin, fake);  // only update entry count if non-zero
   }
 
@@ -261,6 +261,7 @@ RooUnfoldResponse::ClearCache()
 {
   delete _vMes; _vMes= 0;
   delete _eMes; _eMes= 0;
+  delete _vFak; _vFak= 0;
   delete _vTru; _vTru= 0;
   delete _eTru; _eTru= 0;
   delete _mRes; _mRes= 0;
