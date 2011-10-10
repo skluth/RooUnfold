@@ -6,8 +6,9 @@ Tim Adye         10-Oct-2011
     method to take 0 or empty histogram for "measured" and/or "truth" in
     the case where there are no fakes and/or inefficiencies.
     With 0, a 1D histogram is assumed.
-  o Calculated histogram of fakes now includes errors, even though these are not
-    used at present.
+  o Calculated histogram of fakes now includes truth under/overflows from user's
+    response matrix histogram. Errors are also calculated, even though these are
+    not used at present.
   o Fix residuals histogram colours in RooUnfoldTest.
 
 Tim Adye         05-Oct-2011

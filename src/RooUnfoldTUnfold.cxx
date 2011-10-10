@@ -122,7 +122,7 @@ RooUnfoldTUnfold::Unfold()
 {
     /* Does the unfolding. Uses the optimal value of the unfolding parameter unless a value has already been set using FixTau*/
        
-  if (_nm<_nt)     cerr << "Warning: fewer measured bins than truth bins. Unfolding may not work correctly." << endl;
+  if (_nm<_nt)     cerr << "Warning: fewer measured bins than truth bins. TUnfold may not work correctly." << endl;
   if (_haveCovMes) cerr << "Warning: TUnfold does not account for bin-bin correlations on measured input"    << endl;
 
   Bool_t oldstat= TH1::AddDirectoryStatus();
