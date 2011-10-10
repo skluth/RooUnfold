@@ -261,9 +261,6 @@ void RooUnfoldTestHarness3D::Results()
     hRecoX= ProjectionX (hReco, "hRecoX", "Reconstructed X", "E");
     hRecoY= ProjectionY (hReco, "hRecoY", "Reconstructed Y", "E");
     hRecoZ= ProjectionZ (hReco, "hRecoZ", "Reconstructed Z", "E");
-    hRecoX->SetLineColor(kBlack);
-    hRecoY->SetLineColor(kBlack);
-    hRecoZ->SetLineColor(kBlack);
     hRecoX->SetMarkerStyle(kFullDotLarge);
     hRecoY->SetMarkerStyle(kFullDotLarge);
     hRecoZ->SetMarkerStyle(kFullDotLarge);

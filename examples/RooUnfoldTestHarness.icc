@@ -285,6 +285,7 @@ Int_t RooUnfoldTestHarness::Train()
     }
   }
   // or:  response->Setup (hTrain, hTrainTrue, hResmat);
+  // or:  response->Setup (0, 0, hResmat);     // if no inefficiency or fakes
 
   if (verbose>=2) PrintMatrix(response->Mresponse(),"","response matrix",10);
   return 1;
@@ -390,6 +391,7 @@ Int_t RooUnfoldTestHarness::Unfold ()
   hReco= unfold->Hreco((RooUnfold::ErrorTreatment)doerror);
   if (!hReco) return 0;
   hReco->SetName("reco");
+  hReco->SetLineColor(kBlack);  // otherwise inherits style from hTrainTrue
   if (verbose>=0) unfold->PrintTable (cout, hTrue, (RooUnfold::ErrorTreatment)doerror);
   if (verbose>=2 && doerror>=RooUnfold::kCovariance) {
     TMatrixD covmat= unfold->Ereco((RooUnfold::ErrorTreatment)doerror);
@@ -411,8 +413,6 @@ Int_t RooUnfoldTestHarness::Unfold ()
   for (Int_t i= 1; i<=ntbins; i++) {
     if ((hReco->GetBinContent(i)!=0.0 || (doerror && hReco->GetBinError(i)>0.0)) &&
         (hTrue->GetBinContent(i)!=0.0 || (doerror && hTrue->GetBinError(i)>0.0))) {
-      // hReco already includes the statistical error on hTrue, so
-      // don't include that twice when calculating residuals.
       Double_t res= hReco->GetBinContent(i) - hTrue->GetBinContent(i);
       Double_t err= hReco->GetBinError  (i);
       hRes->SetBinContent (i, res);
@@ -443,7 +443,6 @@ void RooUnfoldTestHarness::Results()
   }
   setmax (hTrue, hTestPDFx, hMeas, hFake);
   if (hReco) {
-    hReco->SetLineColor(kBlack);
     hReco->SetMarkerStyle(kFullDotLarge);
     setmax (hTrue, hReco);
   }

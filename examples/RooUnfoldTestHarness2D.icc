@@ -230,8 +230,6 @@ void RooUnfoldTestHarness2D::Results()
   if (hReco) {
     hRecoX= ProjectionX (hReco, "hRecoX", "Reconstructed X", "E");
     hRecoY= ProjectionY (hReco, "hRecoY", "Reconstructed Y", "E");
-    hRecoX->SetLineColor(kBlack);
-    hRecoY->SetLineColor(kBlack);
     hRecoX->SetMarkerStyle(kFullDotLarge);
     hRecoY->SetMarkerStyle(kFullDotLarge);
     setmax (hTrueX, hRecoX);

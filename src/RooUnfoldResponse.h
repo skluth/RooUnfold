@@ -128,7 +128,7 @@ private:
   static Int_t FindBin   (const TH1* h, Double_t x, Double_t y);
   static Int_t FindBin   (const TH1* h, Double_t x, Double_t y, Double_t z);
   static Int_t GetBinDim (const TH1* h, Int_t i);
-  static void ReplaceAxis(TObject* hist, TAxis* axis, const TAxis* source);
+  static void ReplaceAxis(TAxis* axis, const TAxis* source);
 
   // instance variables
 

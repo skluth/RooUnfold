@@ -25,6 +25,7 @@ END_HTML */
 
 #include <iostream>
 #include <assert.h>
+#include <cmath>
 
 #include "TClass.h"
 #include "TNamed.h"
@@ -37,6 +38,8 @@ END_HTML */
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::pow;
+using std::sqrt;
 
 ClassImp (RooUnfoldResponse);
 
@@ -71,6 +74,12 @@ RooUnfoldResponse::RooUnfoldResponse (const TH1* measured, const TH1* truth, con
   : TNamed (name, title)
 {
   // RooUnfoldResponse constructor - create from already-filled histograms
+  // "response" gives the response matrix, measured X truth.
+  // "measured" and "truth" give the projections of "response" onto the X-axis and Y-axis respectively,
+  // but with additional entries in "measured" for measurements with no corresponding truth (fakes/background) and
+  // in "truth" for unmeasured events (inefficiency).
+  // "measured" and/or "truth" can be specified as 0 (1D case only) or an empty histograms (no entries) as a shortcut
+  // to indicate, respectively, no fakes and/or no inefficiency.
   Init();
   Setup (measured, truth, response);
 }
@@ -174,9 +183,10 @@ RooUnfoldResponse::Setup (Int_t nm, Double_t mlo, Double_t mhi, Int_t nt, Double
 }
 
 void
-RooUnfoldResponse::ReplaceAxis (TObject* hist, TAxis* dest, const TAxis* source)
+RooUnfoldResponse::ReplaceAxis (TAxis* dest, const TAxis* source)
 {
   // Replaces an axis with that of a different histogram
+  TObject* hist= dest->GetParent();
   source->Copy (*dest);
   dest->SetParent (hist);
 }
@@ -204,8 +214,8 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
   _nm= _mes->GetNbinsX() * _mes->GetNbinsY() * _mes->GetNbinsZ();
   _nt= _tru->GetNbinsX() * _tru->GetNbinsY() * _tru->GetNbinsZ();
   _res= new TH2D (GetName(), GetTitle(), _nm, 0.0, Double_t(_nm), _nt, 0.0, Double_t(_nt));
-  if (_mdim==1) ReplaceAxis (_res, _res->GetXaxis(), _mes->GetXaxis());
-  if (_tdim==1) ReplaceAxis (_res, _res->GetYaxis(), _tru->GetXaxis());
+  if (_mdim==1) ReplaceAxis (_res->GetXaxis(), _mes->GetXaxis());
+  if (_tdim==1) ReplaceAxis (_res->GetYaxis(), _tru->GetXaxis());
   TH1::AddDirectory (oldstat);
   return *this;
 }
@@ -213,19 +223,39 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth)
 RooUnfoldResponse&
 RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2* response)
 {
-  // set up from already-filled histograms
+  // Set up from already-filled histograms.
+  // "response" gives the response matrix, measured X truth.
+  // "measured" and "truth" give the projections of "response" onto the X-axis and Y-axis respectively,
+  // but with additional entries in "measured" for measurements with no corresponding truth (fakes/background) and
+  // in "truth" for unmeasured events (inefficiency).
+  // "measured" and/or "truth" can be specified as 0 (1D case only) or an empty histograms (no entries) as a shortcut
+  // to indicate, respectively, no fakes and/or no inefficiency.
   Reset();
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
-  _mes= (TH1*)  measured->Clone();
-  _fak= (TH1*)  measured->Clone("fakes");
-  _fak->Reset();
-  _fak->SetTitle("Fakes");
-  _tru= (TH1*)  truth   ->Clone();
-  _res= (TH2*)  response->Clone();
+  _res= (TH2*) response->Clone();
+  if (measured) {
+    _mes= (TH1*) measured->Clone();
+    _fak= (TH1*) measured->Clone("fakes");
+    _fak->Reset();
+    _fak->SetTitle("Fakes");
+    _mdim= _mes->GetDimension();
+  } else {
+    _mes= new TH1D ("measured", "Measured", response->GetNbinsX(), 0.0, 1.0);
+    ReplaceAxis (_mes->GetXaxis(), _res->GetXaxis());
+    _fak= (TH1*) _mes->Clone("fakes");
+    _fak->SetTitle("Fakes");
+    _mdim= 1;
+  }
+  if (truth) {
+    _tru= (TH1*)  truth   ->Clone();
+    _tdim= _tru->GetDimension();
+  } else {
+    _tru= new TH1D ("truth",    "Truth",    response->GetNbinsY(), 0.0, 1.0);
+    ReplaceAxis (_tru->GetXaxis(), _res->GetYaxis());
+    _tdim= 1;
+  }
   TH1::AddDirectory (oldstat);
-  _mdim= _mes->GetDimension();
-  _tdim= _tru->GetDimension();
   if (_overflow && (_mdim > 1 || _tdim > 1)) {
     cerr << "UseOverflow setting ignored for multi-dimensional distributions" << endl;
     _overflow= 0;
@@ -237,19 +267,55 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2* resp
          << ", but matrix is " << _res->GetNbinsX()<< " X " << _res->GetNbinsY() << endl;
   }
 
-  // Fill fakes from the difference of measured-colsum(response)
-  Int_t first=1, nx= _nm, ny= _nt;
+  Int_t first=1, nm= _nm, nt= _nt, s= _res->GetSumw2N();
   if (_overflow) {
     first= 0;
-    nx += 2;
-    ny += 2;
+    nm += 2;
+    nt += 2;
   }
-  for (Int_t i= 0; i<nx; i++) {
-    Double_t nmes= 0.0;
-    for (Int_t j= 0; j<ny; j++) nmes += _res->GetBinContent(i+first,j+first);
-    Int_t bin= GetBin (_fak, i, _overflow);
-    Double_t fake= _mes->GetBinContent (bin) - nmes;
-    if (fake!=0.0) _fak->SetBinContent (bin, fake);  // only update entry count if non-zero
+
+  if (!measured || _mes->GetEntries() == 0.0) {
+    // similar to _res->ProjectionX("_px",first,_nm+_overflow) but without stupid reset of existing histograms
+    for (Int_t i= 0; i<nm; i++) {
+      Double_t nmes= 0.0, wmes= 0.0;
+      for (Int_t j= 0; j<nt; j++) {
+               nmes +=      _res->GetBinContent (i+first, j+first);
+        if (s) wmes += pow (_res->GetBinError   (i+first, j+first), 2);
+      }
+      Int_t bin= GetBin (_mes, i, _overflow);
+             _mes->SetBinContent (bin,      nmes );
+      if (s) _mes->SetBinError   (bin, sqrt(wmes));
+    }
+  } else {
+    // Fill fakes from the difference of _mes - _res->ProjectionX()
+    Int_t sm= _mes->GetSumw2N();
+    for (Int_t i= 0; i<nm; i++) {
+      Double_t nmes= 0.0, wmes= 0.0;
+      for (Int_t j= 0; j<nt; j++) {
+               nmes +=      _res->GetBinContent (i+first, j+first);
+        if (s) wmes += pow (_res->GetBinError   (i+first, j+first), 2);
+      }
+      Int_t bin= GetBin (_mes, i, _overflow);
+      Double_t fake= _mes->GetBinContent (bin) - nmes;
+      if (!s) wmes= nmes;
+      _fak->SetBinContent (bin, fake);
+      _fak->SetBinError   (bin, sqrt (wmes + (sm ? pow(_mes->GetBinError(bin),2) : _mes->GetBinContent(bin))));
+    }
+    _fak->SetEntries (_fak->GetEffectiveEntries());  // 0 entries if 0 fakes
+  }
+
+  if (!truth || _tru->GetEntries() == 0.0) {
+    // similar to _res->ProjectionY("_py",first,_nt+_overflow) but without stupid reset of existing histograms
+    for (Int_t j= 0; j<nt; j++) {
+      Double_t ntru= 0.0, wtru= 0.0;
+      for (Int_t i= 0; i<nm; i++) {
+               ntru +=      _res->GetBinContent (i+first, j+first);
+        if (s) wtru += pow (_res->GetBinError   (i+first, j+first), 2);
+      }
+      Int_t bin= GetBin (_tru, j, _overflow);
+             _tru->SetBinContent (bin,      ntru);
+      if (s) _tru->SetBinError   (bin, sqrt(wtru));
+    }
   }
 
   SetNameTitleDefault();
