@@ -1,6 +1,10 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         14-Oct-2011
+  o Optimise calculation of the error propagation matrix in RooUnfoldBayes using
+    TMatrixD multiplication. This can speed it up by up to a factor of 5.
+
 Tim Adye         10-Oct-2011
   (change originally made 04-Oct-2011, but not included in V01-01-01)
   o Update local copy of TSVDUnfold to ROOT trunk revision 40495 (similar to

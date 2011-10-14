@@ -23,6 +23,7 @@ END_HTML */
 /////////////////////////////////////////////////////////////
 
 //#define OLDERRS   // restore old (incorrect) error calculation
+//#define OLDMULT   // restore old (slower) matrix multiplications
 
 #include "RooUnfoldBayes.h"
 
@@ -228,6 +229,24 @@ void RooUnfoldBayes::train()
     if (kiter <= 0) {
       _dnCidnEj= _Mij;
     } else {
+#ifndef OLDMULT
+      TVectorD en(_nc), nr(_nc);
+      for (Int_t i = 0 ; i < _nc ; i++) {
+        if (P0C[i]<=0.0) continue;
+        Double_t ni= 1.0/(ntrue*P0C[i]);
+        en[i]= -ni*_efficiencyCi[i];
+        nr[i]=  ni*_nbarCi[i];
+      }
+      TMatrixD M1= _dnCidnEj;
+      M1.NormByColumn(nr,"M");
+      TMatrixD M2 (TMatrixD::kTransposed, _Mij);
+      M2.NormByColumn(_nEstj,"M");
+      M2.NormByRow(en,"M");
+      TMatrixD M3 (M2, TMatrixD::kMult, _dnCidnEj);
+      _dnCidnEj.Mult (_Mij, M3);
+      _dnCidnEj += _Mij;
+      _dnCidnEj += M1;
+#else
       TVectorD ksum(_ne);
       for (Int_t j = 0 ; j < _ne ; j++) {
         for (Int_t k = 0 ; k < _ne ; k++) {
@@ -246,6 +265,7 @@ void RooUnfoldBayes::train()
           _dnCidnEj(i,j) = _Mij(i,j) + dsum/ntrue;
         }
       }
+#endif
     }
 #endif
 
