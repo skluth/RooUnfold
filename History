@@ -2,6 +2,20 @@ History of RooUnfold     $Id$
 ====================
 
 Tim Adye         14-Oct-2011
+  o Include effect of response matrix errors in unfolded errors if
+    RooUnfold::IncludeSystematics() is set. This is still experimental and is
+    currently only implemented for Bayes, SVD, TUnfold, and errors from toys.
+    Includes a reimplementation of the Bayes response matrix error propagation.
+    Use RooUnfoldTest dosys=1 to test.
+  o Add another small speed-up of the Bayes error propagation if the measurement
+    errors don't include bin-bin correlations.
+  o Fix RooUnfoldErrors binning and chi^2 plot.
+  o RooUnfoldTest bincorr=999 tests with full measurement covariance matrix that
+    is diagonal (can check it's identical to not using the covariance matrix).
+  o Fix response matrix error propagation matrix equation in doc/bayes_errors
+    (eq. 7).
+
+Tim Adye         13-Oct-2011
   o Optimise calculation of the error propagation matrix in RooUnfoldBayes using
     TMatrixD multiplication. This can speed it up by up to a factor of 5.
 

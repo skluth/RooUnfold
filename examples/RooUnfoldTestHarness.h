@@ -53,7 +53,7 @@ class RooUnfoldTestHarness : public TNamed {
 public:
   // Parameters
   Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain, wpaper, hpaper, regmethod;
-  Int_t    ntoyssvd, nmx, onepage, doerror, dim, overflow, addbias, nbPDF, verbose, dodraw;
+  Int_t    ntoyssvd, nmx, onepage, doerror, dim, overflow, addbias, nbPDF, verbose, dodraw, dosys;
   Int_t    ntoys, ploterrors, plotparms;
   Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx, mscalex, bincorr;
   Double_t regparm, effxlo, effxhi, xbias, xsmear, fakexlo, fakexhi, minparm, maxparm, stepsize;

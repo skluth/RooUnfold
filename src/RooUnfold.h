@@ -66,6 +66,7 @@ public:
   virtual void SetMeasured (const TVectorD& meas, const TVectorD& err);
   virtual void SetMeasuredCov (const TMatrixD& cov);
   virtual void SetResponse (const RooUnfoldResponse* res);
+  virtual void SetResponse (RooUnfoldResponse* res, Bool_t takeOwnership);
 
   virtual void Reset ();
 
@@ -85,6 +86,8 @@ public:
 
   virtual Int_t      verbose() const;
   virtual void       SetVerbose (Int_t level);
+  virtual void       IncludeSystematics (Bool_t dosys= kTRUE);
+  virtual Bool_t     SystematicsIncluded() const;
   virtual Int_t      NToys() const;         // Number of toys
   virtual void       SetNToys (Int_t toys); // Set number of toys
   virtual Int_t      Overflow() const;
@@ -113,6 +116,7 @@ protected:
   static TMatrixD CutZeros     (const TMatrixD& ereco);
   static TH1D*    HistNoOverflow (const TH1* h, Bool_t overflow);
   static TMatrixD& ABAT (const TMatrixD& a, const TMatrixD& b, TMatrixD& c);
+  static TMatrixD& ABAT (const TMatrixD& a, const TVectorD& b, TMatrixD& c);
   static TH1*     Resize (TH1* h, Int_t nx, Int_t ny=-1, Int_t nz=-1);
   static Int_t    InvertMatrix (const TMatrixD& mat, TMatrixD& inv, const char* name="matrix");
 
@@ -139,7 +143,9 @@ protected:
   Bool_t   _fail;          // unfolding failed
   Bool_t   _haveErrors;    // have _variances
   Bool_t   _haveCovMes;    // _covMes was set, not just cached
+  Bool_t   _dosys;         // include systematic errors from response matrix
   const RooUnfoldResponse* _res;   // Response matrix (not owned)
+  RooUnfoldResponse* _resmine;     // Owned response matrix
   const TH1*               _meas;  // Measured distribution (not owned)
   TH1*     _measmine;      // Owned measured histogram
   TVectorD _rec;           // Reconstructed distribution
@@ -291,6 +297,21 @@ Double_t RooUnfold::GetRegParm() const
 {
   // Get regularisation parameter.
   return -1;
+}
+
+inline
+void RooUnfold::IncludeSystematics (Bool_t dosys)
+{
+  // include systematic errors from response matrix
+  if (dosys!=_dosys) _haveWgt= _haveErrors= _haveCov= _have_err_mat= kFALSE;
+  _dosys= dosys;
+}
+
+inline
+Bool_t RooUnfold::SystematicsIncluded() const
+{
+  // return setting for whether to include systematic errors from response matrix
+  return _dosys;
 }
 
 #endif

@@ -113,6 +113,7 @@ public:
   static Double_t GetBinError   (const TH1* h, Int_t i, Bool_t overflow= kFALSE); // Bin error   by vector index
 
   TH1* ApplyToTruth (const TH1* truth= 0, const char* name= "AppliedResponse") const; // If argument is 0, applies itself to its own truth
+  RooUnfoldResponse* RunToy() const;
 
 private:
 

@@ -95,6 +95,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("onepage", &onepage,      4, "number of plots to include on the page, or 0 for all plots on separate pages");
   args.Add ("doerror", &doerror,      RooUnfold::kCovariance,
                                          "error treatment (0=none, 1=error propagation, 2=covariance propagation, 3=toy MC)");
+  args.Add ("dosys",   &dosys,        0, "include systematic errors from response matrix");
   args.Add ("nmx",     &nmx,         -1, "#measured X bins", "ntx");
   args.Add ("mtrainx", &mtrainx,    5.0, "training signal PDF X mean");
   args.Add ("wtrainx", &wtrainx,    1.2, "training signal PDF X width");
@@ -116,7 +117,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("verbose", &verbose,      1, "debug level: 0=warnings, 1=verbose, 2=debug, 3=detailed");
   args.Add ("draw",    &dodraw,       1, "draw results");
   args.Add ("ntoys",   &ntoys,       -1, "number of toys for error calculation (doerror=3) or plots (ploterrors=1, default ntoys=500)", "50");
-  args.Add ("ploterrors",&ploterrors, 0, "plot error comparison and chi2?");
+  args.Add ("ploterrors",&ploterrors, 0, "plot error comparison (ploterrors=1) and chi2 (ploterrors=2)?");
   args.Add ("plotparms",&plotparms,   0, "plot errors for different regularisation parameters?");
   args.Add ("minparm", &minparm,  -1e30, "minimum value in regparm scan (with plotparms=1)", "");
   args.Add ("maxparm", &maxparm,  -1e30, "maximum value in regparm scan (with plotparms=1)", "");
@@ -356,12 +357,14 @@ void RooUnfoldTestHarness::SetMeasuredCov ()
 {
   if (bincorr==0.0) return;
   TMatrixD cov= unfold->GetMeasuredCov();  // initially diagonal
-  Double_t corr= bincorr;
-  for (Int_t k=1; k<nmbins; k++) {
-    for (Int_t i=k; i<nmbins; i++)
-      cov(i,i-k)= cov(i-k,i)= corr*cov(i,i);
-    corr *= bincorr;
-    if (corr==0.0) break;
+  if (bincorr!=999.0) {    // use bincorr=999 to test with truely diagonal matrix
+    Double_t corr= bincorr;
+    for (Int_t k=1; k<nmbins; k++) {
+      for (Int_t i=k; i<nmbins; i++)
+        cov(i,i-k)= cov(i-k,i)= corr*cov(i,i);
+      corr *= bincorr;
+      if (corr==0.0) break;
+    }
   }
   unfold->SetMeasuredCov (cov);
   hMeasCorr= CorrelationHist (cov, "measCor", "Measured correlation matrix",
@@ -381,6 +384,7 @@ Int_t RooUnfoldTestHarness::Unfold ()
   unfold->SetVerbose (verbose);
   if (ntoys<0) ntoys= (ploterrors) ? 500 : 50;
   unfold->SetNToys(ntoys);
+  unfold->IncludeSystematics(dosys);
   SetMeasuredCov();
   
   if (method == RooUnfold::kSVD)     (dynamic_cast<RooUnfoldSvd*    >(unfold))->SetNtoysSVD(ntoyssvd);

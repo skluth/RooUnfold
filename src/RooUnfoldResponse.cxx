@@ -34,6 +34,7 @@ END_HTML */
 #include "TH3.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
+#include "TRandom.h"
 
 using std::cout;
 using std::cerr;
@@ -664,6 +665,29 @@ RooUnfoldResponse::ApplyToTruth (const TH1* truth, const char* name) const
   V2H (*resultvect, result, GetNbinsMeasured(), _overflow);
   delete resultvect;
   return result;
+}
+
+RooUnfoldResponse* RooUnfoldResponse::RunToy() const
+{
+  // Returns new RooUnfoldResponse object with smeared response matrix elements for use as a toy.
+  TString name= GetName();
+  name += "_toy";
+  RooUnfoldResponse* res= new RooUnfoldResponse (*this);
+  res->SetName(name);
+  if (!FakeEntries()) _fak->Reset();
+  TH2* hres= res->Hresponse();
+  for (Int_t i= 1; i<=_nm; i++) {
+    for (Int_t j= 1; j<=_nt; j++) {
+      Int_t bin= hres->GetBin (i,j);
+      Double_t e= hres->GetBinError (bin);
+      if (e>0.0) {
+        Double_t v= hres->GetBinContent(bin) + gRandom->Gaus(0.0,e);
+        if (v<0.0) v= 0.0;
+        hres->SetBinContent (bin, v);
+      }
+    }
+  }
+  return res;
 }
 
 void

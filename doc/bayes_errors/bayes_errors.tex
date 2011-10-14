@@ -18,7 +18,7 @@
 \begin{document}
 \title{Corrected error calculation for iterative Bayesian unfolding}
 \author{Tim Adye, Rutherford Appleton Laboratory}
-\date{14th February 2011}
+\date{14th October 2011}
 \maketitle
 
 The unfolding method based on iterative application of Bayes' theorem
@@ -118,11 +118,16 @@ Other, arbitrary, bin errors (perhaps even correlated) may also be used in Eq.~(
 \subsection{Response matrix uncertainties}
 
 The response matrix, $P(\E_j|\C_i)$, is usually estimated by Monte Carlo. If only limited MC statistics
-are available, then there will be uncertainties on these terms. Their effect can be determined using
+are available, then there will be uncertainties on these terms.
+As D'Agostini describes (see his expression for $\dd{M_{ki}}{P(\E_r|\C_u)}$), 
+their effect can be determined using
 
 \begin{equation}
-\dd{\hat{n}(\C_i)}{P(\E_j|\C_k)} = \frac{n_0(\C_i) n(\E_j)}{f_j \epsilon_i} \left( \delta_{ik} - \frac{n_0(\C_k)}{f_j} \right)
+\dd{\hat{n}(\C_i)}{P(\E_j|\C_k)} = \frac{1}{\epsilon_i} \left( \frac{n_0(\C_i) n(\E_j)}{f_j} - \hat{n}(\C_i) \right) \delta_{ik}  - \frac{n_0(\C_k) n(\E_j)}{f_j} M_{ij} 
+\label{eq:dnCidR}
 \end{equation}
+
+where $\hat{n}(\C_i)$ is the unfolded result from Eq.~(\ref{eq:nCi}). 
 
 The covariance matrix due to these errors is given by
 
@@ -130,7 +135,7 @@ The covariance matrix due to these errors is given by
 V(\hat{n}(\C_k),\hat{n}(\C_l)) = \sum_{i,r=1}^{n_{\E}} \sum_{j,s=1}^{n_{\C}} \dd{\hat{n}(\C_k)}{P(\E_i|\C_j)} V(P(\E_i|\C_j),P(\E_r|\C_s)) \dd{\hat{n}(\C_l)}{P(\E_r|\C_s)}
 \end{equation}
 
-where $V(P(\E_i|\C_j),P(\E_r|\C_s))$ can be taken as multinomial, Poisson, or other distribution.
+where $V(P(\E_i|\C_j),P(\E_r|\C_s))$ can be taken as multinomial (as D'Agostini does), Poisson, or other distribution.
 
 \begin{thebibliography}{99}
 

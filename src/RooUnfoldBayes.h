@@ -59,7 +59,7 @@ protected:
   virtual void GetSettings();
 
   void setup();
-  void train();
+  void unfold();
   void getCovariance(Bool_t doUnfoldSystematic = kFALSE);
 
   void smooth(TVectorD& PbarCi) const;
@@ -78,12 +78,15 @@ protected:
 
   Int_t _nc;              // number of causes  (same as _nt)
   Int_t _ne;              // number of effects (same as _nm)
+  Double_t _N0C;          // number of events in prior
   Double_t _nbartrue;     // best estimate of number of true events
 
   TVectorD _nEstj;        // Number of measured events from Effect E_j
   TVectorD _nCi;          // Number of true events from cause C_i
   TVectorD _nbarCi;       // Estimated number of true events from cause C_i
   TVectorD _efficiencyCi; // efficiency for detecting cause C_i
+  TVectorD _P0C;          // prior before last iteration
+  TVectorD _UjInv;        // 1 / (folded prior) from last iteration
 
   TMatrixD _Nji;          // mapping of causes to effects
   TMatrixD _Mij;          // unfolding matrix

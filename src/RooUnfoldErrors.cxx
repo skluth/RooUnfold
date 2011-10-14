@@ -78,7 +78,7 @@ RooUnfoldErrors::GraphParameters()
 {
     //Gets graph size parameters//
     const TH1* HR=unfold->response()->Htruth();
-    ntx=unfold->response()->GetNbinsMeasured();
+    ntx=unfold->response()->GetNbinsTruth();
     if (HR->GetDimension()==1) {
       xlo=HR->GetXaxis()->GetXmin();
       xhi=HR->GetXaxis()->GetXmax();
@@ -132,8 +132,8 @@ RooUnfoldErrors::CreatePlots()
     TH1::AddDirectory (oldstat);
 
     unfold->SetNToys(toys);
-    const TVectorD& errunf= unfold->ErecoV(RooUnfold::kErrors);
-    const TVectorD& errtoy= unfold->ErecoV(RooUnfold::kCovToy);
+    const TVectorD errunf= unfold->ErecoV(RooUnfold::kErrors);
+    const TVectorD errtoy= unfold->ErecoV(RooUnfold::kCovToy);
     for (int i= 0; i<ntx; i++) {
       h_err    ->SetBinContent(i+1,errunf[i]);
       h_err_res->SetBinContent(i+1,errtoy[i]);
@@ -168,9 +168,9 @@ RooUnfoldErrors::CreatePlotsWithChi2()
     int odd_ch=0;
     for (int k=0; k<toys;k++){  
         RooUnfold* toy= unfold->RunToy();
-        Double_t chi2=        toy->Chi2 (hTrue);
-        const TVectorD& reco= toy->Vreco();
-        const TVectorD& err=  toy->ErecoV();
+        Double_t chi2=       toy->Chi2 (hTrue);
+        const TVectorD reco= toy->Vreco();
+        const TVectorD err=  toy->ErecoV();
         for (int i=0; i<ntx; i++) {    
             graph_vector[i]->Fill(reco[i]);
             h_err->Fill(h_err->GetBinCenter(i+1),err[i]);

@@ -187,6 +187,7 @@ void RooUnfold::Destroy()
   delete _eMes;
   delete _covMes;
   delete _covL;
+  delete _resmine;
 }
 
 RooUnfold::RooUnfold (const RooUnfold& rhs)
@@ -220,14 +221,14 @@ void RooUnfold::Reset()
 
 void RooUnfold::Init()
 {
-  _res= 0;
+  _res= _resmine= 0;
   _vMes= _eMes= 0;
   _covMes= _covL= 0;
   _meas= _measmine= 0;
   _nm= _nt= 0;
   _verbose= 1;
   _overflow= 0;
-  _unfolded= _haveCov= _haveCovMes= _fail= _have_err_mat= _haveErrors= false;
+  _dosys= _unfolded= _haveCov= _haveCovMes= _fail= _have_err_mat= _haveErrors= _haveWgt= false;
   _NToys=50;
   GetSettings();
 }
@@ -306,6 +307,7 @@ const TMatrixD& RooUnfold::GetMeasuredCov() const
 void RooUnfold::SetResponse (const RooUnfoldResponse* res)
 {
   // Set response matrix for unfolding.
+  delete _resmine; _resmine= 0;
   _res= res;
   _overflow= _res->UseOverflowStatus() ? 1 : 0;
   _nm= _res->GetNbinsMeasured();
@@ -315,6 +317,13 @@ void RooUnfold::SetResponse (const RooUnfoldResponse* res)
     _nt += 2;
   }
   SetNameTitleDefault();
+}
+
+void RooUnfold::SetResponse (RooUnfoldResponse* res, Bool_t takeOwnership)
+{
+  // Set response matrix for unfolding, optionally taking ownership of the RooUnfoldResponse object
+  SetResponse (res);
+  if (takeOwnership) _resmine= res;
 }
 
 void RooUnfold::Unfold()
@@ -448,6 +457,8 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
     Returns warnings for small determinants of covariance matrices and if the condition is very large.
     If a matrix has to be inverted also removes rows/cols with all their elements equal to 0*/
 
+    if (!UnfoldWithErrors (DoChi2)) return -1.0;
+
     TVectorD res(_nt);
     for (Int_t i = 0 ; i < _nt; i++) {
       Int_t it= RooUnfoldResponse::GetBin (hTrue, i, _overflow);
@@ -458,17 +469,15 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
 
     if (DoChi2==kCovariance || DoChi2==kCovToy) {
         TMatrixD wgt= Wreco(DoChi2);
-        if (!_haveWgt) return -1;
+        if (_fail) return -1.0;
         TMatrixD resmat(1,_nt), chi2mat(1,1);
         TMatrixDRow(resmat,0)= res;
         ABAT (resmat, wgt, chi2mat);
         return chi2mat(0,0);
-    }
-    else{
+    } else {
         Double_t chi2=0;
-        TVectorD ereco(_nt);
-        ereco= ErecoV(DoChi2);
-        if (!_unfolded) return -1;
+        TVectorD ereco= ErecoV(DoChi2);
+        if (_fail) return -1.0;
         for (Int_t i = 0 ; i < _nt; i++) {
           if (ereco(i)>0.0) {
             Double_t ypull = res[i] / ereco[i];
@@ -673,11 +682,16 @@ Double_t RooUnfold::GetDefaultParm() const
 
 RooUnfold* RooUnfold::RunToy() const
 {
-  // Returns new RooUnfold object with smeared measurements for use as a toy.
+  // Returns new RooUnfold object with smeared measurements and
+  // (if IncludeSystematics) response matrix for use as a toy.
   // Use multiple toys to find spread of unfolding results.
   TString name= GetName();
   name += "_toy";
   RooUnfold* unfold = Clone(name);
+
+  // Make new smeared response matrix
+  if (_dosys) unfold->SetResponse (_res->RunToy(), kTRUE);
+
   if (_haveCovMes) {
 
     // _covL is a lower triangular matrix for which the covariance matrix, V = _covL * _covL^T.
@@ -975,6 +989,16 @@ TMatrixD& RooUnfold::ABAT (const TMatrixD& a, const TMatrixD& b, TMatrixD& c)
 {
   // Fills C such that C = A * B * A^T. Note that C cannot be the same object as A.
   TMatrixD d (b, TMatrixD::kMultTranspose, a);
+  c.Mult (a, d);
+  return c;
+}
+
+TMatrixD& RooUnfold::ABAT (const TMatrixD& a, const TVectorD& b, TMatrixD& c)
+{
+  // Fills C such that C = A * B * A^T, where B is a diagonal matrix specified by the vector.
+  // Note that C cannot be the same object as A.
+  TMatrixD d (TMatrixD::kTransposed, a);
+  d.NormByColumn (b, "M");
   c.Mult (a, d);
   return c;
 }

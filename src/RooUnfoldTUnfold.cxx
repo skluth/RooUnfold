@@ -32,7 +32,7 @@ END_HTML */
 #include "TH2.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
-#include "TUnfold.h"
+#include "TUnfoldSys.h"
 #include "TGraph.h"
 
 #include "RooUnfoldResponse.h"
@@ -155,7 +155,10 @@ RooUnfoldTUnfold::Unfold()
   TUnfold::ERegMode reg= _reg_method;
   if (ndim == 2 || ndim == 3) reg= TUnfold::kRegModeNone;  // set explicitly
 
-  _unf= new TUnfold(Hres,TUnfold::kHistMapOutputVert,reg);
+  if (_dosys)
+    _unf= new TUnfoldSys(Hres,TUnfold::kHistMapOutputVert,reg);
+  else
+    _unf= new TUnfold(Hres,TUnfold::kHistMapOutputVert,reg);
 
   if        (ndim == 2) {
     Int_t nx= _meas->GetNbinsX(), ny= _meas->GetNbinsY();
@@ -217,6 +220,11 @@ RooUnfoldTUnfold::GetCov()
   //Gets Covariance matrix
   if (!_unf) return;
   TH2D* ematrix=_unf->GetEmatrix("ematrix","error matrix",0,0);
+  if (_dosys) {
+    TUnfoldSys* unfsys= dynamic_cast<TUnfoldSys*>(_unf);
+    if (unfsys) unfsys->GetEmatrixSysUncorr (ematrix);
+    else cerr << "Did not use TUnfoldSys, so cannot calculate systematic errors" << endl;
+  }
   _cov.ResizeTo (_nt,_nt);
   for (Int_t i= 0; i<_nt; i++) {
     for (Int_t j= 0; j<_nt; j++) {
