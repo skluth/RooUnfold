@@ -14,11 +14,8 @@
 <p>Links to TSVDUnfold class which unfolds using Singular Value Decomposition (SVD).</p>
 <p>Regularisation parameter defines the level at which values are deemed to be due to statistical fluctuations and are cut out. (Default= number of bins/2)
 <p>Returns errors as a full matrix of covariances
-<p>Error processing is much the same as with the kCovToy setting with 1000 toys. This is quite slow but can be switched off.
 <p>Can only handle 1 dimensional distributions
-<p>True and measured distributions must have the same binning
 <p>Can account for both smearing and biasing
-<p>Returns near singular covariance matrices, again leading to very large chi squared values
 END_HTML */
 
 /////////////////////////////////////////////////////////////
