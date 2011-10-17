@@ -33,6 +33,8 @@ public:
   virtual RooUnfoldTUnfold* Clone (const char* newname= 0) const;
   RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas,TUnfold::ERegMode reg=TUnfold::kRegModeDerivative,
                     const char* name= 0, const char* title= 0);
+  RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* meas,Double_t tau,TUnfold::ERegMode reg=TUnfold::kRegModeDerivative,
+                    const char* name= 0, const char* title= 0);
 
   void Reset();
   TUnfold* Impl();

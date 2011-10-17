@@ -20,8 +20,8 @@
 #ifdef HAVE_DAGOSTINI
 #pragma link C++ class RooUnfoldDagostini+;
 #endif
-#ifdef HAVE_TSVDUNFOLD
-#pragma link C++ class TSVDUnfold+;
+#if defined(HAVE_TSVDUNFOLD) || ROOT_VERSION_CODE < ROOT_VERSION(5,29,2)
+#pragma link C++ class TSVDUnfold_529+;
 #endif
 
 #endif

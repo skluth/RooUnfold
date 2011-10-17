@@ -132,9 +132,12 @@ else
 EXCLUDE      += RooUnfoldDagostini.cxx RooUnfoldDagostini.h
 endif
 
-# TSVDUnfold is included in ROOT 5.28 and later. In earlier versions, use our own copy.
+# TSVDUnfold is included in ROOT 5.28/00 and later, but we need changes introduced in 5.29/02.
+# In earlier versions, use our own copy.
 ifeq ($(HAVE_TSVDUNFOLD),)
 ifeq ($(wildcard $(ROOTINCDIR)/TSVDUnfold.h),)
+HAVE_TSVDUNFOLD = 1
+else ifneq ($(shell $(ROOTCONFIG) --version | grep '^5\.28'),)
 HAVE_TSVDUNFOLD = 1
 endif
 endif

@@ -41,7 +41,6 @@
 #include "RooUnfoldParms.h"
 #include "RooUnfoldResponse.h"
 #include "RooUnfold.h"
-#include "RooUnfoldSvd.h"
 #ifdef USE_TUNFOLD_H
 #include "RooUnfoldTUnfold.h"
 #endif
@@ -89,7 +88,6 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("xlo",     &xlo,        0.0, "X range minimum");
   args.Add ("xhi",     &xhi,       10.0, "X range maximum");
   args.Add ("regparm", &regparm,  -1e30, "regularisation parameter (default: Bayes niter=3, SVD kterm=ntx/2)", "");
-  args.Add ("ntoyssvd",&ntoyssvd,  1000, "number of toys used to obtain SVD covariances");
 #ifdef USE_TUNFOLD_H
   args.Add ("regmethod",&regmethod,   2, "TUnfold regularisation method (0=none, 1=size, 2=derivative, 3=curvature)");
 #endif
@@ -123,7 +121,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("minparm", &minparm,  -1e30, "minimum value in regparm scan (with plotparms=1)", "");
   args.Add ("maxparm", &maxparm,  -1e30, "maximum value in regparm scan (with plotparms=1)", "");
   args.Add ("stepsize",&stepsize,     0, "step size in regparm scan (with plotparms=1)", "");
-  args.Add ("name",    &name, GetName(), "name for output files (name.root and name.ps)");
+  args.Add ("name",    &setname, GetName(), "name for output files (name.root and name.ps)");
 }
 
 //==============================================================================
@@ -389,7 +387,6 @@ Int_t RooUnfoldTestHarness::Unfold ()
   unfold->IncludeSystematics(dosys);
   SetMeasuredCov();
   
-  if (method == RooUnfold::kSVD)     (dynamic_cast<RooUnfoldSvd*    >(unfold))->SetNtoysSVD(ntoyssvd);
 #ifdef USE_TUNFOLD_H
   if (method == RooUnfold::kTUnfold) (dynamic_cast<RooUnfoldTUnfold*>(unfold))->SetRegMethod((TUnfold::ERegMode)regmethod);
 #endif
@@ -793,7 +790,7 @@ int RooUnfoldTestHarness::SetArgs (int argc, const char* const* argv, bool split
 
 void RooUnfoldTestHarness::Init()
 {
-  if (name.Length()>0) SetName (name);
+  if (setname.Length()>0) SetName (setname);
   rootfile= GetName();
   rootfile += ".root";
 

@@ -57,7 +57,7 @@ public:
   Int_t    ntoys, ploterrors, plotparms;
   Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx, mscalex, bincorr;
   Double_t regparm, effxlo, effxhi, xbias, xsmear, fakexlo, fakexhi, minparm, maxparm, stepsize;
-  TString  name, rootfile;
+  TString  setname, rootfile;
 
   // Data
   Int_t              error, ipad, ntbins, nmbins;

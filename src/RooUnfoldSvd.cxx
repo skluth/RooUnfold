@@ -34,7 +34,7 @@ END_HTML */
 #include "TH2.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
-#if defined(HAVE_TSVDUNFOLD) || ROOT_VERSION_CODE < ROOT_VERSION(5,28,0)
+#if defined(HAVE_TSVDUNFOLD) || ROOT_VERSION_CODE < ROOT_VERSION(5,29,2)
 #include "TSVDUnfold_local.h"  /* Use local copy of TSVDUnfold.h */
 #else
 #include "TSVDUnfold.h"
@@ -56,13 +56,22 @@ RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldSvd& rhs)
   CopyData (rhs);
 }
 
-RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kreg, Int_t ntoyssvd,
+RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kreg,
                             const char* name, const char* title)
-  : RooUnfold (res, meas, name, title), _kreg(kreg ? kreg : res->GetNbinsTruth()/2), _ntoyssvd(ntoyssvd)
+  : RooUnfold (res, meas, name, title), _kreg(kreg ? kreg : res->GetNbinsTruth()/2)
 {
   // Constructor with response matrix object and measured unfolding input histogram.
   // The regularisation parameter is kreg.
   Init();
+}
+
+RooUnfoldSvd::RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kreg, Int_t ntoyssvd,
+                            const char* name, const char* title)
+  : RooUnfold (res, meas, name, title), _kreg(kreg ? kreg : res->GetNbinsTruth()/2)
+{
+  // Constructor with old ntoyssvd argument. No longer required.
+  Init();
+  _NToys = ntoyssvd;
 }
 
 RooUnfoldSvd*
@@ -112,7 +121,6 @@ void
 RooUnfoldSvd::CopyData (const RooUnfoldSvd& rhs)
 {
   _kreg= rhs._kreg;
-  _ntoyssvd= rhs._ntoyssvd;
 }
 
 TSVDUnfold*

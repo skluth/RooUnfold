@@ -48,6 +48,10 @@
 #include "TMatrixDSym.h"
 #endif
 
+// Use local copy of TSVDUnfold class under a different name
+// to reduce conflicts with ROOT version.
+#define TSVDUnfold TSVDUnfold_529
+
 class TH1D;
 class TH2D;
 

@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include "TObject.h"
 #include "TList.h"
+#include "TString.h"
 #endif
 
 ArgVars::~ArgVars()
@@ -147,7 +148,7 @@ void ArgVars::SetDefaults() const
   const ArgVar* arg;
   while ((arg= dynamic_cast<const ArgVar*>(next()))) {
     if (!arg->setdef) continue;
-    if      (arg->svar) *(arg->svar)= arg->sdef;
+    if      (arg->svar) arg->svar->Replace (0, arg->svar->Length(), arg->sdef);  // use Replace to work round CINT bug #75875
     else if (arg->ivar) *(arg->ivar)= arg->idef;
     else                *(arg->fvar)= arg->fdef;
   }

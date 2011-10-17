@@ -13,6 +13,9 @@
 #define ROOUNFOLDSVD_HH
 
 #include "RooUnfold.h"
+#if defined(HAVE_TSVDUNFOLD) || ROOT_VERSION_CODE < ROOT_VERSION(5,29,2)
+#define TSVDUnfold TSVDUnfold_529
+#endif
 
 class RooUnfoldResponse;
 class TH1;
@@ -36,18 +39,21 @@ public:
 
   // Special constructors
 
-  RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kreg= 0, Int_t ntoyssvd= 1000,
+  RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kreg= 0,
+                const char* name= 0, const char* title= 0);
+  // compatibility constructor
+  RooUnfoldSvd (const RooUnfoldResponse* res, const TH1* meas, Int_t kreg, Int_t ntoyssvd,
                 const char* name= 0, const char* title= 0);
 
   void SetKterm (Int_t kreg);
-  void SetNtoysSVD (Int_t ntoyssvd);
   Int_t GetKterm() const;
-  Int_t GetNtoysSVD() const;
-
   virtual void  SetRegParm (Double_t parm);
   virtual Double_t GetRegParm() const;
   virtual void Reset();
   TSVDUnfold* Impl();
+
+  void SetNtoysSVD (Int_t ntoyssvd);  // no longer used
+  Int_t GetNtoysSVD() const;          // no longer used
 
 protected:
   void Assign (const RooUnfoldSvd& rhs); // implementation of assignment operator
@@ -66,7 +72,6 @@ protected:
   TSVDUnfold* _svd;  //! Implementation in TSVDUnfold object (no streamer)
   Int_t _kreg;
   Int_t _nb;
-  Int_t _ntoyssvd;
 
   TH1D *_meas1d, *_train1d, *_truth1d;
   TH2D *_reshist, *_meascov;
@@ -123,12 +128,6 @@ void RooUnfoldSvd::SetKterm (Int_t kreg)
   _kreg= kreg;
 }
 
-inline
-void RooUnfoldSvd::SetNtoysSVD (Int_t ntoyssvd)
-{
-  // Set number of toys for error calculation
-  _ntoyssvd= ntoyssvd;
-}
 
 inline
 Int_t RooUnfoldSvd::GetKterm() const
@@ -137,13 +136,8 @@ Int_t RooUnfoldSvd::GetKterm() const
   return _kreg;
 }
 
-inline
-Int_t RooUnfoldSvd::GetNtoysSVD() const
-{
-  // Return number of toys for error calculation
-  return _ntoyssvd;
-}
-
+inline void RooUnfoldSvd::SetNtoysSVD (Int_t ntoyssvd) {_NToys=ntoyssvd;}  // no longer used
+inline Int_t RooUnfoldSvd::GetNtoysSVD() const { return _NToys; }  // no longer used
 
 inline
 void  RooUnfoldSvd::SetRegParm (Double_t parm)
