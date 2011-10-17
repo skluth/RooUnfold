@@ -86,8 +86,8 @@ public:
 
   virtual Int_t      verbose() const;
   virtual void       SetVerbose (Int_t level);
-  virtual void       IncludeSystematics (Bool_t dosys= kTRUE);
-  virtual Bool_t     SystematicsIncluded() const;
+  virtual void       IncludeSystematics (Int_t dosys= 1);
+  virtual Int_t      SystematicsIncluded() const;
   virtual Int_t      NToys() const;         // Number of toys
   virtual void       SetNToys (Int_t toys); // Set number of toys
   virtual Int_t      Overflow() const;
@@ -143,7 +143,7 @@ protected:
   Bool_t   _fail;          // unfolding failed
   Bool_t   _haveErrors;    // have _variances
   Bool_t   _haveCovMes;    // _covMes was set, not just cached
-  Bool_t   _dosys;         // include systematic errors from response matrix
+  Int_t    _dosys;         // include systematic errors from response matrix? use _dosys=2 to exclude measurement errors
   const RooUnfoldResponse* _res;   // Response matrix (not owned)
   RooUnfoldResponse* _resmine;     // Owned response matrix
   const TH1*               _meas;  // Measured distribution (not owned)
@@ -300,15 +300,16 @@ Double_t RooUnfold::GetRegParm() const
 }
 
 inline
-void RooUnfold::IncludeSystematics (Bool_t dosys)
+void RooUnfold::IncludeSystematics (Int_t dosys)
 {
-  // include systematic errors from response matrix
+  // Include systematic errors from response matrix?
+  // Use dosys=2 to exclude measurement errors.
   if (dosys!=_dosys) _haveWgt= _haveErrors= _haveCov= _have_err_mat= kFALSE;
   _dosys= dosys;
 }
 
 inline
-Bool_t RooUnfold::SystematicsIncluded() const
+Int_t RooUnfold::SystematicsIncluded() const
 {
   // return setting for whether to include systematic errors from response matrix
   return _dosys;

@@ -202,7 +202,7 @@ RooUnfoldTUnfold::Unfold()
   else{
     _unf->DoUnfold(_tau);
   }
-  TH1* reco=_unf->GetOutput("_rec","reconstructed dist",0,0);
+  TH1* reco=_unf->GetOutput("_rec","reconstructed dist",0.0,0.0);
   _rec.ResizeTo (_nt);
   for (int i=0;i<_nt;i++){
     _rec(i)=(reco->GetBinContent(i+1));
@@ -219,10 +219,11 @@ RooUnfoldTUnfold::GetCov()
 {
   //Gets Covariance matrix
   if (!_unf) return;
-  TH2D* ematrix=_unf->GetEmatrix("ematrix","error matrix",0,0);
+  TH2D* ematrix= new TH2D ("ematrix","error matrix", _nt, 0.0, _nt, _nt, 0.0, _nt);
+  if (_dosys!=2) _unf->GetEmatrix (ematrix);
   if (_dosys) {
     TUnfoldSys* unfsys= dynamic_cast<TUnfoldSys*>(_unf);
-    if (unfsys) unfsys->GetEmatrixSysUncorr (ematrix);
+    if (unfsys) unfsys->GetEmatrixSysUncorr (ematrix,0,kFALSE);
     else cerr << "Did not use TUnfoldSys, so cannot calculate systematic errors" << endl;
   }
   _cov.ResizeTo (_nt,_nt);

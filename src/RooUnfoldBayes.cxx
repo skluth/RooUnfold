@@ -23,6 +23,7 @@ END_HTML */
 /////////////////////////////////////////////////////////////
 
 //#define OLDERRS   // restore old (incorrect) error calculation
+//#define OLDERRS2  // restore old (incorrect) systematic error calculation
 //#define OLDMULT   // restore old (slower) matrix multiplications
 
 #include "RooUnfoldBayes.h"
@@ -113,7 +114,7 @@ void RooUnfoldBayes::Unfold()
 
 void RooUnfoldBayes::GetCov()
 {
-  getCovariance(_dosys);
+  getCovariance();
   _cov.ResizeTo (_nt, _nt);  // drop fakes in final bin
   _haveCov= true;
 }
@@ -167,9 +168,12 @@ void RooUnfoldBayes::setup()
   _nbarCi.ResizeTo(_nc);
   _efficiencyCi.ResizeTo(_nc);
   _Mij.ResizeTo(_nc,_ne);
-  _dnCidnEj.ResizeTo(_nc,_ne);
   _P0C.ResizeTo(_nc);
   _UjInv.ResizeTo(_ne);
+#ifndef OLDERRS
+  if (_dosys!=2) _dnCidnEj.ResizeTo(_nc,_ne);
+#endif
+  if (_dosys)    _dnCidPjk.ResizeTo(_nc,_ne*_nc);
 
   // Initial distribution
   _N0C= _nCi.Sum();
@@ -237,48 +241,85 @@ void RooUnfoldBayes::unfold()
     PbarCi *= 1.0/_nbartrue;
 
 #ifndef OLDERRS
-    if (kiter <= 0) {
-      _dnCidnEj= _Mij;
-    } else {
+    if (_dosys!=2) {
+      if (kiter <= 0) {
+        _dnCidnEj= _Mij;
+      } else {
 #ifndef OLDMULT
-      TVectorD en(_nc), nr(_nc);
-      for (Int_t i = 0 ; i < _nc ; i++) {
-        if (_P0C[i]<=0.0) continue;
-        Double_t ni= 1.0/(_N0C*_P0C[i]);
-        en[i]= -ni*_efficiencyCi[i];
-        nr[i]=  ni*_nbarCi[i];
-      }
-      TMatrixD M1= _dnCidnEj;
-      M1.NormByColumn(nr,"M");
-      TMatrixD M2 (TMatrixD::kTransposed, _Mij);
-      M2.NormByColumn(_nEstj,"M");
-      M2.NormByRow(en,"M");
-      TMatrixD M3 (M2, TMatrixD::kMult, _dnCidnEj);
-      _dnCidnEj.Mult (_Mij, M3);
-      _dnCidnEj += _Mij;
-      _dnCidnEj += M1;
-#else
-      TVectorD ksum(_ne);
-      for (Int_t j = 0 ; j < _ne ; j++) {
-        for (Int_t k = 0 ; k < _ne ; k++) {
-          Double_t sum = 0.0;
-          for (Int_t l = 0 ; l < _nc ; l++) {
-            if (_P0C[l]>0.0) sum += _efficiencyCi[l]*_Mij(l,k)*_dnCidnEj(l,j)/_P0C[l];
-          }
-          ksum[k]= sum;
-        }
+        TVectorD en(_nc), nr(_nc);
         for (Int_t i = 0 ; i < _nc ; i++) {
-          Double_t dsum = _P0C[i]>0 ? _dnCidnEj(i,j)*_nbarCi[i]/_P0C[i] : 0.0;
-          for (Int_t k = 0 ; k < _ne ; k++) {
-            dsum -= _Mij(i,k)*_nEstj[k]*ksum[k];
-          }
-          // update dnCidnEj. Note that we can do this in-place due to the ordering of the accesses.
-          _dnCidnEj(i,j) = _Mij(i,j) + dsum/_N0C;
+          if (_P0C[i]<=0.0) continue;
+          Double_t ni= 1.0/(_N0C*_P0C[i]);
+          en[i]= -ni*_efficiencyCi[i];
+          nr[i]=  ni*_nbarCi[i];
         }
-      }
+        TMatrixD M1= _dnCidnEj;
+        M1.NormByColumn(nr,"M");
+        TMatrixD M2 (TMatrixD::kTransposed, _Mij);
+        M2.NormByColumn(_nEstj,"M");
+        M2.NormByRow(en,"M");
+        TMatrixD M3 (M2, TMatrixD::kMult, _dnCidnEj);
+        _dnCidnEj.Mult (_Mij, M3);
+        _dnCidnEj += _Mij;
+        _dnCidnEj += M1;
+#else /* OLDMULT */
+        TVectorD ksum(_ne);
+        for (Int_t j = 0 ; j < _ne ; j++) {
+          for (Int_t k = 0 ; k < _ne ; k++) {
+            Double_t sum = 0.0;
+            for (Int_t l = 0 ; l < _nc ; l++) {
+              if (_P0C[l]>0.0) sum += _efficiencyCi[l]*_Mij(l,k)*_dnCidnEj(l,j)/_P0C[l];
+            }
+            ksum[k]= sum;
+          }
+          for (Int_t i = 0 ; i < _nc ; i++) {
+            Double_t dsum = _P0C[i]>0 ? _dnCidnEj(i,j)*_nbarCi[i]/_P0C[i] : 0.0;
+            for (Int_t k = 0 ; k < _ne ; k++) {
+              dsum -= _Mij(i,k)*_nEstj[k]*ksum[k];
+            }
+            // update dnCidnEj. Note that we can do this in-place due to the ordering of the accesses.
+            _dnCidnEj(i,j) = _Mij(i,j) + dsum/_N0C;
+          }
+        }
 #endif
+      }
     }
 #endif
+
+    if (_dosys) {
+#ifndef OLDERRS2
+      if (kiter > 0) {
+        TVectorD mbyu(_ne);
+        for (Int_t j = 0 ; j < _ne ; j++) {
+          mbyu[j]= _UjInv[j]*_nEstj[j]/_N0C;
+        }
+        TMatrixD A= _Mij;
+        A.NormByRow (mbyu, "M");
+        TMatrixD B(A, TMatrixD::kMult, PEjCi);
+        TMatrixD dnCidPjkUpd (B, TMatrixD::kMult, _dnCidPjk);
+        Int_t nec= _ne*_nc;
+        for (Int_t i = 0 ; i < _nc ; i++) {
+          if (_P0C[i]<=0.0) continue;  // skip loop: dnCidPjkUpd(i,jk) will also be 0 because _Mij(i,j) will be 0
+          Double_t r= PbarCi[i]/_P0C[i];
+          for (Int_t jk= 0; jk<nec; jk++)
+            _dnCidPjk(i,jk)= r*_dnCidPjk(i,jk) - dnCidPjkUpd(i,jk);
+        }
+      }
+#else  /* OLDERRS2 */
+      if (kiter == _niter-1)   // used to only calculate _dnCidPjk for the final iteration
+#endif
+      for (Int_t j = 0 ; j < _ne ; j++) {
+        if (_UjInv[j]==0.0) continue;
+        Double_t mbyu= _UjInv[j]*_nEstj[j];
+        Int_t j0= j*_nc;
+        for (Int_t i = 0 ; i < _nc ; i++) {
+          Double_t b= -mbyu * _Mij(i,j);
+          for (Int_t k = 0 ; k < _nc ; k++) _dnCidPjk(i,j0+k) += b*_P0C[k];
+          if (_efficiencyCi[i]!=0.0)
+            _dnCidPjk(i,j0+i) += (_P0C[i]*mbyu - _nbarCi[i]) / _efficiencyCi[i];
+        }
+      }
+    }
 
     // no need to smooth the last iteraction
     if (_smoothit && kiter < (_niter-1)) smooth(PbarCi);
@@ -292,50 +333,49 @@ void RooUnfoldBayes::unfold()
 }
 
 //-------------------------------------------------------------------------
-void RooUnfoldBayes::getCovariance(Bool_t doUnfoldSystematic)
+void RooUnfoldBayes::getCovariance()
 {
-  if (verbose()>=1) cout << "Calculating covariances due to number of measured events" << endl;
+  if (_dosys!=2) {
+    if (verbose()>=1) cout << "Calculating covariances due to number of measured events" << endl;
 
-  // Create the covariance matrix of result from that of the measured distribution
-  _cov.ResizeTo (_nc, _nc);
+    // Create the covariance matrix of result from that of the measured distribution
+    _cov.ResizeTo (_nc, _nc);
 #ifdef OLDERRS
-  const TMatrixD& Dprop= _Mij;
+    const TMatrixD& Dprop= _Mij;
 #else
-  const TMatrixD& Dprop= _dnCidnEj;
+    const TMatrixD& Dprop= _dnCidnEj;
 #endif
-  if (_haveCovMes) {
-    ABAT (Dprop, GetMeasuredCov(), _cov);
-  } else {
-    TVectorD v= Emeasured();
-    v.Sqr();
-    ABAT (Dprop, v, _cov);
-  }
-
-  if (!doUnfoldSystematic) return;
-
-  if (verbose()>=1) cout << "Calculating covariance due to unfolding matrix..." << endl;
-
-  const TMatrixD& Eres= _res->Eresponse();
-  TVectorD Vjk(_ne*_nc);           // vec(Var(j,k))
-  TMatrixD dnCidPjk(_nc,_ne*_nc);  // stack j,k into each column
-  for (Int_t j = 0 ; j < _ne ; j++) {
-    if (_UjInv[j]==0.0) continue;
-    Double_t mbyu= _UjInv[j]*_nEstj[j];
-    Int_t k0= j*_nc;
-    for (Int_t i = 0 ; i < _nc ; i++) {
-      Double_t b= -mbyu * _Mij(i,j);
-      for (Int_t k = 0 ; k < _nc ; k++) dnCidPjk(i,k0+k)= b*_P0C[k];
-      Int_t ki= k0+i;
-      Double_t e= Eres(j,i);
-      Vjk[ki]= e*e;
-      if (_efficiencyCi[i]!=0.0)
-        dnCidPjk(i,ki) += (_P0C[i]*mbyu - _nbarCi[i]) / _efficiencyCi[i];
+    if (_haveCovMes) {
+      ABAT (Dprop, GetMeasuredCov(), _cov);
+    } else {
+      TVectorD v= Emeasured();
+      v.Sqr();
+      ABAT (Dprop, v, _cov);
     }
   }
 
-  TMatrixD covres(_nc,_nc);
-  ABAT (dnCidPjk, Vjk, covres);
-  _cov += covres;
+  if (_dosys) {
+    if (verbose()>=1) cout << "Calculating covariance due to unfolding matrix..." << endl;
+
+    const TMatrixD& Eres= _res->Eresponse();
+    TVectorD Vjk(_ne*_nc);           // vec(Var(j,k))
+    for (Int_t j = 0 ; j < _ne ; j++) {
+      Int_t j0= j*_nc;
+      for (Int_t i = 0 ; i < _nc ; i++) {
+        Double_t e= Eres(j,i);
+        Vjk[j0+i]= e*e;
+      }
+    }
+
+    if (_dosys!=2) {
+      TMatrixD covres(_nc,_nc);
+      ABAT (_dnCidPjk, Vjk, covres);
+      _cov += covres;
+    } else {
+      _cov.ResizeTo (_nc, _nc);
+      ABAT (_dnCidPjk, Vjk, _cov);
+    }
+  }
 }
 
 //-------------------------------------------------------------------------

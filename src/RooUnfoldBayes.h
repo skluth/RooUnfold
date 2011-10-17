@@ -60,7 +60,7 @@ protected:
 
   void setup();
   void unfold();
-  void getCovariance(Bool_t doUnfoldSystematic = kFALSE);
+  void getCovariance();
 
   void smooth(TVectorD& PbarCi) const;
   Double_t getChi2(const TVectorD& prob1,
@@ -92,7 +92,8 @@ protected:
   TMatrixD _Mij;          // unfolding matrix
   TMatrixD _Vij;          // covariance matrix
   TMatrixD _VnEstij;      // covariance matrix of effects
-  TMatrixD _dnCidnEj;     // error propagation matrix
+  TMatrixD _dnCidnEj;     // measurement error propagation matrix
+  TMatrixD _dnCidPjk;     // response error propagation matrix (stack j,k into each column)
 
 public:
   ClassDef (RooUnfoldBayes, 1) // Bayesian Unfolding

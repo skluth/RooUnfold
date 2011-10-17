@@ -691,6 +691,7 @@ RooUnfold* RooUnfold::RunToy() const
 
   // Make new smeared response matrix
   if (_dosys) unfold->SetResponse (_res->RunToy(), kTRUE);
+  if (_dosys==2) return unfold;
 
   if (_haveCovMes) {
 

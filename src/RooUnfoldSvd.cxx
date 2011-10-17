@@ -193,17 +193,18 @@ RooUnfoldSvd::GetCov()
   Bool_t oldstat= TH1::AddDirectoryStatus();
   TH1::AddDirectory (kFALSE);
 
+  TH2D *unfoldedCov= 0, *adetCov= 0;
   //Get the covariance matrix for statistical uncertainties on the measured distribution
-  TH2D* unfoldedCov= _svd->GetXtau();
+  if (_dosys!=2) unfoldedCov= _svd->GetXtau();
   //Get the covariance matrix for statistical uncertainties on the response matrix
-  TH2D* adetCov= 0;
   if (_dosys) adetCov= _svd->GetAdetCovMatrix (_NToys);
 
   _cov.ResizeTo (_nt, _nt);
   for (Int_t i= 0; i<_nt; i++) {
     for (Int_t j= 0; j<_nt; j++) {
-      Double_t     v  = unfoldedCov->GetBinContent(i+1,j+1);
-      if (adetCov) v += adetCov    ->GetBinContent(i+1,j+1);
+      Double_t v  = 0;
+      if (unfoldedCov) v  = unfoldedCov->GetBinContent(i+1,j+1);
+      if (adetCov)     v += adetCov    ->GetBinContent(i+1,j+1);
       _cov(i,j)= v;
     }
   }

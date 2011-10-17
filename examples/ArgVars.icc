@@ -40,8 +40,9 @@ ArgVars& ArgVars::Add(const ArgVars& args)
 ArgVars& ArgVars::Add (ArgVar* arg)
 {
   const void* pvar;
-  if (arg->ivar) pvar= arg->ivar;
-  else           pvar= arg->fvar;
+  if      (arg->svar) pvar= arg->svar;
+  else if (arg->ivar) pvar= arg->ivar;
+  else                pvar= arg->fvar;
   TIter next(&lst);
   const ArgVar* argx;
   while ((argx= dynamic_cast<const ArgVar*>(next()))) {
@@ -49,7 +50,7 @@ ArgVars& ArgVars::Add (ArgVar* arg)
       std::cerr << "ArgVars::Add("<<arg->GetName()<<") duplicate name in argument list" << std::endl;
       break;
     }
-    if (pvar == argx->ivar || pvar == argx->fvar) {
+    if (pvar == argx->ivar || pvar == argx->fvar || pvar == argx->svar) {
       std::cerr << "ArgVars::Add("<<arg->GetName()<<") refers to the same variable as '" << argx->GetName() << "'" << std::endl;
       break;
     }
@@ -66,8 +67,9 @@ void ArgVars::Print (std::ostream& o, const char* sep) const
   while ((arg= dynamic_cast<const ArgVar*>(next()))) {
     if (kilroy++) o << sep;
     o << arg->GetName() << '=';
-    if (arg->ivar) o << *(arg->ivar);
-    else           o << *(arg->fvar);
+    if      (arg->svar) o << *(arg->svar);
+    else if (arg->ivar) o << *(arg->ivar);
+    else                o << *(arg->fvar);
   }
 }
 
@@ -89,6 +91,7 @@ void ArgVars::ArgHelp (std::ostream& o) const
     o.flags (f); o.width(7);
     if (!arg->setdef)   o << " ";
     else if (arg->defhelp) o << arg->defhelp;
+    else if (arg->svar) o << *(arg->svar);
     else if (arg->ivar) o << *(arg->ivar);
     else                o << *(arg->fvar);
     const char* help= arg->GetTitle();
@@ -128,14 +131,25 @@ ArgVars& ArgVars::SetDefault (const char* name, Int_t def)
   return *this;
 }
 
+ArgVars& ArgVars::SetDefault (const char* name, const TString& def)
+{
+  ArgVar* arg= Find (name);
+  if (arg && arg->svar)
+    arg->sdef= def;
+  else
+    std::cerr << "ArgVars::SetDefault("<<name<<','<<def<<") TString argument does not exist" << std::endl;
+  return *this;
+}
+
 void ArgVars::SetDefaults() const
 {
   TIter next(&lst);
   const ArgVar* arg;
   while ((arg= dynamic_cast<const ArgVar*>(next()))) {
     if (!arg->setdef) continue;
-    if (arg->ivar) *(arg->ivar)= arg->idef;
-    else           *(arg->fvar)= arg->fdef;
+    if      (arg->svar) *(arg->svar)= arg->sdef;
+    else if (arg->ivar) *(arg->ivar)= arg->idef;
+    else                *(arg->fvar)= arg->fdef;
   }
 }
 
@@ -179,8 +193,13 @@ Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split) const
         delete [] argname; argname= 0;
         if (arg) {
           char* nxt= 0;
-          if (arg->ivar) *(arg->ivar)= strtol (d, &nxt, 10);
-          else           *(arg->fvar)= strtod (d, &nxt);
+          if      (arg->svar) {
+            nxt= strchr (d, ' ');
+            if (!nxt) nxt= (char*)(d+strlen(d));
+            arg->svar->Replace (0, arg->svar->Length(), d, nxt-d);
+          }
+          else if (arg->ivar) *(arg->ivar)= strtol (d, &nxt, 10);
+          else                *(arg->fvar)= strtod (d, &nxt);
           if (split && nxt && *nxt==' ') q= nxt+1;
           found= (nxt && nxt>d && (*nxt=='\0' || (split && *nxt==' ')));
         }

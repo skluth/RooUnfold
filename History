@@ -1,6 +1,17 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         17-Oct-2011
+  o Fix Bayes response matrix errors to include the effect of the dependency of
+    the prior in one iteration on the response matrix in the previous iteration.
+    This is analagous to the fix of 30-Jan-2011 to the measurement errors.
+    See the updated doc/bayes_errors.pdf.
+  o Simplify equation 3 in doc/bayes_errors.pdf.
+  o If RooUnfold::IncludeSystematics(2) is used, compute just the systematic
+    error, leaving out the measurement errors.
+  o RooUnfoldTest name=X parameter allows one to specify a different name for
+    the output files.
+
 Tim Adye         14-Oct-2011
   o Include effect of response matrix errors in unfolded errors if
     RooUnfold::IncludeSystematics() is set. This is still experimental and is
