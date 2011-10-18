@@ -75,7 +75,7 @@ To take this into account, we compute the error propagation matrix
 
 where $\hat{n}(\C_i)$ is the unfolded result from Eq.~(\ref{eq:nCi}).
 This depends upon the matrix $\dd{n_0(\C_i)}{n(\E_j)}$, which is $\dd{\hat{n}(\C_i)}{n(\E_j)}$ from the previous iteration.
-In the first iteration, the second term vanishes ($\dd{n_0(\C_i)}{n(\E_j)}=0$) and we get $\dd{\hat{n}(\C_i)}{n(\E_j)} = M_{ij}$.
+In the first iteration, $\dd{n_0(\C_i)}{n(\E_j)}=0$ and we get $\dd{\hat{n}(\C_i)}{n(\E_j)} = M_{ij}$.
 
 We can use the error propagation matrix to obtain the covariance matrix on the unfolded distribution
 
@@ -86,7 +86,7 @@ V(\hat{n}(\C_k),\hat{n}(\C_l)) = \sum_{i,j=1}^{n_{\E}} \dd{\hat{n}(\C_k)}{n(\E_i
 
 \noindent from the covariance matrix of the measurements, $V(n(\E_i),n(\E_j))$.
 
-Without the new second term in Eq.~(\ref{eq:dnCidnEj}),
+Without the additional terms in Eq.~(\ref{eq:dnCidnEj}),
 the error is underestimated if more than one iteration
 is used, but agrees well with toy Monte Carlo tests if the full error propagation is used,
 as shown in Fig.~\ref{fig:bayes_errors}.%
@@ -109,7 +109,7 @@ V(n(\E_i),n(\E_j)) = n(\E_i) \delta_{ij} - \frac{n(\E_i) n(\E_j)}{\hat{N}_{\math
 \end{equation}
 
 where $\hat{N}_{\mathrm{true}} \equiv \sum_{i=1}^{n_{\C}} \hat{n}(\C_i)$.
-That describes a histogram with the fixed normalisation, ie. fixed total number of measured events.
+That describes a histogram with fixed normalisation, ie. fixed total number of measured events.
 On the other hand, in counting experiments common in particle physics, each bin is independently Poisson distributed, with
 
 \begin{equation}
@@ -124,7 +124,7 @@ The response matrix, $P(\E_j|\C_i)$, is usually estimated by Monte Carlo. If onl
 are available, then there will be uncertainties on the matrix elements.
 These may be propagated as an uncertainty on the unfolded result.
 
-A correction is also required to D'Agostini treatment of this response matrix error propagation
+A correction is also required to D'Agostini's treatment of this response matrix error propagation
 to account for the fact that, after the first iteration, the prior, $n_0(\C_i)$, depends on the response matrix.
 Taking this into account, the error propagation matrix for the response is
 
@@ -141,10 +141,10 @@ Eq.~\ref{eq:dnCidR} disappear, leaving us with an expression compatible with D'A
 The covariance matrix due to these errors is given by
 
 \begin{equation}
-V(\hat{n}(\C_k),\hat{n}(\C_l)) = \sum_{i,r=1}^{n_{\E}} \sum_{j,s=1}^{n_{\C}} \dd{\hat{n}(\C_k)}{P(\E_i|\C_j)} V(P(\E_i|\C_j),P(\E_r|\C_s)) \dd{\hat{n}(\C_l)}{P(\E_r|\C_s)}
+V(\hat{n}(\C_k),\hat{n}(\C_l)) = \sum_{j,s=1}^{n_{\E}} \sum_{i,r=1}^{n_{\C}} \dd{\hat{n}(\C_k)}{P(\E_j|\C_i)} V(P(\E_j|\C_i),P(\E_s|\C_r)) \dd{\hat{n}(\C_l)}{P(\E_s|\C_r)}
 \end{equation}
 
-where $V(P(\E_i|\C_j),P(\E_r|\C_s))$ can be taken as multinomial (as D'Agostini does), Poisson, or other distribution.
+where $V(P(\E_j|\C_i),P(\E_s|\C_r))$ can be taken as multinomial (as D'Agostini does), Poisson, or other distribution.
 
 The effect of the new response matrix error calculation can be seen in Fig.~\ref{fig:bayes_errors_sys}.%
 \begin{figure}[ht]
