@@ -1,6 +1,11 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         25-Oct-2011
+  o Add RooUnfoldTUnfold methods for retrieving the L Curve and the tau values
+    if an L curve scan is done.
+    This improvement was kindly provided by Pedro Cipriano.
+
 Tim Adye         17-Oct-2011
   o Fix Bayes response matrix errors to include the effect of the dependency of
     the prior in one iteration on the response matrix in the previous iteration.

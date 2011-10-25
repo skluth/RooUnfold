@@ -15,7 +15,7 @@
 <p>Only included in ROOT versions 5.22 and higher
 <p>Only able to reconstruct 1 dimensional distributions
 <p>Can account for bin migration and smearing
-<p>Errors come as a full covariance matrix. 
+<p>Errors come as a full covariance matrix.
 <p>Will sometimes warn of "unlinked" bins. These are bins with 0 entries and do not effect the results of the unfolding
 <p>Regularisation parameter can be either optimised internally by plotting log10(chi2 squared) against log10(tau). The 'kink' in this curve is deemed the optimum tau value. This value can also be set manually (FixTau)
 <p>The latest version (TUnfold 15 in ROOT 2.27.04) will not handle plots with an additional underflow bin. As a result overflows must be turned off
@@ -34,6 +34,7 @@ END_HTML */
 #include "TMatrixD.h"
 #include "TUnfoldSys.h"
 #include "TGraph.h"
+#include "TSpline.h"
 
 #include "RooUnfoldResponse.h"
 
@@ -72,13 +73,16 @@ RooUnfoldTUnfold::RooUnfoldTUnfold (const RooUnfoldResponse* res, const TH1* mea
 void
 RooUnfoldTUnfold::Destroy()
 {
-    delete _unf;
+  delete _unf;
+  delete _lCurve;
+  delete _logTauX;
+  delete _logTauY;
 }
 
 RooUnfoldTUnfold*
 RooUnfoldTUnfold::Clone (const char* newname) const
 {
-    //Clones object
+  // Clones object
   RooUnfoldTUnfold* unfold= new RooUnfoldTUnfold(*this);
   if (newname && strlen(newname)) unfold->SetName(newname);
   return unfold;
@@ -87,7 +91,7 @@ RooUnfoldTUnfold::Clone (const char* newname) const
 void
 RooUnfoldTUnfold::Reset()
 {
-    //Resets all values
+  // Resets all values
   Destroy();
   Init();
   RooUnfold::Reset();
@@ -107,31 +111,56 @@ RooUnfoldTUnfold::CopyData (const RooUnfoldTUnfold& rhs)
   tau_set=rhs.tau_set;
   _tau=rhs._tau;
   _reg_method=rhs._reg_method;
+  _lCurve  = (rhs._lCurve  ? dynamic_cast<TGraph*> (rhs._lCurve ->Clone()) : 0);
+  _logTauX = (rhs._logTauX ? dynamic_cast<TSpline*>(rhs._logTauX->Clone()) : 0);
+  _logTauY = (rhs._logTauY ? dynamic_cast<TSpline*>(rhs._logTauY->Clone()) : 0);
 }
 
 
 void
 RooUnfoldTUnfold::Init()
 {
-    //Sets error matrix
-    tau_set=false;
-    _tau=0;
-    _unf=0;
+  tau_set=false;
+  _tau=0;
+  _unf=0;
+  _lCurve = 0;
+  _logTauX = 0;
+  _logTauY = 0;
   GetSettings();
 }
 
-TUnfold*
-RooUnfoldTUnfold::Impl()
+TUnfold* RooUnfoldTUnfold::Impl()
 {
-    return _unf;
+  // Return TUnfold object used to implement the unfolding for RooUnfoldTUnfold.
+  return _unf;
 }
 
+const TGraph* RooUnfoldTUnfold::GetLCurve() const
+{
+  // If an L curve scan has been done (tau not fixed by user),
+  // return the L curve as graph
+  return _lCurve;
+}
+
+const TSpline* RooUnfoldTUnfold::GetLogTauX() const
+{
+  // If an L curve scan has been done (tau not fixed by user),
+  // return the spline of x-coordinates vs tau for the L curve
+  return _logTauX;
+}
+
+const TSpline* RooUnfoldTUnfold::GetLogTauY() const
+{
+  // If an L curve scan has been done (tau not fixed by user),
+  // return the spline of y-coordinates vs tau for the L curve
+  return _logTauY;
+}
 
 void
 RooUnfoldTUnfold::Unfold()
 {
-    /* Does the unfolding. Uses the optimal value of the unfolding parameter unless a value has already been set using FixTau*/
-       
+  // Does the unfolding. Uses the optimal value of the unfolding parameter unless a value has already been set using FixTau
+
   if (_nm<_nt)     cerr << "Warning: fewer measured bins than truth bins. TUnfold may not work correctly." << endl;
   if (_haveCovMes) cerr << "Warning: TUnfold does not account for bin-bin correlations on measured input"    << endl;
 
@@ -191,8 +220,6 @@ RooUnfoldTUnfold::Unfold()
   Double_t tauMin=0.0;
   Double_t tauMax=0.0;
   Int_t iBest;
-  TSpline *logTauX,*logTauY;
-  TGraph *lCurve;
   // this method scans the parameter tau and finds the kink in the L curve
   // finally, the unfolding is done for the best choice of tau
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,23,0)  /* TUnfold v6 (included in ROOT 5.22) didn't have setInput return value */
@@ -205,7 +232,10 @@ RooUnfoldTUnfold::Unfold()
 #endif
   //_unf->SetConstraint(TUnfold::kEConstraintArea);
   if (!tau_set){
-    iBest=_unf->ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
+    delete _lCurve;  _lCurve  = 0;
+    delete _logTauX; _logTauX = 0;
+    delete _logTauY; _logTauY = 0;
+    iBest=_unf->ScanLcurve(nScan,tauMin,tauMax,&_lCurve,&_logTauX,&_logTauY);
     _tau=_unf->GetTau();  // save value, even if we don't use it unless tau_set
     cout <<"Lcurve scan chose tau= "<<_tau<<endl;
   }
@@ -247,7 +277,7 @@ RooUnfoldTUnfold::GetCov()
 }
 
 
-void 
+void
 RooUnfoldTUnfold::FixTau(Double_t tau)
 {
   // Fix regularisation parameter to a specified value

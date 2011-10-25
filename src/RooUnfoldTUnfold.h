@@ -19,6 +19,8 @@ class RooUnfoldResponse;
 class TH1;
 class TH1D;
 class TH2D;
+class TGraph;
+class TSpline;
 
 class RooUnfoldTUnfold : public RooUnfold {
 
@@ -42,6 +44,9 @@ public:
   void OptimiseTau();
   virtual void SetRegParm(Double_t parm);
   Double_t GetTau() const;
+  const TGraph*  GetLCurve()  const;
+  const TSpline* GetLogTauX() const;
+  const TSpline* GetLogTauY() const;
   virtual Double_t GetRegParm() const;
   void SetRegMethod (TUnfold::ERegMode regmethod);
   TUnfold::ERegMode GetRegMethod() const;
@@ -60,6 +65,9 @@ private:
   TUnfold* _unf; //! Implementation in TUnfold object (no streamer)
   Bool_t tau_set;
   Double_t _tau;
+  TSpline* _logTauX;
+  TSpline* _logTauY;
+  TGraph*  _lCurve;
 
 public:
 
