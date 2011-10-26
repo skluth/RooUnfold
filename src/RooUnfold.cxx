@@ -80,6 +80,7 @@ END_HTML */
 #include "TDecompSVD.h"
 #include "TDecompChol.h"
 #include "TRandom.h"
+#include "TMath.h"
 
 #include "RooUnfoldResponse.h"
 #include "RooUnfoldErrors.h"
@@ -369,7 +370,7 @@ void RooUnfold::GetWgt()
   // This may be overridden if it can be computed directly without the need for inverting the matrix
   if (!_haveCov) GetCov();
   if (!_haveCov) return;
-  if (!InvertMatrix (_cov, _wgt, "covariance matrix")) return;
+  if (!InvertMatrix (_cov, _wgt, "covariance matrix", _verbose)) return;
   _haveWgt= true;
 }
 
@@ -467,25 +468,25 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
       }
     }
 
+    Double_t chi2= 0.0;
     if (DoChi2==kCovariance || DoChi2==kCovToy) {
         TMatrixD wgt= Wreco(DoChi2);
         if (_fail) return -1.0;
         TMatrixD resmat(1,_nt), chi2mat(1,1);
         TMatrixDRow(resmat,0)= res;
         ABAT (resmat, wgt, chi2mat);
-        return chi2mat(0,0);
+        chi2= chi2mat(0,0);
     } else {
-        Double_t chi2=0;
         TVectorD ereco= ErecoV(DoChi2);
         if (_fail) return -1.0;
         for (Int_t i = 0 ; i < _nt; i++) {
-          if (ereco(i)>0.0) {
-            Double_t ypull = res[i] / ereco[i];
-            chi2 += ypull*ypull;
-          }
+          Double_t e= ereco[i];
+          if (e<=0.0) continue;
+          Double_t ypull = res[i] / e;
+          chi2 += ypull*ypull;
         }
-        return chi2;
     }
+    return chi2;
 }
 
 
@@ -728,8 +729,31 @@ RooUnfold* RooUnfold::RunToy() const
 
 void RooUnfold::Print(Option_t *opt) const
 {
-    TNamed::Print(opt);
-    cout <<"regularisation parameter = "<<GetRegParm()<<", ntoys = "<<NToys()<<endl;
+  cout << ClassName() << "::" << GetName() << " \"" << GetTitle()
+       << "\", regularisation parameter=" << GetRegParm() << ", ";
+  if (_haveCovMes) cout << "with measurement covariance, ";
+  if (_dosys)      cout << "calculate systematic errors, ";
+  if (_meas->GetDimension()==1) cout << _nm;
+  else {
+    cout <<        _meas->GetNbinsX()
+         << "x" << _meas->GetNbinsY();
+    if (_meas->GetDimension()>=3)
+    cout << "x" << _meas->GetNbinsZ();
+    cout << " (" << _nm << ")";
+  }
+  cout << " bins measured, ";
+  const TH1* rtrue= _res->Htruth();
+  if (rtrue->GetDimension()==1) cout << _nt;
+  else {
+    cout <<        rtrue->GetNbinsX()
+         << "x" << rtrue->GetNbinsY();
+    if (rtrue->GetDimension()>=3)
+    cout << "x" << rtrue->GetNbinsZ();
+    cout << " (" << _nt << ")";
+  }
+  cout << " bins truth";
+  if (_overflow) cout << " including overflows";
+  cout << endl;
 }
 
 TMatrixD RooUnfold::CutZeros(const TMatrixD& ereco)
@@ -856,7 +880,7 @@ TMatrixD RooUnfold::Wreco(ErrorTreatment withError)
         Wreco_m=_wgt;
         break;
       case kCovToy:
-        InvertMatrix (_err_mat, Wreco_m, "covariance matrix from toys");
+        InvertMatrix (_err_mat, Wreco_m, "covariance matrix from toys", _verbose);
         break;
       default:
         cerr<<"Error, unrecognised error method= "<<withError<<endl;
@@ -1004,7 +1028,7 @@ TMatrixD& RooUnfold::ABAT (const TMatrixD& a, const TVectorD& b, TMatrixD& c)
   return c;
 }
 
-Int_t RooUnfold::InvertMatrix(const TMatrixD& mat, TMatrixD& inv, const char* name)
+Int_t RooUnfold::InvertMatrix(const TMatrixD& mat, TMatrixD& inv, const char* name, Int_t verbose)
 {
   // Invert a matrix using Single Value Decomposition: inv = mat^-1.
   // Can use InvertMatrix(mat,mat) to invert in-place.
@@ -1012,11 +1036,19 @@ Int_t RooUnfold::InvertMatrix(const TMatrixD& mat, TMatrixD& inv, const char* na
   TDecompSVD svd (mat);
   const Double_t cond_max= 1e17;
   Double_t cond= svd.Condition();
+  if (verbose >= 1) {
+    Double_t d1=0,d2=0;
+    svd.Det(d1,d2);
+    Double_t det= d1*TMath::Power(2.,d2);
+    cout << name << " condition="<<cond<<", determinant="<<det;
+    if (d2!=0.0) cout <<" ("<<d1<<"*2^"<<d2<<")";
+    cout <<", tolerance="<<svd.GetTol()<<endl;
+  }
   if        (cond<0.0){
-    cerr <<"Warning: bad "<<name<<": condition="<<cond<<endl;
+    cerr <<"Warning: bad "<<name<<" condition ("<<cond<<")"<<endl;
     ok= 2;
   } else if (cond>cond_max) {
-    cerr << "Warning: poorly conditioned "<<name<<": condition="<< cond<<" - inverse may be inaccurate"<<endl;
+    cerr << "Warning: poorly conditioned "<<name<<" - inverse may be inaccurate (condition="<<cond<<")"<<endl;
     ok= 3;
   }
   inv.ResizeTo (mat.GetNcols(), mat.GetNrows());  // pseudo-inverse of A(r,c) is B(c,r)
@@ -1030,6 +1062,20 @@ Int_t RooUnfold::InvertMatrix(const TMatrixD& mat, TMatrixD& inv, const char* na
 #else
   inv= svd.Invert();
 #endif
+  if (verbose>=1) {
+    TMatrixD I (mat, TMatrixD::kMult, inv);
+    if (verbose>=3) I.Print();
+    Double_t m= 0.0;
+    for (Int_t i= 0; i<I.GetNrows(); i++) {
+      Double_t d= fabs(I(i,i)-1.0);
+      if (d>m) m= d;
+      for (Int_t j= 0; j<i; j++) {
+        d= fabs(I(i,j)); if (d>m) m= d;
+        d= fabs(I(j,i)); if (d>m) m= d;
+      }
+    }
+    cout << "Inverse " << name << " " << 100.0*m << "% maximum error" << endl;
+  }
   return ok;
 }
 

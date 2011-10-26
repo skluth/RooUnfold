@@ -118,7 +118,7 @@ protected:
   static TMatrixD& ABAT (const TMatrixD& a, const TMatrixD& b, TMatrixD& c);
   static TMatrixD& ABAT (const TMatrixD& a, const TVectorD& b, TMatrixD& c);
   static TH1*     Resize (TH1* h, Int_t nx, Int_t ny=-1, Int_t nz=-1);
-  static Int_t    InvertMatrix (const TMatrixD& mat, TMatrixD& inv, const char* name="matrix");
+  static Int_t    InvertMatrix (const TMatrixD& mat, TMatrixD& inv, const char* name="matrix", Int_t verbose=1);
 
 private:
   void Init();

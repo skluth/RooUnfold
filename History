@@ -1,6 +1,11 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         26-Oct-2011
+  o When inverting a matrix (eg. for chi^2), show condition, determinant, and
+    check inverse.
+  o RooUnfold::Print() shows a nicer summary of the object.
+
 Tim Adye         25-Oct-2011
   o Add RooUnfoldTUnfold methods for retrieving the L Curve and the tau values
     if an L curve scan is done.
