@@ -31,6 +31,7 @@ public:
 
   // Data
   TH1D *hTrainZ, *hTrainTrueZ, *hTrainFakeZ, *hTrueZ, *hMeasZ, *hRecoZ, *hFakeZ, *hPullsZ, *hPDFz, *hTestPDFz;
+  TH2D *hTrueXY, *hTrueYZ, *hTrueXZ, *hMeasXY, *hMeasYZ, *hMeasXZ, *hRecoXY, *hRecoYZ, *hRecoXZ;
 
   // Constructors
   RooUnfoldTestHarness3D (const char* name= "RooUnfoldTest3D");
@@ -51,10 +52,11 @@ public:
   virtual void  Init();
   virtual Int_t CheckParms();
 
-  static TH1D* Projection3D (const TH1* h, Option_t* xyz, const char* name, const char* title, Option_t* opt);
-  static TH1D* ProjectionX  (const TH1* h, const char* name=0, const char* title=0, Option_t* opt="") {return Projection3D(h,"x",name,title,opt);}
-  static TH1D* ProjectionY  (const TH1* h, const char* name=0, const char* title=0, Option_t* opt="") {return Projection3D(h,"y",name,title,opt);}
-  static TH1D* ProjectionZ  (const TH1* h, const char* name=0, const char* title=0, Option_t* opt="") {return Projection3D(h,"z",name,title,opt);}
+  static TH1D* Projection1D (const TH1* h, Option_t* xyz, const char* name=0, const char* title=0, Option_t* opt="");
+  static TH2D* Projection2D (const TH1* h, Option_t* xyz, const char* name=0, const char* title=0, Option_t* opt="");
+  static TH1D* ProjectionX  (const TH1* h, const char* name=0, const char* title=0, Option_t* opt="") {return Projection1D(h,"x",name,title,opt);}
+  static TH1D* ProjectionY  (const TH1* h, const char* name=0, const char* title=0, Option_t* opt="") {return Projection1D(h,"y",name,title,opt);}
+  static TH1D* ProjectionZ  (const TH1* h, const char* name=0, const char* title=0, Option_t* opt="") {return Projection1D(h,"z",name,title,opt);}
   Int_t Fill (TH1* h, Double_t x, Double_t y, Double_t z) {TH3* h3= dynamic_cast<TH3*>(h); return h3->Fill(x,y,z);}
 };
 

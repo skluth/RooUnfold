@@ -63,10 +63,10 @@ void RooUnfoldTestHarness2D::Parms (ArgVars& args)
   args.Add ("mtesty",  &mtesty,     4.5, "test signal PDF Y mean");
   args.Add ("wtesty",  &wtesty,     2.5, "test signal PDF Y width");
   args.Add ("btesty",  &btesty,     0.2, "test Y PDF background fraction");
-  args.Add ("effylo",  &effylo,     0.8, "efficiency at ylo");
-  args.Add ("effyhi",  &effyhi,     1.0, "efficiency at yhi");
-  args.Add ("fakeylo", &fakeylo,    0.0, "fraction of fakes at ylo");
-  args.Add ("fakeyhi", &fakeyhi,    0.0, "fraction of fakes at yhi");
+  args.Add ("effylo",  &effylo,    0.95, "efficiency at ylo");
+  args.Add ("effyhi",  &effyhi,     0.8, "efficiency at yhi");
+  args.Add ("fakeylo", &fakeylo,    0.4, "fraction of fakes at ylo");
+  args.Add ("fakeyhi", &fakeyhi,    0.3, "fraction of fakes at yhi");
   args.Add ("rotxy",   &rotxy,      0.6, "rotation angle in XY plane");
   args.Add ("ybias",   &ybias,      1.0, "shift in Y");
   args.Add ("ysmear",  &ysmear,     0.5, "Y smearing width in bins");
@@ -442,6 +442,22 @@ Int_t RooUnfoldTestHarness2D::CheckParms()
   if (ftrainy<0)  {cerr << "Error: ftrainy ("<< ftrainy<< ") < 0"                   << endl; error = 2;}
   if (ftesty<0)   {cerr << "Error: ftesty (" << ftesty << ") < 0"                   << endl; error = 2;}
   return error;
+}
+
+TH1D* RooUnfoldTestHarness2D::ProjectionX (const TH1* h, const char* name, const char* title, Option_t* opt)
+{
+  const TH2* h2= dynamic_cast<const TH2*>(h);
+  TH1D* h1= h2->ProjectionX (name, 1, h->GetNbinsY(), opt);
+  if (title) h1->SetTitle (title);
+  return h1;
+}
+
+TH1D* RooUnfoldTestHarness2D::ProjectionY (const TH1* h, const char* name, const char* title, Option_t* opt)
+{
+  const TH2* h2= dynamic_cast<const TH2*>(h);
+  TH1D* h1= h2->ProjectionY (name, 1, h->GetNbinsX(), opt);
+  if (title) h1->SetTitle (title);
+  return h1;
 }
 
 #endif

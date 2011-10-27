@@ -372,7 +372,7 @@ RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t zr, Double_t xt, Dou
   if (_cached) ClearCache();
   ((TH3*)_mes)->Fill (xr, yr, zr, w);
   ((TH3*)_tru)->Fill (xt, yt, zt, w);
-  return _res->Fill (Double_t(FindBin (_mes, xr, yr, zt))+.5, Double_t(FindBin (_tru, xt, yt, zt))+.5, w);
+  return _res->Fill (Double_t(FindBin (_mes, xr, yr, zr))+.5, Double_t(FindBin (_tru, xt, yt, zt))+.5, w);
 }
 
 Int_t

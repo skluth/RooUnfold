@@ -102,12 +102,14 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("mtestx",  &mtestx,     5.5, "test signal PDF X mean");
   args.Add ("wtestx",  &wtestx,     1.0, "test signal PDF X width");
   args.Add ("btestx",  &btestx,     0.3, "test X PDF background fraction");
+  args.Add ("doeff",   &doeff,        1, "include efficiencies in the response model");
   args.Add ("effxlo",  &effxlo,     0.5, "efficiency at xlo");
   args.Add ("effxhi",  &effxhi,     0.9, "efficiency at xhi");
   args.Add ("xbias",   &xbias,     -1.0, "shift in X");
   args.Add ("xsmear",  &xsmear,     0.5, "X smearing width in bins");
-  args.Add ("fakexlo", &fakexlo,    0.0, "fraction of fakes at xlo");
-  args.Add ("fakexhi", &fakexhi,    0.0, "fraction of fakes at xhi");
+  args.Add ("addfakes",&addfakes,     0, "include fakes in the response model");
+  args.Add ("fakexlo", &fakexlo,    0.2, "fraction of fakes at xlo");
+  args.Add ("fakexhi", &fakexhi,    0.5, "fraction of fakes at xhi");
   args.Add ("bincorr", &bincorr,    0.0, "correlation between neighbouring measured bins");
   args.Add ("overflow",&overflow,     0, "0=unfolding ignores under/overflow bins, 1=unfolding uses under/overflow bins, 2=fill under/overflows into first/last bins");
   args.Add ("addbias", &addbias,     -1, "apply systematic shift/rotation (disabled by default for bin-by-bin/invert methods)", "1");
@@ -597,7 +599,7 @@ TH1D* RooUnfoldTestHarness::Generate (TVectorD& x, const char* name, const char*
 
 Int_t RooUnfoldTestHarness::Fakes (TVectorD& x, Int_t nm, Int_t nx, Double_t x0, Double_t x1, Double_t y0, Double_t y1) const
 {
-  if (y0<=0.0 && y1<=0.0) return 0;
+  if (!addfakes || (y0<=0.0 && y1<=0.0)) return 0;
   if (overflow == 1) {
     // Fill under/overflow bins too
     Double_t xw= x1-x0;
@@ -676,7 +678,7 @@ bool RooUnfoldTestHarness::Eff (Double_t x, Double_t lo, Double_t hi, Double_t e
 {
   // Apply an efficiency function to the truth.
   // Efficiency: 30% at x=lo, 90% at x=hi.
-
+  if (!doeff || (efflo>=1.0 && effhi>=1.0)) return true;
   Double_t xwidth =  (hi-lo);
   Double_t slope = (effhi-efflo) / xwidth;
   Double_t yeff= (efflo + slope * (x-lo));  // efficiency

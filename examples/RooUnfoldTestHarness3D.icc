@@ -46,11 +46,14 @@ void RooUnfoldTestHarness3D::Parms (ArgVars& args)
   RooUnfoldTestHarness2D::Parms (args);
   args.SetDefault ("onepage", 10);
   args.SetDefault ("ntx",     10);
-  args.SetDefault ("nty",      5);
+  args.SetDefault ("nty",      8);
   args.SetDefault ("ftestx",   2);
+  args.SetDefault ("wtestx", 3.0);
+  args.SetDefault ("wtesty", 3.0);
+  args.SetDefault ("effxlo", 0.9);
   args.Add ("ftrainz", &ftrainz,      0, "training Z PDF");
   args.Add ("ftestz",  &ftestz,       6, "test Z PDF");
-  args.Add ("ntz",     &ntz,          5, "#truth Z bins");
+  args.Add ("ntz",     &ntz,          6, "#truth Z bins");
   args.Add ("nmz",     &nmz,         -1, "#measured Z bins", "ntz");
   args.Add ("zlo",     &zlo,        0.0, "Z range minimum");
   args.Add ("zhi",     &zhi,       10.0, "Z range maximum");
@@ -60,13 +63,13 @@ void RooUnfoldTestHarness3D::Parms (ArgVars& args)
   args.Add ("mtestz",  &mtestz,     4.0, "test signal PDF Z mean");
   args.Add ("wtestz",  &wtestz,     1.5, "test signal PDF Z width");
   args.Add ("btestz",  &btestz,     0.3, "test Z PDF background fraction");
-  args.Add ("effzlo",  &effzlo,     0.9, "efficiencz at zlo");
-  args.Add ("effzhi",  &effzhi,     1.0, "efficiencz at zhi");
-  args.Add ("fakezlo", &fakezlo,    0.0, "fraction of fakes at zlo");
-  args.Add ("fakezhi", &fakezhi,    0.0, "fraction of fakes at zhi");
+  args.Add ("effzlo",  &effzlo,    0.75, "efficiencz at zlo");
+  args.Add ("effzhi",  &effzhi,    0.95, "efficiencz at zhi");
+  args.Add ("fakezlo", &fakezlo,    0.6, "fraction of fakes at zlo");
+  args.Add ("fakezhi", &fakezhi,    0.1, "fraction of fakes at zhi");
   args.Add ("rotxz",   &rotxz,      0.4, "rotation angle in XZ plane");
   args.Add ("rotyz",   &rotyz,      0.4, "rotation angle in YZ plane");
-  args.Add ("zbias",   &zbias,     -1.0, "shift in Z");
+  args.Add ("zbias",   &zbias,      1.0, "shift in Z");
   args.Add ("zsmear",  &zsmear,     0.5, "Z smearing width in bins");
 }
 
@@ -211,7 +214,7 @@ Int_t RooUnfoldTestHarness3D::Test()
   }
 
   TVectorD xfake, yfake, zfake;
-  Int_t nfake= Fakes3D (xfake, yfake, zfake, ntrain);
+  Int_t nfake= Fakes3D (xfake, yfake, zfake, ntest);
   if (nfake>0) {
     hFake= new TH3D ("fake", "Test Fakes", nmx, xlo, xhi, nmy, ylo, yhi, nmz, zlo, zhi);
     hFake->SetLineColor(93);
@@ -231,6 +234,13 @@ Int_t RooUnfoldTestHarness3D::Test()
   hMeasY= ProjectionY (hMeas, "hMeasY", "Test Measured Y");
   hTrueZ= ProjectionZ (hTrue, "hTrueZ", "Test Z");
   hMeasZ= ProjectionZ (hMeas, "hMeasZ", "Test Measured Z");
+
+  hTrueXY= Projection2D (hTrue, "xy", "hTrueXY", "Test XY");
+  hMeasXY= Projection2D (hMeas, "xy", "hMeasXY", "Test Measured XY");
+  hTrueYZ= Projection2D (hTrue, "yz", "hTrueYZ", "Test YZ");
+  hMeasYZ= Projection2D (hMeas, "yz", "hMeasYZ", "Test Measured YZ");
+  hTrueXZ= Projection2D (hTrue, "xz", "hTrueXZ", "Test XZ");
+  hMeasXZ= Projection2D (hMeas, "xz", "hMeasXZ", "Test Measured XZ");
 
   return 1;
 }
@@ -261,6 +271,12 @@ void RooUnfoldTestHarness3D::Results()
     hRecoX= ProjectionX (hReco, "hRecoX", "Reconstructed X", "E");
     hRecoY= ProjectionY (hReco, "hRecoY", "Reconstructed Y", "E");
     hRecoZ= ProjectionZ (hReco, "hRecoZ", "Reconstructed Z", "E");
+    hRecoXY= Projection2D (hReco, "xy", "hRecoXY", "Reconstructed XY");
+    hRecoYZ= Projection2D (hReco, "yz", "hRecoYZ", "Reconstructed YZ");
+    hRecoXZ= Projection2D (hReco, "xz", "hRecoXZ", "Reconstructed XZ");
+    hRecoXY->SetMarkerColor(kRed);
+    hRecoYZ->SetMarkerColor(kRed);
+    hRecoXZ->SetMarkerColor(kRed);
     hRecoX->SetMarkerStyle(kFullDotLarge);
     hRecoY->SetMarkerStyle(kFullDotLarge);
     hRecoZ->SetMarkerStyle(kFullDotLarge);
@@ -350,6 +366,39 @@ void RooUnfoldTestHarness3D::Results()
   if (onepage) canvas->cd(++ipad);
   hReco->Draw();
   canvas->Update();
+
+  if (onepage && (ipad>=onepage || ploterrors)) return;
+  if (onepage) canvas->cd(++ipad);
+  hTrueXY->Draw();
+  if (hRecoXY) hRecoXY->Draw("SAME");
+  canvas->Update();
+
+  if (onepage && (ipad>=onepage || ploterrors)) return;
+  if (onepage) canvas->cd(++ipad);
+  hMeasXY->Draw();
+  canvas->Update();
+
+  if (onepage && (ipad>=onepage || ploterrors)) return;
+  if (onepage) canvas->cd(++ipad);
+  hTrueYZ->Draw();
+  if (hRecoYZ) hRecoYZ->Draw("SAME");
+  canvas->Update();
+
+  if (onepage && (ipad>=onepage || ploterrors)) return;
+  if (onepage) canvas->cd(++ipad);
+  hMeasYZ->Draw();
+  canvas->Update();
+
+  if (onepage && (ipad>=onepage || ploterrors)) return;
+  if (onepage) canvas->cd(++ipad);
+  hTrueXZ->Draw();
+  if (hRecoXZ) hRecoXZ->Draw("SAME");
+  canvas->Update();
+
+  if (onepage && (ipad>=onepage || ploterrors)) return;
+  if (onepage) canvas->cd(++ipad);
+  hMeasXZ->Draw();
+  canvas->Update();
 }
 
 //==============================================================================
@@ -422,6 +471,7 @@ void RooUnfoldTestHarness3D::Reset()
 {
   RooUnfoldTestHarness2D::Reset();
   hTrainZ= hTrainTrueZ= hTrueZ= hTrainFakeZ= hFakeZ= hMeasZ= hRecoZ= hPDFz= hTestPDFz= hPullsZ= 0;
+  hTrueXY= hTrueYZ= hTrueXZ= hMeasXY= hMeasYZ= hMeasXZ= hRecoXY= hRecoYZ= hRecoXZ= 0;
   dim= 3;
 }
 
@@ -453,15 +503,28 @@ Int_t RooUnfoldTestHarness3D::CheckParms()
   return error;
 }
 
-TH1D* RooUnfoldTestHarness3D::Projection3D (const TH1* h, Option_t* xyz, const char* name, const char* title, Option_t* opt)
+TH1D* RooUnfoldTestHarness3D::Projection1D (const TH1* h, Option_t* xyz, const char* name, const char* title, Option_t* opt)
 {
   const TH3* h3= dynamic_cast<const TH3*>(h);
   TString opts (xyz);
   opts += opt;
+  opts += "NUFNOF";
   TH1D* h1= dynamic_cast<TH1D*>(h3->Project3D (opts));
   if (h1 && name)  h1->SetName  (name);
   if (h1 && title) h1->SetTitle (title);
   return h1;
+}
+
+TH2D* RooUnfoldTestHarness3D::Projection2D (const TH1* h, Option_t* xyz, const char* name, const char* title, Option_t* opt)
+{
+  const TH3* h3= dynamic_cast<const TH3*>(h);
+  TString opts (xyz);
+  opts += opt;
+  opts += "NUFNOF";
+  TH2D* h2= dynamic_cast<TH2D*>(h3->Project3D (opts));
+  if (h2 && name)  h2->SetName  (name);
+  if (h2 && title) h2->SetTitle (title);
+  return h2;
 }
 
 #endif

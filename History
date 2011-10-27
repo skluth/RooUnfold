@@ -2,9 +2,13 @@ History of RooUnfold     $Id$
 ====================
 
 Tim Adye         26-Oct-2011
+  o Fix 3D RooUnfoldResponse::Fill.
   o When inverting a matrix (eg. for chi^2), show condition, determinant, and
     check inverse.
   o RooUnfold::Print() shows a nicer summary of the object.
+  o RooUnfoldTest3D: fix fake test, change test defaults, plot 2D projections.
+  o RooUnfoldTest doeff=0 addfakes=1 turn off/on all inefficiencies and fakes.
+  o RooUnfoldTest2D+3D projections don't include under/overflow bins.
 
 Tim Adye         25-Oct-2011
   o Add RooUnfoldTUnfold methods for retrieving the L Curve and the tau values
