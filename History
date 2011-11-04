@@ -1,6 +1,10 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          4-Nov-2011
+  o GNUMakefile update for ROOT 5.32, which moved Makefile.arch from the test
+    to the etc directory and renamed $(ROOTCONFIG) to $(RC).
+
 Tim Adye         26-Oct-2011
   o Fix 3D RooUnfoldResponse::Fill.
   o When inverting a matrix (eg. for chi^2), show condition, determinant, and

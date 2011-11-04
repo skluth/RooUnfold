@@ -37,19 +37,32 @@
 
 # === ROOT setup ===============================================================
 
-ROOTSYS      ?= ERROR_RootSysIsNotDefined
+ifeq ($(ROOTSYS),)
+$(error $$ROOTSYS is not defined)
+endif
 
--include $(ROOTSYS)/test/Makefile.arch
+ROOT_MAKEFILE=$(firstword $(wildcard $(ROOTSYS)/etc/Makefile.arch $(ROOTSYS)/test/Makefile.arch))
+ifeq ($(ROOT_MAKEFILE),)
+$(warning Could not find Makefile.arch under $(ROOTSYS)/etc or $(ROOTSYS)/test - trying a basic Linux config)
+else
+-include $(ROOT_MAKEFILE)
+ifeq ($(ARCH),)
+$(warning $(ROOT_MAKEFILE) setup failed (no $$ARCH) - trying a basic Linux config)
+endif
+endif
+ifeq ($(RC),)
 ifeq ($(ROOTCONFIG),)
-ROOTCONFIG    = $(ROOTSYS)/bin/root-config
+RC            = $(ROOTSYS)/bin/root-config
+else
+RC            = $(ROOTCONFIG)
+endif
 endif
 
 ifeq ($(ARCH),)
 # === This section is just in case ROOT's test/Makefile.arch didn't work =======
-out := $(shell echo "$(ROOTSYS)/test/Makefile.arch not found - trying a basic Linux config" >&2)
-ARCH          = $(shell $(ROOTCONFIG) --arch)
-ROOTLIBS      = $(shell $(ROOTCONFIG) --libs)
-CXXFLAGS      = $(shell $(ROOTCONFIG) --cflags)
+ARCH          = $(shell $(RC) --arch)
+ROOTLIBS      = $(shell $(RC) --libs)
+CXXFLAGS      = $(shell $(RC) --cflags)
 CXX           = g++
 CXXFLAGS     += -Wall -fPIC
 LD            = g++
@@ -71,8 +84,8 @@ ifeq ($(PLATFORM),macosx)
 SOFLAGS      := $(subst -install_name $(CURDIR)/,,$(SOFLAGS))
 endif
 
-ROOTINCDIR    = $(shell $(ROOTCONFIG) --incdir)
-ROOTLIBDIR    = $(shell $(ROOTCONFIG) --libdir)
+ROOTINCDIR    = $(shell $(RC) --incdir)
+ROOTLIBDIR    = $(shell $(RC) --libdir)
 ROOTINCLUDES  = -I$(ROOTINCDIR)
 ifeq ($(ROOTCINT),)
 ROOTCINT      = rootcint
@@ -137,7 +150,7 @@ endif
 ifeq ($(HAVE_TSVDUNFOLD),)
 ifeq ($(wildcard $(ROOTINCDIR)/TSVDUnfold.h),)
 HAVE_TSVDUNFOLD = 1
-else ifneq ($(shell $(ROOTCONFIG) --version | grep '^5\.28'),)
+else ifneq ($(shell $(RC) --version | grep '^5\.28'),)
 HAVE_TSVDUNFOLD = 1
 endif
 endif
@@ -152,8 +165,8 @@ endif
 # We only use it for better-normalised test distributions in RooUnfoldTest
 # (uses examples/RooUnfoldTestPdfRooFit.icc instead of examples/RooUnfoldTestPdf.icc).
 ifeq ($(NOROOFIT),)
-ifneq ($(shell $(ROOTCONFIG) --has-roofit),yes)
-out := $(shell echo "This version of ROOT does not support RooFit. We will build the test programs without it." >&2)
+ifneq ($(shell $(RC) --has-roofit),yes)
+$(warning This version of ROOT does not support RooFit. We will build the test programs without it.)
 NOROOFIT      = 1
 endif
 endif
