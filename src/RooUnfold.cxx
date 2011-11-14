@@ -727,7 +727,7 @@ RooUnfold* RooUnfold::RunToy() const
   return unfold;
 }
 
-void RooUnfold::Print(Option_t *opt) const
+void RooUnfold::Print(Option_t* /*opt*/) const
 {
   cout << ClassName() << "::" << GetName() << " \"" << GetTitle()
        << "\", regularisation parameter=" << GetRegParm() << ", ";

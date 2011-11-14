@@ -100,7 +100,7 @@ public:
   Double_t GetStepSizeParm() const;
   Double_t GetDefaultParm() const;
   RooUnfold* RunToy() const;
-  void Print(Option_t *opt="")const;
+  void Print(Option_t* opt="") const;
 
 protected:
   void Assign (const RooUnfold& rhs); // implementation of assignment operator

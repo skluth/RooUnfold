@@ -1,6 +1,9 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         14-Nov-2011
+  o Fix trivial compiler warning.
+
 Tim Adye          4-Nov-2011
   o GNUMakefile update for ROOT 5.32, which moved Makefile.arch from the test
     to the etc directory and renamed $(ROOTCONFIG) to $(RC).
