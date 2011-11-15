@@ -1,6 +1,11 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         15-Nov-2011
+  o Protect against null RooUnfoldResponse fakes histogram pointer. This can
+    arise if reading an object created with an old version of RooUnfold
+    (prior to 1.1.0).
+
 Tim Adye         14-Nov-2011
   o Fix trivial compiler warning.
 

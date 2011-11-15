@@ -433,7 +433,7 @@ inline
 Double_t RooUnfoldResponse::FakeEntries() const
 {
   // Return number of fake entries
-  return _fak->GetEntries();
+  return _fak ? _fak->GetEntries() : 0.0;
 }
 
 #endif
