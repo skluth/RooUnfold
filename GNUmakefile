@@ -150,8 +150,10 @@ endif
 ifeq ($(HAVE_TSVDUNFOLD),)
 ifeq ($(wildcard $(ROOTINCDIR)/TSVDUnfold.h),)
 HAVE_TSVDUNFOLD = 1
-else ifneq ($(shell $(RC) --version | grep '^5\.28'),)
+else
+ifneq ($(shell $(RC) --version | grep '^5\.28'),)
 HAVE_TSVDUNFOLD = 1
+endif
 endif
 endif
 
@@ -188,6 +190,7 @@ endif
 MAIN          = $(filter-out $(EXCLUDE),$(notdir $(wildcard $(EXESRC)*.cxx)))
 MAINEXE       = $(addprefix $(EXEDIR),$(patsubst %.cxx,%$(ExeSuf),$(MAIN)))
 LINKDEF       = $(INCDIR)$(PACKAGE)_LinkDef.h
+LINKDEFMAP    = $(WORKDIR)$(PACKAGE)Map_LinkDef
 HLIST         = $(filter-out $(addprefix $(INCDIR),$(EXCLUDE)) $(LINKDEF),$(wildcard $(INCDIR)*.h)) $(LINKDEF)
 CINTFILE      = $(WORKDIR)$(PACKAGE)Dict.cxx
 CINTOBJ       = $(OBJDIR)$(PACKAGE)Dict.o
@@ -318,11 +321,13 @@ $(CINTFILE) : $(HLIST)
 	@mkdir -p $(WORKDIR)
 	@mkdir -p $(OBJDIR)
 	@echo "Generating dictionary from $(LINKDEF)"
-	$(_)cd $(SRC) ; $(ROOTCINT) -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)
+	$(_)$(ROOTCINT) -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)
 
 $(ROOTMAP) : $(SHLIBFILE) $(LINKDEF)
 	@echo "Making $@"
-	$(_)$(RLIBMAP) -o $@ -l $< -d $(ROOTLIBFILES) -c $(LINKDEF)
+	$(_)echo TObject.h TMemberInspector.h $(HLIST) | tr ' ' '\n' | sed 's/^\(.*\)$$/#include "\1"/' > $(LINKDEFMAP).cxx
+	$(_)$(CXX) -E -C -D__MAKECINT__ -D__CINT__ -o $(LINKDEFMAP).h $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $(LINKDEFMAP).cxx
+	$(_)$(RLIBMAP) -o $@ -l $< -d $(ROOTLIBFILES) -c $(LINKDEFMAP).h
 
 # Rule to combine objects into a library
 $(LIBFILE) : $(OLIST) $(CINTOBJ)
@@ -372,7 +377,7 @@ clean : cleanbin
 	rm -f $(CINTFILE) $(basename $(CINTFILE)).h
 	rm -f $(OLIST) $(CINTOBJ)
 	rm -f $(LIBFILE)
-	rm -f $(SHLIBFILE) $(ROOTMAP)
+	rm -f $(SHLIBFILE) $(ROOTMAP) $(LINKDEFMAP).cxx $(LINKDEFMAP).h
 	rm -f $(STATICLIBFILE)
 
 cleanbin :

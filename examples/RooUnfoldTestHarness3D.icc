@@ -510,6 +510,7 @@ TH1D* RooUnfoldTestHarness3D::Projection1D (const TH1* h, Option_t* xyz, const c
   opts += opt;
   opts += "NUFNOF";
   TH1D* h1= dynamic_cast<TH1D*>(h3->Project3D (opts));
+  h1->SetLineColor (h3->GetLineColor());  // doesn't seem to be copied in older versions of ROOT
   if (h1 && name)  h1->SetName  (name);
   if (h1 && title) h1->SetTitle (title);
   return h1;

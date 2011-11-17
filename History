@@ -1,6 +1,17 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         17-Nov-2011
+  o Fix for ROOT 5.12 and before, which doesn't have TH1::GetEffectiveEntries().
+  o Remove std::vector definitions from RooUnfold dictionary.
+    These gave warnings when the library was loaded into ROOT, where they were
+    already defined.
+  o GNUMakefile runs RooUnfold_LinkDef.h through the preprocessor before running
+    rlibmap, so deselected classes aren't included in the rootmap.
+  o Fix GNUMakefile for gmake 3.80 and before (eg. in SL4) which doesn't allow
+    "else ifneq".
+  o Remove spurious "cd" in rootcint make rule.
+
 Tim Adye         15-Nov-2011
   o Protect against null RooUnfoldResponse fakes histogram pointer. This can
     arise if reading an object created with an old version of RooUnfold

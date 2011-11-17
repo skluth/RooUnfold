@@ -291,7 +291,7 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2* resp
   } else {
     // Fill fakes from the difference of _mes - _res->ProjectionX()
     // Always include under/overflows in sum of truth.
-    Int_t sm= _mes->GetSumw2N();
+    Int_t sm= _mes->GetSumw2N(), nfake=0;
     for (Int_t i= 0; i<nm; i++) {
       Double_t nmes= 0.0, wmes= 0.0;
       for (Int_t j= 0; j<_nt+2; j++) {
@@ -300,11 +300,16 @@ RooUnfoldResponse::Setup (const TH1* measured, const TH1* truth, const TH2* resp
       }
       Int_t bin= GetBin (_mes, i, _overflow);
       Double_t fake= _mes->GetBinContent (bin) - nmes;
+      if (fake!=0.0) nfake++;
       if (!s) wmes= nmes;
       _fak->SetBinContent (bin, fake);
       _fak->SetBinError   (bin, sqrt (wmes + (sm ? pow(_mes->GetBinError(bin),2) : _mes->GetBinContent(bin))));
     }
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,13,0)
     _fak->SetEntries (_fak->GetEffectiveEntries());  // 0 entries if 0 fakes
+#else
+    _fak->SetEntries (nfake);  // 0 entries if 0 fakes
+#endif
   }
 
   if (!truth || _tru->GetEntries() == 0.0) {
