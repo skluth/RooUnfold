@@ -22,9 +22,6 @@ RooUnfoldTestHarness2D* test2d= 0;
 
 void RooUnfoldTest2D (const char* args= "")
 {
-#ifdef __CINT__
-  if (!TClass::GetDict("RooUnfold")) gSystem->Load("libRooUnfold");
-#endif
 // If run interactively, remove canvas and all histograms that might have been
 // created with a previous invocation.
   delete test2d; test2d= 0;

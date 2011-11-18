@@ -11,6 +11,10 @@ Tim Adye         17-Nov-2011
   o Fix GNUMakefile for gmake 3.80 and before (eg. in SL4) which doesn't allow
     "else ifneq".
   o Remove spurious "cd" in rootcint make rule.
+  o Remove gSystem->Load("libRooUnfold") from examples. That should happen
+    automatically now that we have a libRooUnfold.rootmap.
+  o Tidy up and expand help at the top of the GNUmakefile.
+  o GNUmakefile can now build user programs in the current directory.
 
 Tim Adye         15-Nov-2011
   o Protect against null RooUnfoldResponse fakes histogram pointer. This can

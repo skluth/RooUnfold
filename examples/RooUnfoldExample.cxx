@@ -48,10 +48,6 @@ Double_t smear (Double_t xt)
 
 void RooUnfoldExample()
 {
-#ifdef __CINT__
-  gSystem->Load("libRooUnfold");
-#endif
-
   cout << "==================================== TRAIN ====================================" << endl;
   RooUnfoldResponse response (40, -10.0, 10.0);
 
