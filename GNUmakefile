@@ -267,6 +267,12 @@ endif
 
 # === Implicit rules ===========================================================
 
+# Remove default compile-and-link rules
+%$(ExeSuf)  : %.cc
+%$(ExeSuf)  : %.C
+%$(ExeSuf)  : %.$(SrcSuf)
+%$(ExeSuf)  : %.$(ObjSuf)
+
 # Implicit rule making all dependency Makefiles included at the end of this makefile
 $(DEPDIR)%.d : $(SRCDIR)%.cxx
 	@echo "Making $@"
