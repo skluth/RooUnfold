@@ -202,6 +202,11 @@ LIBFILE       = $(LIBDIR)lib$(LIBNAME).a
 STATICLIBFILE = $(LIBDIR)lib$(STATICLIBNAME).a
 SHLIBFILE     = $(SHLIBDIR)lib$(LIBNAME).$(DllSuf)
 ROOTMAP       = $(SHLIBDIR)lib$(LIBNAME).rootmap
+ifeq ($(MAKECMDGOALS),)
+GOALS         = default
+else
+GOALS         = $(filter-out clean cleanbin help,$(MAKECMDGOALS))
+endif
 
 CPPFLAGS     += -DMAKEBUILD
 ifneq ($(findstring g++,$(CXX)),)
@@ -421,8 +426,10 @@ $(HTMLDOC)/index.html : $(SHLIBFILE)
 
 html : $(HTMLDOC)/index.html
 
-.PHONY : include shlib lib bin default clean cleanbin html
+.PHONY : include shlib lib bin default clean cleanbin html help
 
+ifneq ($(GOALS),)
 ifneq ($(DLIST),)
 -include $(DLIST)
+endif
 endif
