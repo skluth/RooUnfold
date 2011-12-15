@@ -55,6 +55,7 @@
 
 #ifdef USE_ROOFIT
 #include "RooUnfoldTestPdfRooFit.icc"
+#include "RooRandom.h"
 #else
 #include "RooUnfoldTestPdf.icc"
 #endif
@@ -124,6 +125,7 @@ void RooUnfoldTestHarness::Parms (ArgVars& args)
   args.Add ("maxparm", &maxparm,  -1e30, "maximum value in regparm scan (with plotparms=1)", "");
   args.Add ("stepsize",&stepsize,     0, "step size in regparm scan (with plotparms=1)", "");
   args.Add ("name",    &setname, GetName(), "name for output files (name.root and name.ps)");
+  args.Add ("seed",    &seed,        -1, "random number seed for test distributions and RooUnfold toy error calculation (use seed=0 for a different seed on each run)", "");
 }
 
 //==============================================================================
@@ -812,6 +814,13 @@ void RooUnfoldTestHarness::Init()
   } else {
     if (wpaper==0) wpaper= 750;
     if (hpaper==0) hpaper= 300;
+  }
+
+  if (seed>=0) {
+    gRandom->SetSeed(seed);   // seed=0, uses a unique (UUID) seed each job (see TRandom3::SetSeed)
+#ifdef USE_ROOFIT
+    RooRandom::randomGenerator()->SetSeed(seed+8243);
+#endif
   }
 }
 

@@ -365,7 +365,8 @@ RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t xt, Double_t yt, Dou
   if (_cached) ClearCache();
   ((TH2*)_mes)->Fill (xr, yr, w);
   ((TH2*)_tru)->Fill (xt, yt, w);
-  return _res->Fill (Double_t(FindBin (_mes, xr, yr))+.5, Double_t(FindBin (_tru, xt, yt))+.5, w);
+  return _res->Fill (_res->GetXaxis()->GetBinCenter (FindBin (_mes, xr, yr)+1),
+                     _res->GetYaxis()->GetBinCenter (FindBin (_tru, xt, yt)+1), w);
 }
 
 Int_t
@@ -377,13 +378,14 @@ RooUnfoldResponse::Fill (Double_t xr, Double_t yr, Double_t zr, Double_t xt, Dou
   if (_cached) ClearCache();
   ((TH3*)_mes)->Fill (xr, yr, zr, w);
   ((TH3*)_tru)->Fill (xt, yt, zt, w);
-  return _res->Fill (Double_t(FindBin (_mes, xr, yr, zr))+.5, Double_t(FindBin (_tru, xt, yt, zt))+.5, w);
+  return _res->Fill (_res->GetXaxis()->GetBinCenter (FindBin (_mes, xr, yr, zr)+1),
+                     _res->GetYaxis()->GetBinCenter (FindBin (_tru, xt, yt, zt)+1), w);
 }
 
 Int_t
 RooUnfoldResponse::FindBin(const TH1* h, Double_t x, Double_t y)
 {
-  // Get vector index (0..nx*ny-1) for (x,y) coordinates
+  // Get vector index (0..nx*ny-1) for bin containing (x,y) coordinates
   Int_t nx=   h->GetNbinsX();
   Int_t ny=   h->GetNbinsY();
   Int_t binx= h->GetXaxis()->FindBin(x) - 1;
@@ -398,7 +400,7 @@ RooUnfoldResponse::FindBin(const TH1* h, Double_t x, Double_t y)
 Int_t
 RooUnfoldResponse::FindBin(const TH1* h, Double_t x, Double_t y, Double_t z)
 {
-  // Get vector index (0..nx*ny*nz-1) for (x,y,z) coordinates
+  // Get vector index (0..nx*ny*nz-1) for bin containing (x,y,z) coordinates
   Int_t nx=   h->GetNbinsX();
   Int_t ny=   h->GetNbinsY();
   Int_t nz=   h->GetNbinsZ();

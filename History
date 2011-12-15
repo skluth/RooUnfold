@@ -1,6 +1,14 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         15-Dec-2011
+  o RooUnfoldResponse::FindBin is now public to help users fill their own
+    response matrix histograms. For consistency, there's also now a trivial 1D
+    version.
+  o 2+3D RooUnfoldResponse::Fill no longer assumes _res has the expected axis
+    ranges, since this may be a user's histogram.
+  o RooUnfoldTest "seed" parameter allows random number seed to be set.
+
 Tim Adye         17-Nov-2011
   o Fix for ROOT 5.12 and before, which doesn't have TH1::GetEffectiveEntries().
   o Remove std::vector definitions from RooUnfold dictionary.

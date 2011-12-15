@@ -105,9 +105,12 @@ public:
   static TH1D*     H2H1D(const TH1*  h, Int_t nb);
   static TVectorD* H2V  (const TH1*  h, Int_t nb, Bool_t overflow= kFALSE);
   static TVectorD* H2VE (const TH1*  h, Int_t nb, Bool_t overflow= kFALSE);
-  static TMatrixD* H2M  (const TH2* h, Int_t nx, Int_t ny, const TH1* norm= 0, Bool_t overflow= kFALSE);
-  static TMatrixD* H2ME (const TH2* h, Int_t nx, Int_t ny, const TH1* norm= 0, Bool_t overflow= kFALSE);
+  static TMatrixD* H2M  (const TH2*  h, Int_t nx, Int_t ny, const TH1* norm= 0, Bool_t overflow= kFALSE);
+  static TMatrixD* H2ME (const TH2*  h, Int_t nx, Int_t ny, const TH1* norm= 0, Bool_t overflow= kFALSE);
   static void      V2H  (const TVectorD& v, TH1* h, Int_t nb, Bool_t overflow= kFALSE);
+  static Int_t   FindBin(const TH1*  h, Double_t x);  // return vector index for bin containing (x)
+  static Int_t   FindBin(const TH1*  h, Double_t x, Double_t y);  // return vector index for bin containing (x,y)
+  static Int_t   FindBin(const TH1*  h, Double_t x, Double_t y, Double_t z);  // return vector index for bin containing (x,y)
   static Int_t   GetBin (const TH1*  h, Int_t i, Bool_t overflow= kFALSE);  // vector index (0..nx*ny-1) -> multi-dimensional histogram global bin number (0..(nx+2)*(ny+2)-1) skipping under/overflow bins
   static Double_t GetBinContent (const TH1* h, Int_t i, Bool_t overflow= kFALSE); // Bin content by vector index
   static Double_t GetBinError   (const TH1* h, Int_t i, Bool_t overflow= kFALSE); // Bin error   by vector index
@@ -126,8 +129,6 @@ private:
   virtual Int_t Fake1D (Double_t xr, Double_t w= 1.0);  // Fill fake event into 1D Response Matrix (with weight)
   virtual Int_t Fake2D (Double_t xr, Double_t yr, Double_t w= 1.0);  // Fill fake event into 2D Response Matrix (with weight)
 
-  static Int_t FindBin   (const TH1* h, Double_t x, Double_t y);
-  static Int_t FindBin   (const TH1* h, Double_t x, Double_t y, Double_t z);
   static Int_t GetBinDim (const TH1* h, Int_t i);
   static void ReplaceAxis(TAxis* axis, const TAxis* source);
 
@@ -418,7 +419,7 @@ Int_t RooUnfoldResponse::Fake (Double_t xr, Double_t yr, Double_t w)
 inline
 void RooUnfoldResponse::UseOverflow (Bool_t set)
 {
-  // Specify to use overflow bins
+  // Specify to use overflow bins. Only supported for 1D truth and measured distributions.
   _overflow= (set ? 1 : 0);
 }
 
@@ -434,6 +435,13 @@ Double_t RooUnfoldResponse::FakeEntries() const
 {
   // Return number of fake entries
   return _fak ? _fak->GetEntries() : 0.0;
+}
+
+inline
+Int_t RooUnfoldResponse::FindBin (const TH1* h, Double_t x)
+{
+  // Return vector index for bin containing (x)
+  return h->GetXaxis()->FindBin(x) - 1;
 }
 
 #endif
