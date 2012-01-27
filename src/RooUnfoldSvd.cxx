@@ -137,12 +137,7 @@ RooUnfoldSvd::Unfold()
     return;
   }
 
-  if (_res->FakeEntries()) {
-    _nb= _nt+1;
-    if (_nm>_nb) _nb= _nm;
-  } else {
-    _nb= _nm > _nt ? _nm : _nt;
-  }
+  _nb= _nm > _nt ? _nm : _nt;
 
   if (_kreg > _nb) {
     cerr << "RooUnfoldSvd invalid kreg=" << _kreg << " with " << _nb << " bins" << endl;
@@ -159,12 +154,15 @@ RooUnfoldSvd::Unfold()
   Resize (_train1d, _nb);
   Resize (_truth1d, _nb);
   Resize (_reshist, _nb, _nb);
+
+  // Subtract fakes from measured distribution
   if (_res->FakeEntries()) {
     TVectorD fakes= _res->Vfakes();
-    Double_t nfakes= fakes.Sum();
-    if (_verbose>=1) cout << "Add truth bin for " << nfakes << " fakes" << endl;
-    for (Int_t i= 0; i<_nm; i++) _reshist->SetBinContent(i+1,_nt+1,fakes[i]);
-    _truth1d->SetBinContent(_nt+1,nfakes);
+    Double_t fac= _res->Vmeasured().Sum();
+    if (fac!=0.0) fac=  Vmeasured().Sum() / fac;
+    if (_verbose>=1) cout << "Subtract " << fac*fakes.Sum() << " fakes from measured distribution" << endl;
+    for (Int_t i= 1; i<=_nm; i++)
+      _meas1d->SetBinContent (i, _meas1d->GetBinContent(i)-(fac*fakes[i-1]));
   }
 
   _meascov= new TH2D ("meascov", "meascov", _nb, 0.0, 1.0, _nb, 0.0, 1.0);
@@ -182,6 +180,13 @@ RooUnfoldSvd::Unfold()
   _rec.ResizeTo (_nt);
   for (Int_t i= 0; i<_nt; i++) {
     _rec[i]= rechist->GetBinContent(i+1);
+  }
+
+  if (_verbose>=2) {
+    PrintTable (cout, _truth1d, _train1d, 0, _meas1d, rechist, _nb, _nb, kFALSE, kErrors);
+    TMatrixD* resmat= RooUnfoldResponse::H2M (_reshist, _nb, _nb);
+    RooUnfoldResponse::PrintMatrix(*resmat,"TSVDUnfold response matrix");
+    delete resmat;
   }
 
   delete rechist;

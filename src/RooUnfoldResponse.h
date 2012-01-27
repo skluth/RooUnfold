@@ -101,6 +101,7 @@ public:
   void   UseOverflow (Bool_t set= kTRUE);      // Specify to use overflow bins
   Bool_t UseOverflowStatus() const;            // Get UseOverflow setting
   Double_t FakeEntries() const;                // Return number of bins with fakes
+  virtual void Print (Option_t* option="") const;
 
   static TH1D*     H2H1D(const TH1*  h, Int_t nb);
   static TVectorD* H2V  (const TH1*  h, Int_t nb, Bool_t overflow= kFALSE);
@@ -114,6 +115,7 @@ public:
   static Int_t   GetBin (const TH1*  h, Int_t i, Bool_t overflow= kFALSE);  // vector index (0..nx*ny-1) -> multi-dimensional histogram global bin number (0..(nx+2)*(ny+2)-1) skipping under/overflow bins
   static Double_t GetBinContent (const TH1* h, Int_t i, Bool_t overflow= kFALSE); // Bin content by vector index
   static Double_t GetBinError   (const TH1* h, Int_t i, Bool_t overflow= kFALSE); // Bin error   by vector index
+  static void PrintMatrix (const TMatrixD& m, const char* name="matrix", const char* format=0, Int_t cols_per_sheet=10);
 
   TH1* ApplyToTruth (const TH1* truth= 0, const char* name= "AppliedResponse") const; // If argument is 0, applies itself to its own truth
   RooUnfoldResponse* RunToy() const;

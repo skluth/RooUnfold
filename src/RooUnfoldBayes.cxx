@@ -101,7 +101,10 @@ void RooUnfoldBayes::CopyData (const RooUnfoldBayes& rhs)
 void RooUnfoldBayes::Unfold()
 {
   setup();
-  if (verbose() >= 2) Print();
+  if (verbose() >= 2) {
+    Print();
+    RooUnfoldResponse::PrintMatrix(_Nji,"RooUnfoldBayes response matrix (Nji)");
+  }
   if (verbose() >= 1) cout << "Now unfolding..." << endl;
   unfold();
   if (verbose() >= 2) Print();

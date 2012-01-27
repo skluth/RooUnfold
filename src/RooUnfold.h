@@ -102,6 +102,14 @@ public:
   RooUnfold* RunToy() const;
   void Print(Option_t* opt="") const;
 
+  static void PrintTable (std::ostream& o, const TH1* hTrainTrue, const TH1* hTrain,
+                          const TH1* hTrue, const TH1* hMeas, const TH1* hReco,
+                          Int_t _nm=0, Int_t _nt=0, Bool_t _overflow=kFALSE,
+                          ErrorTreatment withError=kNoError, Double_t chi_squ=-999.0);
+
+  static void PrintTable (std::ostream& o, const TVectorD& vTrainTrue, const TVectorD& vTrain,
+                          const TVectorD& vMeas, const TVectorD& vReco, Int_t nm, Int_t nt);
+
 protected:
   void Assign (const RooUnfold& rhs); // implementation of assignment operator
   virtual void SetNameTitleDefault();

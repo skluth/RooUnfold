@@ -2,7 +2,16 @@ History of RooUnfold     $Id$
 ====================
 
 Tim Adye         27-Jan-2012
+  o RooUnfoldSvd deals with fakes by subtracting from the measured input, rather
+    than adding an extra effectless-causes bin, which didn't work very well if
+    it was much different from its neighbouring bin.
+    Giovanni Marchiori reported this problem.
   o Fix PrintTable "total pull". Bug reported by Giovanni Marchiori.
+  o Level 2 verbose printout shows results table with algorithm binning.
+    Uses new RooUnfold::PrintTable methods.
+  o RooUnfoldResponse::Print shows response matrix contents.
+  o Matrix debug printout uses new RooUnfoldResponse::PrintMatrix method
+    (borrowed from RooUnfoldTestHarness), which is neater than TMatrix::Print.
 
 Tim Adye         15-Dec-2011
   o RooUnfoldResponse::FindBin is now public to help users fill their own

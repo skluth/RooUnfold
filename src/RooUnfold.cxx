@@ -492,12 +492,41 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
 
 void RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment withError)
 {
-    //Prints data from truth, measured and reconstructed data for each bin.
+  // Prints entries from truth, measured, and reconstructed data for each bin.
   const TH1* hReco=      Hreco (withError);
   if (!_unfolded) return;
-  const TH1* hMeas=      Hmeasured();
-  const TH1* hTrainTrue= response()->Htruth();
-  const TH1* hTrain=     response()->Hmeasured();
+  Double_t chi_squ= -999.0;
+  if (hTrue && (withError==kCovariance || withError==kCovToy)) chi_squ = Chi2(hTrue,withError);
+  PrintTable (o, response()->Htruth(), response()->Hmeasured(), hTrue, Hmeasured(), hReco,
+              _nm, _nt, _overflow, withError, chi_squ);
+}
+
+
+void RooUnfold::PrintTable (std::ostream& o, const TVectorD& vTrainTrue, const TVectorD& vTrain,
+                            const TVectorD& vMeas, const TVectorD& vReco,
+                            Int_t nm, Int_t nt)
+{
+  if (nm<=0) nm= vTrain    .GetNrows();
+  if (nt<=0) nt= vTrainTrue.GetNrows();
+  TH1D hTrainTrue ("", "", nt, 0.0, nt);
+  TH1D hTrain     ("", "", nm, 0.0, nm);
+  TH1D hMeas      ("", "", nm, 0.0, nm);
+  TH1D hReco      ("", "", nt, 0.0, nt);
+  RooUnfoldResponse::V2H (vTrainTrue, &hTrainTrue, nt);
+  RooUnfoldResponse::V2H (vTrain,     &hTrain,     nm);
+  RooUnfoldResponse::V2H (vMeas,      &hMeas,      nm);
+  RooUnfoldResponse::V2H (vReco,      &hReco,      nt);
+  PrintTable (o, &hTrainTrue, &hTrain, 0, &hMeas, &hReco, nm, nt);
+}
+
+void RooUnfold::PrintTable (std::ostream& o, const TH1* hTrainTrue, const TH1* hTrain,
+                            const TH1* hTrue, const TH1* hMeas, const TH1* hReco,
+                            Int_t _nm, Int_t _nt, Bool_t _overflow,
+                            ErrorTreatment withError, Double_t chi_squ)
+{
+  // Prints entries from truth, measured, and reconstructed data for each bin.
+  if (_nm<=0) _nm= hTrain    ->GetNbinsX();
+  if (_nt<=0) _nt= hTrainTrue->GetNbinsX();
   std::ostringstream fmt;
   fmt.copyfmt (o);
   Int_t dim= hReco->GetDimension(), ntxb= hReco->GetNbinsX()+2, ntyb= hReco->GetNbinsY()+2;
@@ -565,7 +594,7 @@ void RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment wi
           ndf++;
           Double_t ypull = ydiff/yerr;
           chi2 += ypull*ypull;
-           o << ' ' << setw(8) << ypull;
+          o << ' ' << setw(8) << ypull;
         }
       }
     }
@@ -593,17 +622,13 @@ void RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment wi
     << "===============================================================================" << xwid << endl;
   o.copyfmt (fmt);
   if (hTrue) {
-    Double_t chi_squ = chi2;
-    if (withError==kCovariance || withError==kCovToy) {
-      chi_squ = Chi2(hTrue,withError);
-      o << "Chi^2/NDF=" << chi_squ << "/" << ndf << " (bin-by-bin Chi^2=" << chi2 << ")";
+    if (chi_squ!=-999.0) {
+      o << "Chi^2/NDF=" << chi_squ << "/" << ndf << " (bin-by-bin Chi^2=" << chi2 << ")" << endl;
     } else {
-      o << "Bin-by-bin Chi^2/NDF=" << chi_squ << "/" << ndf;
+      o << "Bin-by-bin Chi^2/NDF=" << chi2 << "/" << ndf << endl;
+      chi_squ= chi2;
     }
-    o << endl;
-    if (chi_squ<=0){
-      cerr << "Warning: Invalid Chi^2 Value" << endl;
-    }
+    if (chi_squ<=0.0) cerr << "Warning: Invalid Chi^2 Value" << endl;
   }
 }
 
@@ -703,10 +728,7 @@ RooUnfold* RooUnfold::RunToy() const
       c.Decompose();
       TMatrixD U(c.GetU());
       _covL= new TMatrixD (TMatrixD::kTransposed, U);
-      if (_verbose>=2) {
-        cout << "Decomposed measurement covariance matrix:-" << endl;
-        _covL->Print();
-      }
+      if (_verbose>=2) RooUnfoldResponse::PrintMatrix(*_covL,"decomposed measurement covariance matrix");
     }
     TVectorD newmeas(_nm);
     for (Int_t i= 0; i<_nm; i++) newmeas[i]= gRandom->Gaus(0.0,1.0);
@@ -1065,7 +1087,7 @@ Int_t RooUnfold::InvertMatrix(const TMatrixD& mat, TMatrixD& inv, const char* na
 #endif
   if (verbose>=1) {
     TMatrixD I (mat, TMatrixD::kMult, inv);
-    if (verbose>=3) I.Print();
+    if (verbose>=3) RooUnfoldResponse::PrintMatrix(I,"V*V^-1");
     Double_t m= 0.0;
     for (Int_t i= 0; i<I.GetNrows(); i++) {
       Double_t d= fabs(I(i,i)-1.0);

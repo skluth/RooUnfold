@@ -111,8 +111,6 @@ public:
   static  TH2D*    CorrelationHist (const TMatrixD& cov,
                                     const char* name="rho", const char* title="Correlation matrix",
                                     Double_t lo=0.0, Double_t hi=1.0);
-  static  void     PrintMatrix (const TMatrixD& m, const char* format= 0,
-                                const char* name= "matrix", Int_t cols_per_sheet= 0);
 };
 #ifndef NOINLINE
 #include "RooUnfoldTestHarness.icc"
