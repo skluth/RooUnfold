@@ -1,6 +1,9 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         27-Jan-2012
+  o Fix PrintTable "total pull". Bug reported by Giovanni Marchiori.
+
 Tim Adye         15-Dec-2011
   o RooUnfoldResponse::FindBin is now public to help users fill their own
     response matrix histograms. For consistency, there's also now a trivial 1D

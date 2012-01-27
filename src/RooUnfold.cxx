@@ -581,14 +581,15 @@ void RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment wi
     o << ' ' << setw(8) << true_test_tot;
   else
     o << setw(9) << ' ';
+  Double_t toterr= 0.0;
+  if (meas_test_tot>0.0 && meas_train_tot>0.0) toterr= sqrt(meas_test_tot)*true_train_tot/meas_train_tot;
   o << ' ' << setw(8) << meas_test_tot << setprecision(1)
     << ' ' << setw(8) << unf_tot
-    << ' ' << setw(9) << sqrt(meas_test_tot)*(true_train_tot/meas_train_tot)
+    << ' ' << setw(9) << toterr
     << ' ' << setw(8) << unf_tot-true_test_tot;
-    if(hMeas->Integral()>0){
-    o<< ' ' << setw(8) <<(unf_tot-true_test_tot)/sqrt(meas_test_tot);
-    }
-    o<< endl
+  if(toterr>0.0)
+  o << ' ' << setw(8) <<(unf_tot-true_test_tot)/toterr;
+  o << endl
     << "===============================================================================" << xwid << endl;
   o.copyfmt (fmt);
   if (hTrue) {

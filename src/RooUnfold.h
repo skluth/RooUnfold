@@ -91,7 +91,7 @@ public:
   virtual Int_t      NToys() const;         // Number of toys
   virtual void       SetNToys (Int_t toys); // Set number of toys
   virtual Int_t      Overflow() const;
-  virtual void       PrintTable (std::ostream& o, const TH1* hTrue= 0, ErrorTreatment=kNoError);
+  virtual void       PrintTable (std::ostream& o, const TH1* hTrue= 0, ErrorTreatment witherror=kNoError);
   virtual void       SetRegParm (Double_t parm);
   virtual Double_t   GetRegParm() const; // Get Regularisation Parameter
   Double_t Chi2 (const TH1* hTrue,ErrorTreatment DoChi2=kCovariance);
