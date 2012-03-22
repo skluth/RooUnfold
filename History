@@ -1,6 +1,12 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         22-Mar-2012
+  o RooUnfoldResponse::ReplaceAxis: keep axis name when copying from another
+    axis. Unfolded histogram was getting the x-axis called 'yaxis' (from truth
+    axis of response matrix), which breaks TAxis::SetRangeUser.
+    Bug reported by Petr Balek.
+
 Tim Adye         27-Jan-2012
   o RooUnfoldSvd deals with fakes by subtracting from the measured input, rather
     than adding an extra effectless-causes bin, which didn't work very well if

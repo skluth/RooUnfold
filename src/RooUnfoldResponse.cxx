@@ -187,8 +187,10 @@ void
 RooUnfoldResponse::ReplaceAxis (TAxis* dest, const TAxis* source)
 {
   // Replaces an axis with that of a different histogram
+  TString  name= dest->GetName();
   TObject* hist= dest->GetParent();
   source->Copy (*dest);
+  dest->SetName   (name);
   dest->SetParent (hist);
 }
 
