@@ -61,14 +61,14 @@ endif
 endif
 
 ifeq ($(ARCH),)
-# === This section is just in case ROOT's test/Makefile.arch didn't work =======
+# === This section is just in case ROOT's Makefile.arch didn't work =======
 ARCH          = $(shell $(RC) --arch)
 ROOTLIBS      = $(shell $(RC) --libs)
+CXX           = $(shell $(RC) --cxx)
 CXXFLAGS      = $(shell $(RC) --cflags)
-CXX           = g++
 CXXFLAGS     += -Wall -fPIC
-LD            = g++
-LDFLAGS       =
+LD            = $(shell $(RC) --ld)
+LDFLAGS       = $(shell $(RC) --ldflags)
 SOFLAGS       = -shared
 ObjSuf        = o
 ExeSuf        =
@@ -77,6 +77,8 @@ OutPutOpt     = -o # keep whitespace after "-o"
 ifneq ($(findstring debug,$(ROOTBUILD)),)
 CXXFLAGS     += -g
 LDFLAGS      += -g
+else
+CXXFLAGS     += -O2
 endif
 endif
 

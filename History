@@ -1,6 +1,12 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          1-Jun-2012
+  o GNUMakefile sets LDFLAGS, even if Makefile.arch not found. Change suggested
+    by Martin Woudstra.
+  o Add .rootrc file to define ACLiC.IncludePaths, so user doesn't have to
+    say ".include src" to run code with ACLiC.
+
 Tim Adye         22-Mar-2012
   o RooUnfoldResponse::ReplaceAxis: keep axis name when copying from another
     axis. Unfolded histogram was getting the x-axis called 'yaxis' (from truth
