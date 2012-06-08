@@ -449,10 +449,7 @@ void RooUnfoldBayes::Print(Option_t* option) const
     Int_t iend = min(_nCi.GetNrows(),_nEstj.GetNrows());
     cout << "    \tTrain \tTest\tUnfolded"<< endl;
     cout << "Bin \tTruth \tInput\tOutput"<< endl;
-    Int_t ir=0, ic=0;
     for (Int_t i=0; i < iend ; i++) {
-      ic = i / _ne;
-      ir = i - (ic*_ne);
       if ((_nCi[i] == 0) && (_nEstj[i] == 0) &&
           (_nEstj[i] == 0) && (_nbarCi[i]==0)) continue;
       cout << i << "\t" << _nCi[i]                                      \

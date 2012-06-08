@@ -193,14 +193,14 @@ Int_t ArgVars::SetArgs (int argc, const char* const* argv, bool split) const
         arg= Find (argname);
         delete [] argname; argname= 0;
         if (arg) {
-          char* nxt= 0;
+          const char* nxt= 0;
           if      (arg->svar) {
             nxt= strchr (d, ' ');
-            if (!nxt) nxt= (char*)(d+strlen(d));
+            if (!nxt) nxt= d+strlen(d);
             arg->svar->Replace (0, arg->svar->Length(), d, nxt-d);
           }
-          else if (arg->ivar) *(arg->ivar)= strtol (d, &nxt, 10);
-          else                *(arg->fvar)= strtod (d, &nxt);
+          else if (arg->ivar) *(arg->ivar)= strtol (d, (char**)&nxt, 10);
+          else                *(arg->fvar)= strtod (d, (char**)&nxt);
           if (split && nxt && *nxt==' ') q= nxt+1;
           found= (nxt && nxt>d && (*nxt=='\0' || (split && *nxt==' ')));
         }

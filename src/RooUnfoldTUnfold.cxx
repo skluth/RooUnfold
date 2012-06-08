@@ -219,7 +219,6 @@ RooUnfoldTUnfold::Unfold()
   // use automatic L-curve scan: start with taumin=taumax=0.0
   Double_t tauMin=0.0;
   Double_t tauMax=0.0;
-  Int_t iBest;
   // this method scans the parameter tau and finds the kink in the L curve
   // finally, the unfolding is done for the best choice of tau
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,23,0)  /* TUnfold v6 (included in ROOT 5.22) didn't have setInput return value */
@@ -235,7 +234,7 @@ RooUnfoldTUnfold::Unfold()
     delete _lCurve;  _lCurve  = 0;
     delete _logTauX; _logTauX = 0;
     delete _logTauY; _logTauY = 0;
-    iBest=_unf->ScanLcurve(nScan,tauMin,tauMax,&_lCurve,&_logTauX,&_logTauY);
+    _unf->ScanLcurve(nScan,tauMin,tauMax,&_lCurve,&_logTauX,&_logTauY);
     _tau=_unf->GetTau();  // save value, even if we don't use it unless tau_set
     cout <<"Lcurve scan chose tau= "<<_tau<<endl;
   }

@@ -1,6 +1,9 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          8-Jun-2012
+  o Fix some GCC 4.6 warnings.
+
 Tim Adye          1-Jun-2012
   o GNUMakefile sets LDFLAGS, even if Makefile.arch not found. Change suggested
     by Martin Woudstra.
