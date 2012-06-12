@@ -32,15 +32,105 @@ END_HTML */
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
+#include "TF1.h"
+#include "TF2.h"
+#include "TF3.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
 #include "TRandom.h"
+
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,18,0)
+#define HAVE_RooUnfoldFoldingFunction
+#endif
 
 using std::cout;
 using std::cerr;
 using std::endl;
 using std::pow;
 using std::sqrt;
+
+
+#ifdef HAVE_RooUnfoldFoldingFunction
+class RooUnfoldFoldingFunction {
+public:
+  RooUnfoldFoldingFunction (const RooUnfoldResponse* res, TF1* func, Double_t eps=1e-12, bool verbose=false)
+    : _res(res), _func(func), _eps(eps), _verbose(verbose), _fvals(_res->GetNbinsMeasured()) {
+    _ndim= dynamic_cast<TF3*>(_func) ? 3 :
+           dynamic_cast<TF2*>(_func) ? 2 : 1;
+    if (_ndim>=2 && eps==1e-12) eps= 0.000001;
+    FVals();
+  }
+
+  double operator() (double* x, double* p) const {
+    const TH1* mes= _res->Hmeasured();
+    Int_t bin;
+    if      (_ndim==1) bin= RooUnfoldResponse::FindBin (mes, x[0]);
+    else if (_ndim==2) bin= RooUnfoldResponse::FindBin (mes, x[0], x[1]);
+    else               bin= RooUnfoldResponse::FindBin (mes, x[0], x[1], x[2]);
+    if (bin<0 || bin>=_res->GetNbinsMeasured()) return 0.0;
+    for (Int_t i=0, n=_func->GetNpar(); i<n; i++) {
+      if (p[i] == _func->GetParameter(i)) continue;
+      _func->SetParameters(p);
+      FVals();
+      break;
+    }
+    Double_t fy= _fvals[bin];
+    if (_verbose) cout << "x=" << x[0] << ", bin=" << bin << " -> " << fy << endl;
+    return fy;
+  }
+
+private:
+  void FVals() const {
+    const TH1* tru= _res->Htruth();
+    if (_verbose) {
+      cout << "p=";
+      for (int i=0, n=_func->GetNpar(); i<n; i++) cout <<_func->GetParameter(i)<<",";
+      cout << " f=";
+    }
+    _fvals.Zero();
+    for (Int_t i=0, n=_res->GetNbinsTruth(); i<n; i++) {
+      Int_t j= RooUnfoldResponse::GetBin(tru, i);
+      Int_t jx, jy, jz;
+      if (_ndim>=2) tru->GetBinXYZ (j, jx, jy, jz);
+      Double_t fv;
+      if (_eps<=0.0) {
+        if (_ndim>=2)
+          fv= _func->Eval (tru->GetXaxis()->GetBinCenter(jx),
+                           tru->GetYaxis()->GetBinCenter(jy),
+                           tru->GetZaxis()->GetBinCenter(jz));
+        else
+          fv= _func->Eval (tru->GetBinCenter(j));
+      } else {
+        if        (_ndim==1) {
+          Double_t tw= tru->GetBinWidth(j), tlo= tru->GetBinLowEdge(j), thi= tlo+tw;
+          fv= _func->Integral (tlo, thi, (Double_t*)0, _eps) / tw;
+        } else if (_ndim==2) {
+          fv= _func->Integral (tru->GetXaxis()->GetBinLowEdge(jx), tru->GetXaxis()->GetBinUpEdge(jx),
+                               tru->GetYaxis()->GetBinLowEdge(jy), tru->GetYaxis()->GetBinUpEdge(jy), _eps);
+          fv /= tru->GetXaxis()->GetBinWidth(jx) * tru->GetYaxis()->GetBinWidth(jy);
+        } else {
+          fv= _func->Integral (tru->GetXaxis()->GetBinLowEdge(jx), tru->GetXaxis()->GetBinUpEdge(jx),
+                               tru->GetYaxis()->GetBinLowEdge(jy), tru->GetYaxis()->GetBinUpEdge(jy),
+                               tru->GetZaxis()->GetBinLowEdge(jz), tru->GetZaxis()->GetBinUpEdge(jz), _eps);
+          fv /= tru->GetXaxis()->GetBinWidth(jx) * tru->GetYaxis()->GetBinWidth(jy) * tru->GetZaxis()->GetBinWidth(jz);
+        }
+      }
+      if (_verbose) cout << " " << fv;
+      for (Int_t bin=0, m=_res->GetNbinsMeasured(); bin<m; bin++) {
+        _fvals[bin] += fv * (*_res)(bin,i);
+      }
+    }
+    if (_verbose) cout << endl;
+  }
+
+  const RooUnfoldResponse* _res;
+  TF1* _func;
+  Double_t _eps;
+  bool _verbose;
+  mutable TVectorD _fvals;
+  Int_t _ndim;
+};
+#endif  
 
 ClassImp (RooUnfoldResponse);
 
@@ -739,6 +829,55 @@ RooUnfoldResponse::ApplyToTruth (const TH1* truth, const char* name) const
   delete resultvect;
   return result;
 }
+
+
+TF1* RooUnfoldResponse::MakeFoldingFunction (TF1* func, Double_t eps, Bool_t verbose) const
+{
+  // Creates a function object that applies the response matrix to a user parametric function.
+  // This can be fitted to the measured distribution as an alternative to unfolding.
+  // The returned object is owned by the caller. The function will be binned.
+  // Specify eps=0 to calculate function at bin centers; otherwise integrates over each bin (may be slow).
+  // Example:
+  //    TF1* func= new TF1 ("func", "gaus", 0, 10);
+  //    TF1* fold= respose->MakeFoldingFunction(func);
+  //    histMeasured->Fit(fold);
+  //    fold->Draw("h"); // draw function fitted to histMeasured
+  //    func->Draw();    // draw truth function
+#ifdef HAVE_RooUnfoldFoldingFunction
+  Int_t np= func->GetNpar();
+  RooUnfoldFoldingFunction ff (this, func, eps, verbose);
+  TString name= func->GetName();
+  name += "_folded";
+  TF1* f;
+  if        (TF3* func3= dynamic_cast<TF3*>(func))
+    f= new TF3 (name, ROOT::Math::ParamFunctor(ff),
+                func3->GetXmin(), func3->GetXmax(),
+                func3->GetYmin(), func3->GetYmax(),
+                func3->GetZmin(), func3->GetZmax(), np);
+  else if (TF2* func2= dynamic_cast<TF2*>(func))
+    f= new TF2 (name, ROOT::Math::ParamFunctor(ff),
+                func2->GetXmin(), func2->GetXmax(),
+                func2->GetYmin(), func2->GetYmax(), np);
+  else
+    f= new TF1 (name, ROOT::Math::ParamFunctor(ff),
+                func ->GetXmin(), func ->GetXmax(), np);
+  f->SetNpx (_nm<=2 ? 4 : _nm==3 ? 6 : _nm);  // TF1 requires Npx>=4
+  // Copy parameters in case we set them in func
+  f->SetParameters (func->GetParameters());
+  f->SetParErrors  (func->GetParErrors());
+  for (Int_t i=0; i<np; i++) {
+    Double_t plo=0.0, phi=0.0;
+    func->GetParLimits (i, plo, phi);
+    f   ->SetParLimits (i, plo, phi);
+    f->SetParName (i, func->GetParName(i));
+  }
+  return f;
+#else
+  cerr << "RooUnfoldResponse::MakeFoldingFunction not supported in this version of ROOT" << endl;
+  return 0;
+#endif
+}
+
 
 RooUnfoldResponse* RooUnfoldResponse::RunToy() const
 {

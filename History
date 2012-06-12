@@ -1,6 +1,13 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         12-Jun-2012
+  o Add RooUnfoldResponse::MakeFoldingFunction which wraps a TF1 to apply the
+    response matrix to a user parametric function. This can be fitted to the
+    measured distribution as an alternative to unfolding.
+  o RooUnfoldTest fit=1 tests this (test function definitions only implemented
+    for the 1D case).
+
 Tim Adye          8-Jun-2012
   o Fix some GCC 4.6 warnings.
 

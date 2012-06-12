@@ -34,6 +34,7 @@ END_HTML */
 
 #include <iostream>
 #include <cmath>
+#include <vector>
 
 #include "TString.h"
 #include "TStyle.h"
@@ -49,7 +50,6 @@ END_HTML */
 using std::cout;
 using std::cerr;
 using std::endl;
-using std::vector;
 
 ClassImp (RooUnfoldErrors);
 
@@ -156,7 +156,7 @@ RooUnfoldErrors::CreatePlotsWithChi2()
     h_err     = new TProfile ("unferr", "Unfolding errors", ntx, xlo, xhi); 
     h_err_res = new TH1D     ("toyerr", "Toy MC RMS",       ntx, xlo, xhi); 
     hchi2     = new TNtuple  ("chi2", "chi2", "chi2");
-    vector<TH1D*> graph_vector(ntx);
+    std::vector<TH1D*> graph_vector(ntx);
     for (int a=0; a<ntx; a++) {
       TString graph_name;
       graph_name.Form("resbin%d",a);

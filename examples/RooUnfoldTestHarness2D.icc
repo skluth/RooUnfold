@@ -441,6 +441,7 @@ Int_t RooUnfoldTestHarness2D::CheckParms()
   if (ylo >= yhi) {cerr << "Error: ylo ("    << ylo    << ") >= yhi(" << yhi << ")" << endl; error = 2;}
   if (ftrainy<0)  {cerr << "Error: ftrainy ("<< ftrainy<< ") < 0"                   << endl; error = 2;}
   if (ftesty<0)   {cerr << "Error: ftesty (" << ftesty << ") < 0"                   << endl; error = 2;}
+  if (dofit)      {cerr << "Warning: parametric fit test only implemented for 1D"   << endl; dofit = 0;}
   return error;
 }
 

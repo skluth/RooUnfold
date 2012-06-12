@@ -20,6 +20,7 @@
 #else
 class TVectorD;
 #endif
+class TF1;
 class TH2;
 class TH2D;
 class TAxis;
@@ -111,13 +112,15 @@ public:
   static void      V2H  (const TVectorD& v, TH1* h, Int_t nb, Bool_t overflow= kFALSE);
   static Int_t   FindBin(const TH1*  h, Double_t x);  // return vector index for bin containing (x)
   static Int_t   FindBin(const TH1*  h, Double_t x, Double_t y);  // return vector index for bin containing (x,y)
-  static Int_t   FindBin(const TH1*  h, Double_t x, Double_t y, Double_t z);  // return vector index for bin containing (x,y)
+  static Int_t   FindBin(const TH1*  h, Double_t x, Double_t y, Double_t z);  // return vector index for bin containing (x,y,z)
   static Int_t   GetBin (const TH1*  h, Int_t i, Bool_t overflow= kFALSE);  // vector index (0..nx*ny-1) -> multi-dimensional histogram global bin number (0..(nx+2)*(ny+2)-1) skipping under/overflow bins
   static Double_t GetBinContent (const TH1* h, Int_t i, Bool_t overflow= kFALSE); // Bin content by vector index
   static Double_t GetBinError   (const TH1* h, Int_t i, Bool_t overflow= kFALSE); // Bin error   by vector index
   static void PrintMatrix (const TMatrixD& m, const char* name="matrix", const char* format=0, Int_t cols_per_sheet=10);
 
   TH1* ApplyToTruth (const TH1* truth= 0, const char* name= "AppliedResponse") const; // If argument is 0, applies itself to its own truth
+  TF1* MakeFoldingFunction (TF1* func, Double_t eps=1e-12, Bool_t verbose=false) const;
+
   RooUnfoldResponse* RunToy() const;
 
 private:

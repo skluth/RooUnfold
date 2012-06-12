@@ -43,6 +43,7 @@ class TLegend;
 class TH1;
 class TH1D;
 class TH2D;
+class TF1;
 class TNtuple;
 class RooUnfoldResponse;
 class RooUnfold;
@@ -54,7 +55,7 @@ public:
   // Parameters
   Int_t    method, stage, ftrainx, ftestx, ntx, ntest, ntrain, wpaper, hpaper, regmethod;
   Int_t    ntoyssvd, nmx, onepage, doerror, dim, overflow, addbias, nbPDF, verbose, dodraw, dosys;
-  Int_t    ntoys, ploterrors, plotparms, doeff, addfakes, seed;
+  Int_t    ntoys, ploterrors, plotparms, doeff, addfakes, seed, dofit;
   Double_t xlo, xhi, mtrainx, wtrainx, btrainx, mtestx, wtestx, btestx, mscalex, bincorr;
   Double_t regparm, effxlo, effxhi, xbias, xsmear, fakexlo, fakexhi, minparm, maxparm, stepsize;
   TString  setname, rootfile;
@@ -68,6 +69,7 @@ public:
   TH1                *hUnfErr, *hToyErr, *hParmChi2, *hParmErr, *hParmRes, *hParmRms;
   TH1D               *hPDFx, *hTestPDFx;
   TH2D               *hResmat, *hCorr, *hMeasCorr;
+  TF1                *fitFunc, *trueFunc;
   TNtuple            *ntChi2;
   RooUnfoldResponse* response;
   RooUnfold*         unfold;
@@ -89,6 +91,7 @@ public:
   virtual Int_t    Test();
   virtual void     SetMeasuredCov();
   virtual Int_t    Unfold();
+  virtual void     Fit();
   virtual void     Results();
   virtual void     PlotErrors();
   virtual void     PlotParms();
@@ -107,10 +110,11 @@ public:
   virtual void     PrintParms (std::ostream& o) const;
   static  void     setmax   (TH1* h, const TH1* h1= 0, const TH1* h2= 0, const TH1* h3= 0,
                              const TH1* h4= 0, const TH1* h5= 0, const TH1* h6= 0);
-  static  void     Legend (TLegend*& legend, TH1* pdf, TH1* truth, TH1* fake, TH1* meas, TH1* reco= 0);
+  static  void     Legend (TLegend*& legend, TH1* pdf, TH1* truth, TH1* fake, TH1* meas, TH1* reco= 0, TF1* ff=0, TF1* tf=0);
   static  TH2D*    CorrelationHist (const TMatrixD& cov,
                                     const char* name="rho", const char* title="Correlation matrix",
                                     Double_t lo=0.0, Double_t hi=1.0);
+  static TF1*      FitFunc (Int_t fpdf, TH1* h, Double_t mean= 0.0, Double_t width= 2.5, Double_t bkg= 0.0);
 };
 #ifndef NOINLINE
 #include "RooUnfoldTestHarness.icc"
