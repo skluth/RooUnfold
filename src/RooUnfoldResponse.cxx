@@ -791,7 +791,7 @@ void RooUnfoldResponse::PrintMatrix(const TMatrixD& m, const char* name, const c
 }
 
 void
-RooUnfoldResponse::Print (Option_t* option) const
+RooUnfoldResponse::Print (Option_t* /* option */) const
 {
   PrintMatrix (Mresponse(), Form("%s response matrix",GetTitle()));
 }

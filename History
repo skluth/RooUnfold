@@ -7,6 +7,7 @@ Tim Adye         12-Jun-2012
     measured distribution as an alternative to unfolding.
   o RooUnfoldTest fit=1 tests this (test function definitions only implemented
     for the 1D case).
+  o Fix some specific compiler warnings.
 
 Tim Adye          8-Jun-2012
   o Fix some GCC 4.6 warnings.
