@@ -38,7 +38,8 @@ public:
     kNoError,            //   no error treatment: returns sqrt(N)
     kErrors,             //   bin-by-bin errors (diagonal covariance matrix)
     kCovariance,         //   covariance matrix from unfolding
-    kCovToy              //   covariance matrix from toy MC
+    kCovToy,             //   covariance matrix from toy MC
+    kDefault=-1          //   not specified
   };
 
   static RooUnfold* New (Algorithm alg, const RooUnfoldResponse* res, const TH1* meas, Double_t regparm= -1e30,
@@ -91,7 +92,7 @@ public:
   virtual Int_t      NToys() const;         // Number of toys
   virtual void       SetNToys (Int_t toys); // Set number of toys
   virtual Int_t      Overflow() const;
-  virtual void       PrintTable (std::ostream& o, const TH1* hTrue= 0, ErrorTreatment witherror=kNoError);
+  virtual void       PrintTable (std::ostream& o, const TH1* hTrue= 0, ErrorTreatment withError=kDefault);
   virtual void       SetRegParm (Double_t parm);
   virtual Double_t   GetRegParm() const; // Get Regularisation Parameter
   Double_t Chi2 (const TH1* hTrue,ErrorTreatment DoChi2=kCovariance);
@@ -105,7 +106,7 @@ public:
   static void PrintTable (std::ostream& o, const TH1* hTrainTrue, const TH1* hTrain,
                           const TH1* hTrue, const TH1* hMeas, const TH1* hReco,
                           Int_t _nm=0, Int_t _nt=0, Bool_t _overflow=kFALSE,
-                          ErrorTreatment withError=kNoError, Double_t chi_squ=-999.0);
+                          ErrorTreatment withError=kDefault, Double_t chi_squ=-999.0);
 
   static void PrintTable (std::ostream& o, const TVectorD& vTrainTrue, const TVectorD& vTrain,
                           const TVectorD& vMeas, const TVectorD& vReco, Int_t nm, Int_t nt);
@@ -165,10 +166,11 @@ protected:
   mutable TVectorD* _eMes; //! Cached measured error
   mutable TMatrixD* _covMes;       // Measurement covariance matrix
   mutable TMatrixD* _covL; //! Cached lower triangular matrix for which _covMes = _covL * _covL^T.
+  ErrorTreatment _withError; // type of error last calulcated
 
 public:
 
-  ClassDef (RooUnfold, 1) // Unfolding base class: implementations in RooUnfoldBayes, RooUnfoldSvd, RooUnfoldBinByBin, RooUnfoldTUnfold, and RooUnfoldInvert
+  ClassDef (RooUnfold, 2) // Unfolding base class: implementations in RooUnfoldBayes, RooUnfoldSvd, RooUnfoldBinByBin, RooUnfoldTUnfold, and RooUnfoldInvert
 };
 
 //==============================================================================

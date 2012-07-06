@@ -234,9 +234,9 @@ RooUnfoldTUnfold::Unfold()
     delete _lCurve;  _lCurve  = 0;
     delete _logTauX; _logTauX = 0;
     delete _logTauY; _logTauY = 0;
-    _unf->ScanLcurve(nScan,tauMin,tauMax,&_lCurve,&_logTauX,&_logTauY);
+    Int_t bestPoint = _unf->ScanLcurve(nScan,tauMin,tauMax,&_lCurve,&_logTauX,&_logTauY);
     _tau=_unf->GetTau();  // save value, even if we don't use it unless tau_set
-    cout <<"Lcurve scan chose tau= "<<_tau<<endl;
+    cout <<"Lcurve scan chose tau= "<<_tau<<endl<<" at point "<<bestPoint<<endl;
   }
   else{
     _unf->DoUnfold(_tau);
