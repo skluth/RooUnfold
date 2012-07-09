@@ -92,7 +92,9 @@ RooUnfoldSvd::Destroy()
 {
   delete _svd;
   delete _meas1d;
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,34,0)
   delete _meascov;
+#endif
   delete _train1d;
   delete _truth1d;
   delete _reshist;
@@ -219,7 +221,10 @@ RooUnfoldSvd::GetCov()
     }
   }
 
+  delete adetCov;
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,34,0)
   delete unfoldedCov;
+#endif
   TH1::AddDirectory (oldstat);
 
   _haveCov= true;
@@ -243,7 +248,9 @@ void RooUnfoldSvd::GetWgt()
     }
   }
 
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,34,0)
   delete unfoldedWgt;
+#endif
   TH1::AddDirectory (oldstat);
 
   _haveWgt= true;
