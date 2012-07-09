@@ -362,7 +362,7 @@ $(CINTFILE) : $(HLIST)
 $(ROOTMAP) : $(SHLIBFILE) $(LINKDEF)
 	@echo "Making $@"
 	$(_)echo TObject.h TMemberInspector.h $(HLIST) | tr ' ' '\n' | sed 's/^\(.*\)$$/#include "\1"/' > $(LINKDEFMAP).cxx
-	$(_)$(CXX) -E -C -D__MAKECINT__ -D__CINT__ -o $(LINKDEFMAP).h $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $(LINKDEFMAP).cxx
+	$(_)$(CXX) -E -D__MAKECINT__ -D__CINT__ -o $(LINKDEFMAP).h $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $(LINKDEFMAP).cxx
 	$(_)$(RLIBMAP) -o $@ -l $< -d $(ROOTLIBFILES) -c $(LINKDEFMAP).h
 
 # Rule to combine objects into a library

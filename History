@@ -1,6 +1,9 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          9-Jul-2012
+  o Fix rootmap creation with GCC 4.6. [Bug reported by Gavin Hesketh.]
+
 Tim Adye          6-Jul-2012
   o Change RooUnfold::PrintTable default to show errors as returned by the
     last unfolding (or else kErrors). If kNoError specified, don't show
