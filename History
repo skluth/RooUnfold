@@ -1,6 +1,10 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          8-Jan-2013
+  o Implement RooUnfoldResponse::Merge so hadd and TFileMerger can merge
+    response matrix objects.
+
 Tim Adye          9-Jul-2012
   o Fix rootmap creation with GCC 4.6. [Bug reported by Gavin Hesketh.]
   o Fix double delete in ROOT 5.34 TSVDUnfold.

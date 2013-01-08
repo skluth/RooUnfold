@@ -38,6 +38,7 @@ END_HTML */
 #include "TVectorD.h"
 #include "TMatrixD.h"
 #include "TRandom.h"
+#include "TCollection.h"
 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,18,0)
 #define HAVE_RooUnfoldFoldingFunction
@@ -214,6 +215,19 @@ RooUnfoldResponse::Add (const RooUnfoldResponse& rhs)
   _tru->Add (rhs._tru);
   _res->Add (rhs._res);
 }
+
+
+Long64_t RooUnfoldResponse::Merge (TCollection* others)
+{
+  // Add all RooUnfoldResponse objects in the collection to this one.
+  // This allows merging with hadd and TFileMerger.
+  for (TIter it= others; TObject* o= it();) {
+    if (RooUnfoldResponse* other= dynamic_cast<RooUnfoldResponse*>(o))
+      Add (*other);
+  }
+  return Long64_t(_res->GetEntries());
+}
+
 
 RooUnfoldResponse&
 RooUnfoldResponse::Reset()

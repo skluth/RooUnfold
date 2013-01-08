@@ -24,6 +24,7 @@ class TF1;
 class TH2;
 class TH2D;
 class TAxis;
+class TCollection;
 
 class RooUnfoldResponse : public TNamed {
 
@@ -71,6 +72,7 @@ public:
   virtual Int_t Fake (Double_t xr, Double_t yr, Double_t zr, Double_t w);  // Fill fake event into 3D Response Matrix
 
   virtual void Add (const RooUnfoldResponse& rhs);
+  virtual Long64_t Merge (TCollection* others);
 
   // Accessors
 
