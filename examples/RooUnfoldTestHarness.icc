@@ -968,7 +968,7 @@ void RooUnfoldTestHarness::Init()
   if (seed>=0) {
     gRandom->SetSeed(seed);   // seed=0, uses a unique (UUID) seed each job (see TRandom3::SetSeed)
 #ifdef USE_ROOFIT
-    RooRandom::randomGenerator()->SetSeed(seed+8243);
+    RooRandom::randomGenerator()->SetSeed(seed ? seed+8243 : 0);
 #endif
   }
 }

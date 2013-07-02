@@ -1,6 +1,9 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          2-Jul-2013
+  o RooUnfoldTest seed=0 uses a unique seed for each job.
+
 Tim Adye          8-Jan-2013
   o Implement RooUnfoldResponse::Merge so hadd and TFileMerger can merge
     response matrix objects.
