@@ -935,13 +935,13 @@ TH1D* RooUnfold::HistNoOverflow (const TH1* h, Bool_t overflow)
     hx->SetBinContent (hx->GetNbinsX()+1, 0.0);
     return hx;
   }
-  Int_t nb= h->GetNbinsX();
+  Int_t nb= h->GetNbinsX(), s= h->GetSumw2N();
   Double_t xlo= h->GetXaxis()->GetXmin(), xhi= h->GetXaxis()->GetXmax(), xb= (xhi-xlo)/nb;
   nb += 2;
   TH1D* hx= new TH1D (h->GetName(), h->GetTitle(), nb, xlo-xb, xhi+xb);
   for (Int_t i= 0; i < nb; i++) {
-    hx->SetBinContent (i+1, h->GetBinContent (i));
-    hx->SetBinError   (i+1, h->GetBinError   (i));
+           hx->SetBinContent (i+1, h->GetBinContent (i));
+    if (s) hx->SetBinError   (i+1, h->GetBinError   (i));
   }
   return hx;
 }

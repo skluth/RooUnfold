@@ -1,6 +1,16 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         29-Jul-2013
+  o Update local copy of TSVDUnfold from ROOT 5.34.00, which fixes some memory
+    leaks. (Actually used ROOT 5.34.06, which has a comment spelling fix.)
+  o Use weighted errors in SVD systematic error if response matrix has error
+    weights set (Sumw2() called on input response matrix histogram). This uses
+    a private version of TSVDUnfold from Kerstin Tackmann, responding to a
+    report by Brian Page.
+  o Preserve Sumw2() setting in histograms created by RooUnfoldResponse::H2H1D,
+    RooUnfoldResponse::HresponseNoOverflow, and RooUnfold::HistNoOverflow.
+
 Tim Adye          2-Jul-2013
   o RooUnfoldTest seed=0 uses a unique seed for each job.
 

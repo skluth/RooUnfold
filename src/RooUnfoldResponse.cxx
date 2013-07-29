@@ -607,10 +607,11 @@ RooUnfoldResponse::H2H1D(const TH1* h, Int_t nb)
 {
   if (dynamic_cast<const TH1D*>(h)) return dynamic_cast<TH1D*>(h->Clone());
   TH1D* h1d= new TH1D(h->GetName(), h->GetTitle(), nb, 0.0, 1.0);
+  Int_t s= h->GetSumw2N();
   for (Int_t i= 0; i < nb; i++) {
     Int_t j= GetBin (h, i);  // don't bother with under/overflow bins (not supported for >1D)
-    h1d->SetBinContent (i+1, h->GetBinContent (j));
-    h1d->SetBinError   (i+1, h->GetBinError   (j));
+           h1d->SetBinContent (i+1, h->GetBinContent (j));
+    if (s) h1d->SetBinError   (i+1, h->GetBinError   (j));
   }
   return h1d;
 }
@@ -619,7 +620,7 @@ TH2D*
 RooUnfoldResponse::HresponseNoOverflow() const
 {
   const TH2* h= Hresponse();
-  Int_t nx= h->GetNbinsX(), ny= h->GetNbinsY();
+  Int_t nx= h->GetNbinsX(), ny= h->GetNbinsY(), s= h->GetSumw2N();
   if (_overflow) {  // implies truth/measured both 1D
     Double_t xlo= h->GetXaxis()->GetXmin(), xhi= h->GetXaxis()->GetXmax(), xb= (xhi-xlo)/nx;
     Double_t ylo= h->GetYaxis()->GetXmin(), yhi= h->GetYaxis()->GetXmax(), yb= (yhi-ylo)/ny;
@@ -627,8 +628,8 @@ RooUnfoldResponse::HresponseNoOverflow() const
     TH2D* hx= new TH2D (h->GetName(), h->GetTitle(), nx, xlo-xb, xhi+xb, ny, ylo-yb, yhi+yb);
     for (Int_t i= 0; i < nx; i++) {
       for (Int_t j= 0; j < ny; j++) {
-        hx->SetBinContent (i+1, j+1, h->GetBinContent (i, j));
-        hx->SetBinError   (i+1, j+1, h->GetBinError   (i, j));
+               hx->SetBinContent (i+1, j+1, h->GetBinContent (i, j));
+        if (s) hx->SetBinError   (i+1, j+1, h->GetBinError   (i, j));
       }
     }
     return hx;
@@ -650,8 +651,8 @@ RooUnfoldResponse::HresponseNoOverflow() const
     TH2D* hx= new TH2D (h->GetName(), h->GetTitle(), nx, xlo, xhi, ny, ylo, yhi);
     for (Int_t i= 0; i < nx+2; i++) {
       for (Int_t j= 0; j < ny+2; j++) {
-        hx->SetBinContent (i, j, h->GetBinContent (i, j));
-        hx->SetBinError   (i, j, h->GetBinError   (i, j));
+               hx->SetBinContent (i, j, h->GetBinContent (i, j));
+        if (s) hx->SetBinError   (i, j, h->GetBinError   (i, j));
       }
     }
     return hx;

@@ -31,7 +31,7 @@ END_HTML */
 #include "TH2.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
-#if defined(HAVE_TSVDUNFOLD) || ROOT_VERSION_CODE < ROOT_VERSION(5,29,2)
+#if defined(HAVE_TSVDUNFOLD) || ROOT_VERSION_CODE < ROOT_VERSION(5,34,99)
 #include "TSVDUnfold_local.h"  /* Use local copy of TSVDUnfold.h */
 #else
 #include "TSVDUnfold.h"
@@ -209,7 +209,20 @@ RooUnfoldSvd::GetCov()
   //Get the covariance matrix for statistical uncertainties on the measured distribution
   if (_dosys!=2) unfoldedCov= _svd->GetXtau();
   //Get the covariance matrix for statistical uncertainties on the response matrix
-  if (_dosys) adetCov= _svd->GetAdetCovMatrix (_NToys);
+  if (_dosys) {
+    TH2D* uncmat= 0;
+    if (_res->Hresponse()->GetSumw2N()) {  // include weights
+      Bool_t oldstat= TH1::AddDirectoryStatus();
+      TH1::AddDirectory (kFALSE);
+      uncmat= dynamic_cast<TH2D*>(_reshist->Clone("reserrors"));
+      TH1::AddDirectory (oldstat);
+      uncmat->Reset();
+      for (Int_t i=0, n=_reshist->GetSize(); i<n; i++)
+        uncmat->SetBinContent (i, _reshist->GetBinError (i));
+    }
+    adetCov= _svd->GetAdetCovMatrix (_NToys, 1, uncmat);
+    delete uncmat;
+  }
 
   _cov.ResizeTo (_nt, _nt);
   for (Int_t i= 0; i<_nt; i++) {

@@ -50,7 +50,7 @@
 
 // Use local copy of TSVDUnfold class under a different name
 // to reduce conflicts with ROOT version.
-#define TSVDUnfold TSVDUnfold_529
+#define TSVDUnfold TSVDUnfold_130729
 
 class TH1D;
 class TH2D;
@@ -92,7 +92,8 @@ public:
    // response matrix
    // "ntoys"  - number of pseudo experiments used for the propagation
    // "seed"   - seed for pseudo experiments
-   TH2D*    GetAdetCovMatrix( Int_t ntoys, Int_t seed=1 );
+   // "uncmat" - matrix containing the uncertainty on the detector matrix elements if different from purely statistical without any weights
+   TH2D*    GetAdetCovMatrix( Int_t ntoys, Int_t seed=1, const TH2D* uncmat=0 );
 
    // Regularisation parameter
    Int_t    GetKReg() const { return fKReg; }
@@ -109,6 +110,9 @@ public:
    // Obtain the computed inverse of the covariance matrix
    TH2D*    GetXinv() const;
    
+   //Obtain the covariance matrix on the data
+   TH2D*    GetBCov() const;
+
    // Helper functions
    Double_t ComputeChiSquared( const TH1D& truspec, const TH1D& unfspec );
 
