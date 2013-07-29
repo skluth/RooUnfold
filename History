@@ -10,6 +10,8 @@ Tim Adye         29-Jul-2013
     report by Brian Page.
   o Preserve Sumw2() setting in histograms created by RooUnfoldResponse::H2H1D,
     RooUnfoldResponse::HresponseNoOverflow, and RooUnfold::HistNoOverflow.
+  o Don't use TUnfoldSys for systematic errors with TUnfold if not available
+    (ROOT 5.22 - previously didn't have TUnfold, later versions had TUnfoldSys).
 
 Tim Adye          2-Jul-2013
   o RooUnfoldTest seed=0 uses a unique seed for each job.

@@ -35,6 +35,9 @@ END_HTML */
 #include "TSVDUnfold_local.h"  /* Use local copy of TSVDUnfold.h */
 #else
 #include "TSVDUnfold.h"
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,34,0)
+#define TSVDUNFOLD_LEAK 1
+#endif
 #endif
 
 #include "RooUnfoldResponse.h"
@@ -92,7 +95,7 @@ RooUnfoldSvd::Destroy()
 {
   delete _svd;
   delete _meas1d;
-#if ROOT_VERSION_CODE < ROOT_VERSION(5,34,0)
+#ifdef TSVDUNFOLD_LEAK
   delete _meascov;
 #endif
   delete _train1d;
@@ -235,7 +238,7 @@ RooUnfoldSvd::GetCov()
   }
 
   delete adetCov;
-#if ROOT_VERSION_CODE < ROOT_VERSION(5,34,0)
+#ifdef TSVDUNFOLD_LEAK
   delete unfoldedCov;
 #endif
   TH1::AddDirectory (oldstat);
@@ -261,7 +264,7 @@ void RooUnfoldSvd::GetWgt()
     }
   }
 
-#if ROOT_VERSION_CODE < ROOT_VERSION(5,34,0)
+#ifdef TSVDUNFOLD_LEAK
   delete unfoldedWgt;
 #endif
   TH1::AddDirectory (oldstat);

@@ -127,9 +127,20 @@ HAVE_TUNFOLD  = 1
 endif
 endif
 
+# Only use TUnfoldSys if it is available (ROOT 5.23.02 and later).
+ifeq ($(HAVE_TUNFOLDSYS),)
+ifneq ($(wildcard $(ROOTINCDIR)/TUnfoldSys.h),)
+HAVE_TUNFOLDSYS = 1
+endif
+endif
+
 ifneq ($(HAVE_TUNFOLD),1)
 CPPFLAGS     += -DNOTUNFOLD
 EXCLUDE      += RooUnfoldTUnfold.cxx RooUnfoldTUnfold.h
+else
+ifneq ($(HAVE_TUNFOLDSYS),1)
+CPPFLAGS     += -DNOTUNFOLDSYS
+endif
 endif
 
 # RooUnfoldDagostini is an interface to D'Agostini's implementation

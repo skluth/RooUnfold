@@ -32,7 +32,11 @@ END_HTML */
 #include "TH2.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
+#ifndef NOTUNFOLDSYS
 #include "TUnfoldSys.h"
+#else
+#include "TUnfold.h"
+#endif
 #include "TGraph.h"
 #include "TSpline.h"
 
@@ -194,9 +198,11 @@ RooUnfoldTUnfold::Unfold()
   TUnfold::ERegMode reg= _reg_method;
   if (ndim == 2 || ndim == 3) reg= TUnfold::kRegModeNone;  // set explicitly
 
+#ifndef NOTUNFOLDSYS
   if (_dosys)
     _unf= new TUnfoldSys(Hres,TUnfold::kHistMapOutputVert,reg);
   else
+#endif
     _unf= new TUnfold(Hres,TUnfold::kHistMapOutputVert,reg);
 
   if        (ndim == 2) {
@@ -270,9 +276,13 @@ RooUnfoldTUnfold::GetCov()
   TH2D* ematrix= new TH2D ("ematrix","error matrix", _nt, 0.0, _nt, _nt, 0.0, _nt);
   if (_dosys!=2) _unf->GetEmatrix (ematrix);
   if (_dosys) {
+#ifndef NOTUNFOLDSYS
     TUnfoldSys* unfsys= dynamic_cast<TUnfoldSys*>(_unf);
-    if (unfsys) unfsys->GetEmatrixSysUncorr (ematrix,0,kFALSE);
-    else cerr << "Did not use TUnfoldSys, so cannot calculate systematic errors" << endl;
+    if (unfsys)
+      unfsys->GetEmatrixSysUncorr (ematrix,0,kFALSE);
+    else
+#endif
+      cerr << "Did not use TUnfoldSys, so cannot calculate systematic errors" << endl;
   }
   _cov.ResizeTo (_nt,_nt);
   for (Int_t i= 0; i<_nt; i++) {
