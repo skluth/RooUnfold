@@ -212,20 +212,8 @@ RooUnfoldSvd::GetCov()
   //Get the covariance matrix for statistical uncertainties on the measured distribution
   if (_dosys!=2) unfoldedCov= _svd->GetXtau();
   //Get the covariance matrix for statistical uncertainties on the response matrix
-  if (_dosys) {
-    TH2D* uncmat= 0;
-    if (_res->Hresponse()->GetSumw2N()) {  // include weights
-      Bool_t oldstat= TH1::AddDirectoryStatus();
-      TH1::AddDirectory (kFALSE);
-      uncmat= dynamic_cast<TH2D*>(_reshist->Clone("reserrors"));
-      TH1::AddDirectory (oldstat);
-      uncmat->Reset();
-      for (Int_t i=0, n=_reshist->GetSize(); i<n; i++)
-        uncmat->SetBinContent (i, _reshist->GetBinError (i));
-    }
-    adetCov= _svd->GetAdetCovMatrix (_NToys, 1, uncmat);
-    delete uncmat;
-  }
+  //Uses Poisson or Gaussian-distributed toys, depending on response matrix histogram's Sumw2 setting.
+  if (_dosys)        adetCov= _svd->GetAdetCovMatrix (_NToys);
 
   _cov.ResizeTo (_nt, _nt);
   for (Int_t i= 0; i<_nt; i++) {

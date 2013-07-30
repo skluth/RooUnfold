@@ -510,7 +510,7 @@ TH2D* TSVDUnfold::GetAdetCovMatrix( Int_t ntoys, Int_t seed, const TH2D* uncmat 
    // response matrix using pseudo experiments
    // "ntoys"  - number of pseudo experiments used for the propagation
    // "seed"   - seed for pseudo experiments
-
+   // "uncmat" - matrix to be interpreted as uncertainties on detector response matrix, to be propagated by toys, if no matrix passed, uncertainties on Adet will be used in toys with Gaussian smearing if Sumw2 is set for Adet, otherwise Poisson variations on Adet will be performed in toys
   if (uncmat && (uncmat->GetNbinsX() != fNdim || uncmat->GetNbinsY() != fNdim)) 
     {
       TString msg = "Uncertainty histogram must have the same dimension as all other histograms.\n";
@@ -542,7 +542,9 @@ TH2D* TSVDUnfold::GetAdetCovMatrix( Int_t ntoys, Int_t seed, const TH2D* uncmat 
 	   if (fAdet->GetBinContent(k,m)){
 	     if(uncmat)
 	       fToymat->SetBinContent(k, m, fAdet->GetBinContent(k,m)+random.Gaus(0.,uncmat->GetBinContent(k,m)));
-	     else
+	     else if(fAdet->GetSumw2N())
+	       fToymat->SetBinContent(k, m, fAdet->GetBinContent(k,m)+random.Gaus(0.,fAdet->GetBinError(k,m)));
+	     else 
 	       fToymat->SetBinContent(k, m, random.Poisson(fAdet->GetBinContent(k,m)));
 	   }
          }
@@ -566,8 +568,9 @@ TH2D* TSVDUnfold::GetAdetCovMatrix( Int_t ntoys, Int_t seed, const TH2D* uncmat 
 	   if (fAdet->GetBinContent(k,m)){
 	     if(uncmat)
 	       fToymat->SetBinContent(k, m, fAdet->GetBinContent(k,m)+random.Gaus(0.,uncmat->GetBinContent(k,m)));
+	     else if(fAdet->GetSumw2N())
+	       fToymat->SetBinContent(k, m, fAdet->GetBinContent(k,m)+random.Gaus(0.,fAdet->GetBinError(k,m)));
 	     else 
-
 	       fToymat->SetBinContent(k, m, random.Poisson(fAdet->GetBinContent(k,m)));
 	   }
          }

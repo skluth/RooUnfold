@@ -1,6 +1,11 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         30-Jul-2013
+  o Use a new version of TSVDUnfold from Kerstin Tackmann which can pick up the
+    response matrix errors if they are set, so we don't have to do anything
+    special in RooUnfoldSvd.
+
 Tim Adye         29-Jul-2013
   o Update local copy of TSVDUnfold from ROOT 5.34.00, which fixes some memory
     leaks. (Actually used ROOT 5.34.06, which has a comment spelling fix.)
