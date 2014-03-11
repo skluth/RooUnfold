@@ -1,6 +1,11 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye         11-Mar-2014
+  o Change way root libraries are pruned for libRooUnfold.rootmap, so it works
+    also on MacOSX. MacOSX's grep command doesn't accept "grep -f-" to get
+    patterns from stdin.
+
 Tim Adye         30-Jul-2013
   o Use a new version of TSVDUnfold from Kerstin Tackmann which can pick up the
     response matrix errors if they are set, so we don't have to do anything

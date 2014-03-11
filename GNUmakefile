@@ -264,7 +264,7 @@ DLISTLIB      = $(wildcard $(addprefix $(DEPDIR),$(patsubst %.cxx,%.d,$(filter %
 ifneq ($(DLISTLIB),)
 ROOTLIBMAPS  := $(wildcard $(patsubst %.$(DllSuf),%.rootmap,$(ROOTLIBFILES)))
 ifneq ($(ROOTLIBMAPS),)
-ROOTLIBFILESUSED := $(patsubst %.rootmap,%.$(DllSuf),$(shell sed -n 's,^ *$(ROOTINCDIR)[^ ]*/\([^ /]*\)\.h .*,^Library\.\1:,p' $(DLISTLIB) | sort -u | grep -l -f- $(ROOTLIBMAPS)))
+ROOTLIBFILESUSED := $(patsubst %.rootmap,%.$(DllSuf),$(shell grep -l '^Library\.\($(shell sed -n 's,^ *$(ROOTINCDIR)[^ ]*/\([^ /]*\)\.h .*,\1\\,p' $(DLISTLIB) | sort -u | tr '\n' '|' | sed 's,\\|$$,,')\):' $(ROOTLIBMAPS)))
 ifneq ($(ROOTLIBFILESUSED),)
 ROOTLIBFILES := $(ROOTLIBFILESUSED)
 endif
