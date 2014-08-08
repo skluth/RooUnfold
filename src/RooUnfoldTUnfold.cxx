@@ -247,23 +247,23 @@ RooUnfoldTUnfold::Unfold()
   else{
     _unf->DoUnfold(_tau);
   }
-  TH1* reco=_unf->GetOutput("_rec","reconstructed dist",0.0,0.0);
+  TH1D reco("_rec","reconstructed dist",_nt,0.0,_nt);
+  _unf->GetOutput(&reco);
   _rec.ResizeTo (_nt);
   for (int i=0;i<_nt;i++){
-    _rec(i)=(reco->GetBinContent(i+1));
+    _rec(i)=(reco.GetBinContent(i+1));
   }
 
   if (_verbose>=2) {
     TH1* train1d= HistNoOverflow (_res->Hmeasured(), _overflow);
     TH1* truth1d= HistNoOverflow (_res->Htruth(),    _overflow);
-    PrintTable (cout, truth1d, train1d, 0, meas, reco, _nm, _nt, kTRUE);
+    PrintTable (cout, truth1d, train1d, 0, meas, &reco, _nm, _nt, kTRUE);
     delete truth1d;
     delete train1d;
   }
 
   delete meas;
   delete Hres;
-  delete reco;
   _unfolded= true;
   _haveCov=  false;
 }

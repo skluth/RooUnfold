@@ -1,6 +1,12 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          8-Aug-2014
+  o Fixes for compatibility with ROOT 5.34.19 (TUnfold v17.0) and ROOT 6.00.00
+    (Cling and TF1::Integral).
+  o GNUmakefile now finds ROOT using root-config (with fall-back to $ROOTSYS).
+    This works for ROOT installed in default location without $ROOTSYS.
+
 Tim Adye         11-Mar-2014
   o Change way root libraries are pruned for libRooUnfold.rootmap, so it works
     also on MacOSX. MacOSX's grep command doesn't accept "grep -f-" to get

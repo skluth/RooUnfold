@@ -6,10 +6,11 @@
 #   Makefile for the RooUnfold package
 #
 # Instructions:
-# o Make sure the ROOTSYS environment variable is set and points
-#   to your ROOT release, and that $ROOTSYS/bin is in your PATH.
-#   This can be done with:   . PATH_TO_ROOT/bin/thisroot.sh           (Bourne-style shell)
-#   or with:                 source PATH_TO_ROOT/bin/thisroot.csh     (C-style shell)
+# o Make sure that ROOT (root-config actually) is installed in your PATH, or else
+#   that the ROOTSYS environment variable is set and points to your ROOT release.
+#   If not set up by default, this can be done
+#   with:      . PATH_TO_ROOT/bin/thisroot.sh      (Bourne-style shell)
+#   or with:   source PATH_TO_ROOT/bin/thisroot.csh     (C-style shell)
 #
 # o run "make TARGET"
 #   - Default TARGET makes shared library (libRooUnfold.so) for use in ROOT.
@@ -39,13 +40,25 @@
 
 # === ROOT setup ===============================================================
 
+RC0          := root-config
+ROOTSYS0     := $(shell $(RC0) --prefix 2>/dev/null)
+ifeq ($(ROOTSYS0),)
 ifeq ($(ROOTSYS),)
-$(error $$ROOTSYS is not defined)
+$(error $(RC0) not found and $$ROOTSYS is not defined)
+endif
+ETC          := $(ROOTSYS)/etc $(ROOTSYS)/test
+else
+ETC          := $(shell $(RC0) --etcdir 2>/dev/null)
+ifeq ($(ETC),)
+ETC          := $(ROOTSYS0)/etc $(ROOTSYS0)/test
+else
+ETC          := $(ETC) $(ROOTSYS0)/test
+endif
 endif
 
-ROOT_MAKEFILE=$(firstword $(wildcard $(ROOTSYS)/etc/Makefile.arch $(ROOTSYS)/test/Makefile.arch))
+ROOT_MAKEFILE=$(firstword $(wildcard $(addsuffix /Makefile.arch,$(ETC))))
 ifeq ($(ROOT_MAKEFILE),)
-$(warning Could not find Makefile.arch under $(ROOTSYS)/etc or $(ROOTSYS)/test - trying a basic Linux config)
+$(warning Could not find Makefile.arch under $(word 1,$(ETC)) or $(word 2,$(ETC)) - trying a basic Linux config)
 else
 -include $(ROOT_MAKEFILE)
 ifeq ($(ARCH),)
@@ -57,6 +70,9 @@ ifeq ($(ROOTCONFIG),)
 RC            = $(ROOTSYS)/bin/root-config
 else
 RC            = $(ROOTCONFIG)
+endif
+ifeq ($(wildcard $(RC)),)
+$(error $(RC) not found)
 endif
 endif
 
@@ -83,7 +99,7 @@ endif
 endif
 
 ifeq ($(PLATFORM),macosx)
-# Fix stupid shared library option on MacOSX. This doesn't work (and we don't
+# Remove stupid shared library option on MacOSX. The option doesn't work (and we don't
 # need it) because our linker output file specifies the full path.
 SOFLAGS      := $(subst -install_name $(CURDIR)/,,$(SOFLAGS))
 endif
@@ -91,7 +107,7 @@ endif
 ROOTINCDIR    = $(shell $(RC) --incdir)
 ROOTLIBDIR    = $(shell $(RC) --libdir)
 ROOTINCLUDES  = -I$(ROOTINCDIR)
-ifeq ($(ROOTCINT),)
+ifeq ($(ROOTCINT)$(ROOTCLING),)
 ROOTCINT      = rootcint
 endif
 ifeq ($(RLIBMAP),)
@@ -101,6 +117,10 @@ ifeq ($(VERBOSE),1)
 _             =
 else
 _             = @
+endif
+
+ifeq ($(MAKE_RESTARTS),)
+$(info Use ROOT $(shell $(RC) --version) for $(ARCH) from $(shell $(RC) --prefix))
 endif
 
 # === RooUnfold directories ========================================
@@ -208,6 +228,9 @@ LINKDEF       = $(INCDIR)$(PACKAGE)_LinkDef.h
 LINKDEFMAP    = $(WORKDIR)$(PACKAGE)Map_LinkDef
 HLIST         = $(filter-out $(addprefix $(INCDIR),$(EXCLUDE)) $(LINKDEF),$(wildcard $(INCDIR)*.h)) $(LINKDEF)
 CINTFILE      = $(WORKDIR)$(PACKAGE)Dict.cxx
+ifneq ($(ROOTCLING),)
+CLINGDICT     = $(CURDIR)/$(PACKAGE)Dict_rdict.pcm
+endif
 CINTOBJ       = $(OBJDIR)$(PACKAGE)Dict.$(ObjSuf)
 LIBNAME       = $(PACKAGE)
 STATICLIBNAME = $(PACKAGE)_static
@@ -225,7 +248,7 @@ CPPFLAGS     += -DMAKEBUILD
 ifneq ($(findstring g++,$(CXX)),)
 MFLAGS        = -MM
 endif
-INCLUDES      = -I$(INCDIR)
+INCLUDES      = -I$(INCDIR) -I$(CURDIR)
 CXX          += $(EXTRAINCLUDES)
 LDFLAGS      += $(EXTRALDFLAGS)
 
@@ -364,11 +387,16 @@ help        :
 	@echo "Some TARGETs are: 'bin', 'html', 'clean', and 'commands'"
 
 # Rule to make ROOTCINT output file
-$(CINTFILE) : $(HLIST)
+$(CINTFILE) $(CLINGDICT) : $(HLIST)
 	@mkdir -p $(WORKDIR)
 	@mkdir -p $(OBJDIR)
 	@echo "Generating dictionary from $(LINKDEF)"
-	$(_)$(ROOTCINT) -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)
+ifeq ($(ROOTCLING),)
+	$(_)$(ROOTCINT)  -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)
+else
+	$(_)$(ROOTCLING) -f $(CINTFILE)       $(CPPFLAGS) $(INCLUDES) $(HLIST)
+	$(_)mv -f $(dir $(CINTFILE))$(notdir $(CLINGDICT)) $(CLINGDICT)
+endif
 
 $(ROOTMAP) : $(SHLIBFILE) $(LINKDEF)
 	@echo "Making $@"
@@ -400,13 +428,17 @@ $(SHLIBFILE) : $(OLIST) $(CINTOBJ)
 # Useful build targets
 include: $(DLIST)
 lib: $(LIBFILE)
-shlib: $(SHLIBFILE) $(ROOTMAP)
+shlib: $(SHLIBFILE) $(ROOTMAP) $(CLINGDICT)
 bin: shlib $(MAINEXE)
 
 commands :
 	@echo "Make $(DEPDIR)%.d:	$(CXX) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $(SRCDIR)%.cxx | sed 's,\(%\.$(ObjSuf)\) *:,$(OBJDIR)\1 $(DEPDIR)%.d :,g' > $(DEPDIR)%.d"
 	@echo
-	@echo "Make dictionary: $(ROOTCINT) -f $(CINTFILE) -c -p $(INCLUDES) $(HLIST)"
+ifeq ($(ROOTCLING),)
+	@echo "Make dictionary: $(ROOTCINT) -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)"
+else
+	@echo "Make dictionary: $(ROOTCLING) -f $(CINTFILE) $(CPPFLAGS) $(INCLUDES) $(HLIST)"
+endif
 	@echo
 	@echo "Compile $(SRCDIR)%.cxx:	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(SRCDIR)%.cxx -o $(OBJDIR)%.$(ObjSuf) $(INCLUDES)"
 	@echo
@@ -416,7 +448,7 @@ commands :
 
 clean : cleanbin
 	rm -f $(DLIST)
-	rm -f $(CINTFILE) $(basename $(CINTFILE)).h
+	rm -f $(CINTFILE) $(basename $(CINTFILE)).h $(CLINGDICT)
 	rm -f $(OLIST) $(CINTOBJ)
 	rm -f $(LIBFILE)
 	rm -f $(SHLIBFILE) $(ROOTMAP) $(LINKDEFMAP).cxx $(LINKDEFMAP).h

@@ -104,6 +104,16 @@ private:
       } else {
         if        (_ndim==1) {
           Double_t tw= tru->GetBinWidth(j), tlo= tru->GetBinLowEdge(j), thi= tlo+tw;
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
+          fv= _func->Integral (tlo, thi, _eps) / tw;
+        } else {
+          Double_t tlo[3]= { tru->GetXaxis()->GetBinLowEdge(jx), tru->GetYaxis()->GetBinLowEdge(jy), tru->GetZaxis()->GetBinLowEdge(jz) };
+          Double_t thi[3]= { tru->GetXaxis()->GetBinUpEdge (jx), tru->GetYaxis()->GetBinUpEdge (jy), tru->GetZaxis()->GetBinUpEdge (jz) };
+          Double_t relerr=0.0;
+          fv= _func->IntegralMultiple (_ndim, tlo, thi, _eps, relerr);
+          fv /= tru->GetXaxis()->GetBinWidth(jx) * tru->GetYaxis()->GetBinWidth(jy);
+          if (_ndim>=3) fv /= tru->GetZaxis()->GetBinWidth(jz);
+#else
           fv= _func->Integral (tlo, thi, (Double_t*)0, _eps) / tw;
         } else if (_ndim==2) {
           fv= _func->Integral (tru->GetXaxis()->GetBinLowEdge(jx), tru->GetXaxis()->GetBinUpEdge(jx),
@@ -114,6 +124,7 @@ private:
                                tru->GetYaxis()->GetBinLowEdge(jy), tru->GetYaxis()->GetBinUpEdge(jy),
                                tru->GetZaxis()->GetBinLowEdge(jz), tru->GetZaxis()->GetBinUpEdge(jz), _eps);
           fv /= tru->GetXaxis()->GetBinWidth(jx) * tru->GetYaxis()->GetBinWidth(jy) * tru->GetZaxis()->GetBinWidth(jz);
+#endif
         }
       }
       if (_verbose) cout << " " << fv;

@@ -16,7 +16,6 @@
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include "TNamed.h"
 #include "TString.h"
-#include "RooUnfold.h"
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,0,0)
 #include "TVectorDfwd.h"
 #include "TMatrixDfwd.h"

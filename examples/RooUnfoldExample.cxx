@@ -9,7 +9,7 @@
 //
 //==============================================================================
 
-#if !defined(__CINT__) || defined(__MAKECINT__)
+#if !(defined(__CINT__) || defined(__CLING__)) || defined(__ACLIC__)
 #include <iostream>
 using std::cout;
 using std::endl;
