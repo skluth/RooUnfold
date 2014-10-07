@@ -1,6 +1,10 @@
 History of RooUnfold     $Id$
 ====================
 
+Tim Adye          7-Oct-2014
+  o Fix GNUmakefile for old ROOT (5.30 and before) which defined ROOTCONFIG
+    instead of RC [Bug reported by Linda Finco.]
+
 Tim Adye          8-Aug-2014
   o Fixes for compatibility with ROOT 5.34.19 (TUnfold v17.0) and ROOT 6.00.00
     (Cling and TF1::Integral).

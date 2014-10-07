@@ -66,11 +66,7 @@ $(warning $(ROOT_MAKEFILE) setup failed (no $$ARCH) - trying a basic Linux confi
 endif
 endif
 ifeq ($(RC),)
-ifeq ($(ROOTCONFIG),)
-RC            = $(ROOTSYS)/bin/root-config
-else
-RC            = $(ROOTCONFIG)
-endif
+RC           := $(ROOTSYS)/bin/root-config
 ifeq ($(wildcard $(RC)),)
 $(error $(RC) not found)
 endif
