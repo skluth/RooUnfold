@@ -6,6 +6,7 @@
 
 #pragma link C++ class RooUnfold-;
 #pragma link C++ class RooUnfoldBayes+;
+#pragma link C++ class RooUnfoldBasisSplines+;
 #pragma link C++ class RooUnfoldSvd-;
 #pragma link C++ class RooUnfoldBinByBin+;
 #pragma link C++ class RooUnfoldResponse-;

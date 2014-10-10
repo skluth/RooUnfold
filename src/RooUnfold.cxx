@@ -492,6 +492,19 @@ Double_t RooUnfold::Chi2(const TH1* hTrue,ErrorTreatment DoChi2)
 }
 
 
+Double_t RooUnfold::Chi2measured() {
+  TVectorD vReco= Vreco();
+  TMatrixD A= _res->Mresponse();
+  TVectorD yreco= A*vReco;
+  TVectorD ymeasured= Vmeasured();
+  TVectorD delta= ymeasured - yreco;
+  TMatrixD Vinv= GetMeasuredCov();
+  InvertMatrix( Vinv, Vinv );
+  Double_t chisq= Vinv.Similarity( delta );
+  return chisq;
+}
+
+
 void RooUnfold::PrintTable (std::ostream& o, const TH1* hTrue, ErrorTreatment withError)
 {
   // Prints entries from truth, measured, and reconstructed data for each bin.
@@ -687,6 +700,22 @@ TH1* RooUnfold::Hreco (ErrorTreatment withError)
 
   return reco;
 }
+
+
+TH1* RooUnfold::HrecoMeasured() {
+  TH1* hist= (TH1*) _meas->Clone( GetName() );
+  hist->Reset();
+  hist->SetTitle( GetTitle() );
+  TVectorD reco= Vreco();
+  TMatrixD A= _res->Mresponse();
+  TVectorD yreco= A*reco;
+  for( Int_t i= 0; i < _nm; i++ ) {
+    Int_t j= RooUnfoldResponse::GetBin( hist, i, _overflow );
+    hist->SetBinContent( j, yreco(i) );
+  }
+  return hist;
+}
+
 
 void RooUnfold::GetSettings()
 {

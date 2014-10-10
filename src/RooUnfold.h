@@ -80,6 +80,10 @@ public:
   const    TVectorD& Emeasured() const;   // Measured distribution errors as a TVectorD
   const    TMatrixD& GetMeasuredCov() const;   // Measured distribution covariance matrix
 
+  // Methods for unfolding tests
+  virtual TH1* HrecoMeasured();
+  Double_t Chi2measured();
+
   virtual TVectorD&  Vreco();
   virtual TMatrixD   Ereco  (ErrorTreatment witherror=kCovariance);
   virtual TVectorD   ErecoV (ErrorTreatment witherror=kErrors);
