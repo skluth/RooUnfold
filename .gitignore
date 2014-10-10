@@ -1,0 +1,3 @@
+# ignore pdfs, precompiled python, etc
+*.pdf
+*.pyc
