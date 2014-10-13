@@ -2,7 +2,6 @@
 
 from ROOT import gRandom, TH1, TH1D, gROOT, cout, TMath, gStyle
 
-
 gROOT.LoadMacro( "$HOME/Downloads/RooUnfold/libRooUnfold.so" )
 
 from ROOT import RooUnfoldResponse
