@@ -311,17 +311,14 @@ def plotPulls( optunf="Bayes", ntest=10, leff=True, loufl=False,
     hbininfo= bininfo.create( optfun )
     dx= hbininfo["mhi"]
     for sigma, ipad in [ [ 0.01*dx, 1 ], [ 0.03*dx, 2 ], [ 0.1*dx, 3 ] ]:
-        hPulls= TProfile( "pulls",
-                          optunf + ", smear mu, s.d.= " +
-                          str(gmean) + ", " + str(sigma) +
-                          ", train: " + funttxt + ", test: " + funtxt +
-                          ", " + str(ntest) + " tests",
+        txt= optunf + ", smear mu, s.d.= " + str(gmean) + ", " + str(sigma) + ", train: " + funttxt + ", test: " + funtxt + ", " + str(ntest) + " tests"
+        hPulls= TProfile( "pulls", txt,
                           hbininfo["tbins"], hbininfo["tlo"], hbininfo["thi"] )
         hPulls.SetErrorOption( "s" )
         hPulls.SetYTitle( "Thruth reco pull" )
         histos.append( hPulls )
-        hChisq= TH1D( "chisq", "P(chi^2) rec vs truth", 10, 0.0, 1.0 )
-        hChisqm= TH1D( "chisqm", "P(chi^2) measured", 10, 0.0, 1.0 )
+        hChisq= TH1D( "chisq", "P(chi^2) rec " + txt, 10, 0.0, 1.0 )
+        hChisqm= TH1D( "chisqm", "P(chi^2) mea " + txt, 10, 0.0, 1.0 )
         histos.append( hChisq )
         histos.append( hChisqm )
         measurement= createMeasurement( gmean, sigma, leff, optfun )        
