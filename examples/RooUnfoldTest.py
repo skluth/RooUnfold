@@ -448,13 +448,19 @@ def doAllPlots( optunfs= "Bayes SVD TUnfold Invert Reverse BasisSplines",
     for optunf in optunftokens:
         for optfun in [ "bw", "exp", "blobel" ]:
             for opttfun in [ "", "gaus" ]:
-                for loufl in [ False, True ]:
-                    featureSizePlots( optunf=optunf,
-                                      optfun=optfun, opttfun=opttfun,
-                                      loufl=loufl )
-                    plotPulls( optunf=optunf, ntest=ntest,
-                               optfun=optfun, opttfun=opttfun,
-                               loufl=loufl )
+                # for loufl in [ False, True ]:
+                #     featureSizePlots( optunf=optunf,
+                #                       optfun=optfun, opttfun=opttfun,
+                #                       loufl=loufl )
+                #     plotPulls( optunf=optunf, ntest=ntest,
+                #                optfun=optfun, opttfun=opttfun,
+                #                loufl=loufl )
+                featureSizePlots( optunf=optunf,
+                                  optfun=optfun, opttfun=opttfun )
+                plotPulls( optunf=optunf, ntest=ntest,
+                           optfun=optfun, opttfun=opttfun )
+
+
     return
 
 

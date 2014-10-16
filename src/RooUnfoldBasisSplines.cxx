@@ -142,13 +142,14 @@ void RooUnfoldBasisSplines::PrintTable( std::ostream& o, const TH1* hTrue,
 			 _nm, _nt, _overflow, withError, chi_squ );
   return;
 }
+
+// Creates reconstructed distribution. Error calculation varies by withError:
+// 0: No errors
+// 1: Errors from the square root of the diagonals of the covariance matrix given by the unfolding
+// 2: Errors from the square root of of the covariance matrix given by the unfolding
+// 3: Errors from the square root of the covariance matrix from the variation of the results in 
+//    toy MC tests
 TH1* RooUnfoldBasisSplines::Hreco( ErrorTreatment withError ) {
-    /*Creates reconstructed distribution. Error calculation varies by withError:
-    0: No errors
-    1: Errors from the square root of the diagonals of the covariance matrix given by the unfolding
-    2: Errors from the square root of of the covariance matrix given by the unfolding
-    3: Errors from the square root of the covariance matrix from the variation of the results in toy MC tests
-    */
   TH1* reco= (TH1*) _res->Htruth()->Clone( GetName() ); 
   reco= reco->Rebin( _nrebin );
   reco->Reset();
@@ -169,6 +170,7 @@ TH1* RooUnfoldBasisSplines::Hreco( ErrorTreatment withError ) {
   return reco;
 }
 
+// Get reconstructed distribution folded up to measured level:
 TH1* RooUnfoldBasisSplines::HrecoMeasured() {
   TH1* hist= (TH1*) _meas->Clone( GetName() );
   hist->Reset();
@@ -180,9 +182,6 @@ TH1* RooUnfoldBasisSplines::HrecoMeasured() {
   }
   return hist;
 }
-
-
-
 
 // Override for measured chi^2:
 Double_t RooUnfoldBasisSplines::Chi2measured() {
@@ -432,7 +431,6 @@ TMatrixD RooUnfoldBasisSplines::makeRebinMatrix( Int_t nbin,
 // Determination of number of control points from "noise" in 
 // unreg. solution q' from eigenvalues of C.  See "Note on Blobels 
 // unfolding method", G. Cowan, 2/1998 (www.desy.de/~blobel/runcowan.ps)
-// Double_t RooUnfoldBasisSplines::findTauFromNoise( const TVectorD& bins, 
 Double_t RooUnfoldBasisSplines::findTauFromNoise( const TMatrixD& AB, 
 						  const TVectorD& y, 
 						  const TMatrixDSym& Vinv, 
@@ -466,8 +464,8 @@ Double_t RooUnfoldBasisSplines::findTauFromNoise( const TMatrixD& AB,
   Int_t m0noise= m0FromTau( opttaunoise, Cpeigenvalues );
   Double_t opttau= optTau( Cpeigenvalues, std::min(m0noise,np-1) );
   if( verbose() >= 2 ) {
-    cout << "RooUnfoldBasisSplines::findTauFromNoise: Optimal tau, m0, tau from noise in q': " << opttaunoise 
-	 << " " << m0noise << " " << opttau << endl;
+    cout << "RooUnfoldBasisSplines::findTauFromNoise: Optimal tau, m0, tau from noise in q': " 
+	 << opttaunoise << " " << m0noise << " " << opttau << endl;
   }
   return opttau;
 }
