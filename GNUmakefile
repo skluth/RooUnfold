@@ -1,6 +1,6 @@
 #===============================================================================
 # File and Version Information:
-#      $Id$
+#      $Id: GNUmakefile 352 2015-04-14 11:00:05Z T.J.Adye@rl.ac.uk $
 #
 # Description:
 #   Makefile for the RooUnfold package
@@ -19,13 +19,14 @@
 #   - Add NOROOFIT=1 to link without RooFit (this is default if RooFit is not available).
 #   - Add SHARED=1 to link test executables with shared library (libRooUnfold.so).
 #     Otherwise links with static library (libRooUnfold.a).
+#     To used the shared library: export LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH"
 #   - Add ROOTBUILD=debug for debug version.
 #   - Add VERBOSE=1 to show commands as they are executed.
 #
 # Build targets:
 #   help    - give brief help
 #   shlib   - make libRooUnfold.so (default target)
-#   include - make dependency files (*.d)
+#   depend  - make dependency files (*.d)
 #   lib     - make libRooUnfold.a
 #   bin     - make lib and example programs
 #   commands- show commands to make each type of target
@@ -40,15 +41,15 @@
 
 # === ROOT setup ===============================================================
 
-RC0          := root-config
-ROOTSYS0     := $(shell $(RC0) --prefix 2>/dev/null)
+RC           := root-config
+ROOTSYS0     := $(shell $(RC) --prefix 2>/dev/null)
 ifeq ($(ROOTSYS0),)
 ifeq ($(ROOTSYS),)
-$(error $(RC0) not found and $$ROOTSYS is not defined)
+$(error $(RC) not found and $$ROOTSYS is not defined)
 endif
 ETC          := $(ROOTSYS)/etc $(ROOTSYS)/test
 else
-ETC          := $(shell $(RC0) --etcdir 2>/dev/null)
+ETC          := $(shell $(RC) --etcdir 2>/dev/null)
 ifeq ($(ETC),)
 ETC          := $(ROOTSYS0)/etc $(ROOTSYS0)/test
 else
@@ -58,8 +59,11 @@ endif
 
 ROOT_MAKEFILE=$(firstword $(wildcard $(addsuffix /Makefile.arch,$(ETC))))
 ifeq ($(ROOT_MAKEFILE),)
+ifeq ($(MAKE_RESTARTS),)
 $(warning Could not find Makefile.arch under $(word 1,$(ETC)) or $(word 2,$(ETC)) - trying a basic Linux config)
+endif
 else
+RC           :=
 -include $(ROOT_MAKEFILE)
 ifeq ($(ARCH),)
 $(warning $(ROOT_MAKEFILE) setup failed (no $$ARCH) - trying a basic Linux config)
@@ -103,11 +107,17 @@ endif
 ROOTINCDIR    = $(shell $(RC) --incdir)
 ROOTLIBDIR    = $(shell $(RC) --libdir)
 ROOTINCLUDES  = -I$(ROOTINCDIR)
-ifeq ($(ROOTCINT)$(ROOTCLING),)
+ifeq ($(shell $(RC) --has-cling),yes)
+ifeq ($(ROOTCLING),)
+ROOTCLING     = rootcling
+endif
+else
+ifeq ($(ROOTCINT),)
 ROOTCINT      = rootcint
 endif
 ifeq ($(RLIBMAP),)
 RLIBMAP       = rlibmap
+endif
 endif
 ifeq ($(VERBOSE),1)
 _             =
@@ -225,7 +235,7 @@ LINKDEFMAP    = $(WORKDIR)$(PACKAGE)Map_LinkDef
 HLIST         = $(filter-out $(addprefix $(INCDIR),$(EXCLUDE)) $(LINKDEF),$(wildcard $(INCDIR)*.h)) $(LINKDEF)
 CINTFILE      = $(WORKDIR)$(PACKAGE)Dict.cxx
 ifneq ($(ROOTCLING),)
-CLINGDICT     = $(CURDIR)/$(PACKAGE)Dict_rdict.pcm
+CLINGDICT     = $(SHLIBDIR)/$(PACKAGE)Dict_rdict.pcm
 endif
 CINTOBJ       = $(OBJDIR)$(PACKAGE)Dict.$(ObjSuf)
 LIBNAME       = $(PACKAGE)
@@ -237,7 +247,7 @@ ROOTMAP       = $(SHLIBDIR)lib$(LIBNAME).rootmap
 ifeq ($(MAKECMDGOALS),)
 GOALS         = default
 else
-GOALS         = $(filter-out clean cleanbin help,$(MAKECMDGOALS))
+GOALS         = $(filter-out clean cleanbin help commands,$(MAKECMDGOALS))
 endif
 
 CPPFLAGS     += -DMAKEBUILD
@@ -293,7 +303,7 @@ endif
 endif
 
 ifeq ($(NOROOFIT),)
-ifeq ($(DLIST),)
+ifeq ($(wildcard $(DLIST)),)
 # Since we can't check the dependencies, include RooFit on all binaries
 ROOFITCLIENTS = $(patsubst %.cxx,$(OBJDIR)%.$(ObjSuf),$(MAIN))
 else
@@ -316,7 +326,7 @@ $(DEPDIR)%.d : $(SRCDIR)%.cxx
 	@mkdir -p $(DEPDIR)
 	@rm -f $@
 	$(_)set -e; \
-	 $(CXX) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $< \
+	 $(CXX) $(MFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INCLUDES) $< \
 	 | sed 's,\($(notdir $*)\.$(ObjSuf)\) *:,$(OBJDIR)\1 $@ :,g' > $@; \
 	 [ -s $@ ] || rm -f $@
 
@@ -325,7 +335,7 @@ $(DEPDIR)%.d : $(EXESRC)%.cxx
 	@mkdir -p $(DEPDIR)
 	@rm -f $@
 	$(_)set -e; \
-	 $(CXX) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $< \
+	 $(CXX) $(MFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INCLUDES) $< \
 	 | sed 's,\($(notdir $*)\.$(ObjSuf)\) *:,$(OBJDIR)\1 $@ :,g' > $@; \
 	 [ -s $@ ] || rm -f $@
 
@@ -383,30 +393,34 @@ help        :
 	@echo "Some TARGETs are: 'bin', 'html', 'clean', and 'commands'"
 
 # Rule to make ROOTCINT output file
-$(CINTFILE) $(CLINGDICT) : $(HLIST)
+ifeq ($(ROOTCLING),)
+$(CINTFILE) : $(HLIST)
 	@mkdir -p $(WORKDIR)
 	@mkdir -p $(OBJDIR)
-	@echo "Generating dictionary from $(LINKDEF)"
-ifeq ($(ROOTCLING),)
-	$(_)$(ROOTCINT)  -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)
-else
-	$(_)$(ROOTCLING) -f $(CINTFILE)       $(CPPFLAGS) $(INCLUDES) $(HLIST)
-	$(_)mv -f $(dir $(CINTFILE))$(notdir $(CLINGDICT)) $(CLINGDICT)
-endif
+	@echo "Generating CINT dictionary $(CINTFILE)"
+	$(_)$(ROOTCINT) -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)
 
 $(ROOTMAP) : $(SHLIBFILE) $(LINKDEF)
-	@echo "Making $@"
+	@echo "Making CINT $@"
 	$(_)echo TObject.h TMemberInspector.h $(HLIST) | tr ' ' '\n' | sed 's/^\(.*\)$$/#include "\1"/' > $(LINKDEFMAP).cxx
 	$(_)$(CXX) -E -D__MAKECINT__ -D__CINT__ -o $(LINKDEFMAP).h $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $(LINKDEFMAP).cxx
 	$(_)$(RLIBMAP) -o $@ -l $< -d $(ROOTLIBFILES) -c $(LINKDEFMAP).h
+else
+$(CINTFILE) $(CLINGDICT) $(ROOTMAP) : $(HLIST)
+	@mkdir -p $(WORKDIR)
+	@mkdir -p $(OBJDIR)
+	@echo "Generating CLING dictionary files $(CINTFILE), $(CLINGDICT), and $(ROOTMAP)"
+	$(_)$(ROOTCLING) -f $(CINTFILE) -rml $(notdir $(SHLIBFILE)) -rmf $(ROOTMAP) $(CPPFLAGS) $(INCLUDES) $(HLIST)
+	$(_)mv -f $(dir $(CINTFILE))$(notdir $(CLINGDICT)) $(CLINGDICT)
+endif
 
 # Rule to combine objects into a library
 $(LIBFILE) : $(OLIST) $(CINTOBJ)
 	@echo "Making $@"
 	@mkdir -p $(LIBDIR)
 	@rm -f $@
-	$(_)ar q $@ $^
-	@ranlib $@
+	$(_)ar cq $@ $^
+	$(_)ranlib $@
 
 # Make symlink to static library so we can refer to that without picking up shared library.
 # Assumes $(LIBFILE) and $(STATICLIBFILE) are in the same directory
@@ -422,18 +436,20 @@ $(SHLIBFILE) : $(OLIST) $(CINTOBJ)
 	$(_)$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt)$@ $(ROOTLIBS) $(GCCLIBS)
 
 # Useful build targets
-include: $(DLIST)
+depend: $(DLIST)
+include: depend
 lib: $(LIBFILE)
 shlib: $(SHLIBFILE) $(ROOTMAP) $(CLINGDICT)
-bin: shlib $(MAINEXE)
+exe: $(MAINEXE)
+bin: shlib exe
 
 commands :
-	@echo "Make $(DEPDIR)%.d:	$(CXX) $(MFLAGS) $(CPPFLAGS) $(INCLUDES) $(ROOTINCLUDES) $(SRCDIR)%.cxx | sed 's,\(%\.$(ObjSuf)\) *:,$(OBJDIR)\1 $(DEPDIR)%.d :,g' > $(DEPDIR)%.d"
+	@echo "Make $(DEPDIR)%.d:	$(CXX) $(MFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INCLUDES) $(SRCDIR)%.cxx | sed 's,\(%\.$(ObjSuf)\) *:,$(OBJDIR)\1 $(DEPDIR)%.d :,g' > $(DEPDIR)%.d"
 	@echo
 ifeq ($(ROOTCLING),)
-	@echo "Make dictionary: $(ROOTCINT) -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)"
+	@echo "Make dictionary:         $(ROOTCINT) -f $(CINTFILE) -c -p $(CPPFLAGS) $(INCLUDES) $(HLIST)"
 else
-	@echo "Make dictionary: $(ROOTCLING) -f $(CINTFILE) $(CPPFLAGS) $(INCLUDES) $(HLIST)"
+	@echo "Make dictionary:         $(ROOTCLING) -f $(CINTFILE) -rml $(notdir $(SHLIBFILE)) -rmf $(ROOTMAP) $(CPPFLAGS) $(INCLUDES) $(HLIST)"
 endif
 	@echo
 	@echo "Compile $(SRCDIR)%.cxx:	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(SRCDIR)%.cxx -o $(OBJDIR)%.$(ObjSuf) $(INCLUDES)"
@@ -463,11 +479,11 @@ $(HTMLDOC)/index.html : $(SHLIBFILE)
 	   echo 'h.SetOutputDir("$(HTMLDOC)");';   \
 	   echo 'h.MakeAll();';                    \
 	   echo '.q' )                             \
-	 | root -l -b
+	 | ROOT_HIST=0 root -n -l -b
 
 html : $(HTMLDOC)/index.html
 
-.PHONY : include shlib lib bin default clean cleanbin html help
+.PHONY : include depend shlib lib exe bin default clean cleanbin html help
 
 ifneq ($(GOALS),)
 ifneq ($(DLIST),)

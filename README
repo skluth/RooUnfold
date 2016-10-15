@@ -1,4 +1,4 @@
-RooUnfold             $Id$
+RooUnfold             $Id: README 247 2010-10-04 22:04:21Z T.J.Adye $
 =========
 
 RooUnfold is a framework for unfolding (AKA "deconvolution" or "unsmearing").

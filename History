@@ -1,5 +1,16 @@
-History of RooUnfold     $Id$
+History of RooUnfold     $Id: History 352 2015-04-14 11:00:05Z T.J.Adye@rl.ac.uk $
 ====================
+
+Tim Adye         14-Apr-2015
+  o Make sure RooUnfoldDict_rdict.pcm is in same directory as libRooUnfold.so.
+  o Update "make commands".
+
+Tim Adye         13-Apr-2015
+  More GNUmakefile fixes for ROOT6:
+  o Use rootcling (instead of rlibmap) to make libRooUnfold.rootmap.
+  o Include $(CXXFLAGS) (notably -std=c++11) in dependency file creation.
+  o Fallback if dependency file creation fails.
+  o Fallback if no Makefile.arch, also for ROOT installed in default location.
 
 Tim Adye          7-Oct-2014
   o Fix GNUmakefile for old ROOT (5.30 and before) which defined ROOTCONFIG
